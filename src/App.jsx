@@ -463,11 +463,9 @@ function PhoneFrame({ platform, device, children }) {
               <span style={{ fontSize: `${Math.round(8*scale)}px`, color: "#000" }}>▲▲▲ WiFi 🔋</span>
             </div>
           )}
-          {/* Screen content — scaled via transform */}
-          <div style={{ flex: 1, background: "#fff", overflow: "hidden", position: "relative" }}>
-            <div style={{ transformOrigin: "top left", transform: `scale(${scale})`, width: `${device.w}px`, height: `${Math.round(device.h * (1 - (isIOS ? 72 : 64) / device.h))}px`, overflowY: "auto" }}>
-              {children}
-            </div>
+          {/* Screen content */}
+          <div style={{ flex: 1, background: "#fff", overflowY: "auto", overflowX: "hidden" }}>
+            {children}
           </div>
           {/* Home indicator */}
           {isIOS ? (
