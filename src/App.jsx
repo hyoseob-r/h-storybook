@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { colors, typography, spacing, radius, elevation } from "./tokens";
+import { colors, typography, spacing, radius, elevation, states } from "./tokens";
 
 // ── Code generators ──────────────────────────────────────────────────────────
 
@@ -198,6 +198,7 @@ function ColorsSection() {
     { title: "Background", tokens: Object.values(colors.background) },
     { title: "Variant", tokens: Object.values(colors.variant) },
   ];
+  const overlays = Object.values(states.overlay);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
       {groups.map(g => (
@@ -208,6 +209,27 @@ function ColorsSection() {
           </div>
         </div>
       ))}
+      {/* States / Overlay */}
+      <div>
+        <div style={{ fontSize: "11px", color: "#5a5a8a", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "14px", fontWeight: 600 }}>States / Overlay</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          {overlays.map(o => (
+            <div key={o.name} style={{ padding: "14px 20px", background: "#0c0c1e", border: "1px solid #1a1a30", borderRadius: "10px", display: "flex", alignItems: "center", gap: "16px" }}>
+              {/* Checkerboard + overlay swatch */}
+              <div style={{ width: "48px", height: "32px", borderRadius: "6px", flexShrink: 0, position: "relative", overflow: "hidden" }}>
+                <div style={{ position: "absolute", inset: 0, backgroundImage: "repeating-conic-gradient(#3a3a5a 0% 25%, #1a1a30 0% 50%)", backgroundSize: "10px 10px" }} />
+                <div style={{ position: "absolute", inset: 0, background: o.value }} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: "11px", color: "#c0c0f0", fontWeight: 600 }}>{o.label}</div>
+                <div style={{ fontSize: "10px", color: "#5a5a8a", fontFamily: "monospace", marginTop: "2px" }}>{o.name}</div>
+              </div>
+              <div style={{ fontFamily: "monospace", fontSize: "11px", color: "#7070a0" }}>{o.value.toUpperCase()}</div>
+              <div style={{ fontSize: "10px", color: "#3a3a6a", background: "#1a1a30", padding: "2px 8px", borderRadius: "4px" }}>opacity {o.opacity}</div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

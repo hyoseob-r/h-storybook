@@ -2,8 +2,8 @@ export const colors = {
   foundation: {
     primary:     { name: "primary",     value: "#fa0050" },
     primary_i:   { name: "primary_i",   value: "#ff3072" },
-    secondary:   { name: "secondary",   value: "#2591b5" },
-    secondary_i: { name: "secondary_i", value: "#2582a1" },
+    secondary:   { name: "secondary",   value: "#0c74e4" },
+    secondary_i: { name: "secondary_i", value: "#1f8bff" },
     red:         { name: "red",         value: "#c00000" },
     red_i:       { name: "red_i",       value: "#ff5c5c" },
     green:       { name: "green",       value: "#05947f" },
@@ -71,6 +71,14 @@ export const spacing = [
   { name: "s2", value: 4 },
   { name: "s7", value: 16 },
 ];
+
+export const states = {
+  overlay: {
+    loading_k: { name: "overlay_k/loading", label: "Black Loading",   value: "#0000001a", opacity: "10%" },
+    loading_p: { name: "overlay_p/loading", label: "Primary Loading", value: "#fa00501a", opacity: "10%" },
+    loading_w: { name: "overlay_w/loading", label: "White Loading",   value: "#ffffff33", opacity: "20%" },
+  },
+};
 
 export const radius = [
   { name: "r3", value: 10 },
