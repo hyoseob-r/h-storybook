@@ -686,7 +686,7 @@ const DEVICES = {
 
 const MAX_FRAME_H = 560;
 
-function PhoneFrame({ platform, device, children }) {
+function PhoneFrame({ platform, device, children, canvasMode }) {
   const isIOS = platform === "ios";
   const scale = MAX_FRAME_H / device.h;
   const fw = Math.round(device.w * scale);
@@ -729,8 +729,8 @@ function PhoneFrame({ platform, device, children }) {
                   <span style={{ fontSize: "8px", color: "#000" }}>▲▲▲ WiFi 🔋</span>
                 </div>
               )}
-              {/* Screen content — renders at actual dp */}
-              <div style={{ flex: 1, background: "#fff", overflowY: "auto", overflowX: "hidden" }}>
+              {/* Screen content */}
+              <div style={{ flex: 1, background: "#fff", position: "relative", overflow: canvasMode ? "hidden" : "auto" }}>
                 {children}
               </div>
               {/* Home indicator */}
@@ -769,186 +769,276 @@ function PhoneFrame({ platform, device, children }) {
 }
 
 function SimulatorSection() {
-  const [platform, setPlatform] = useState("ios");
-  const [deviceIdx, setDeviceIdx] = useState(0);
-  const [canvasItems, setCanvasItems] = useState([
-    { id: 1, type: "button", variant: "primary", size: "medium", label: "주문하기" },
-    { id: 2, type: "label",  color: "primary",   size: "medium", label: "인기" },
-    { id: 3, type: "button", variant: "outline",  size: "medium", label: "장바구니" },
-  ]);
-  const [selected, setSelected] = useState(null);
-  const nextId = () => Date.now();
+  const [platform,  setPlatform]  = useState("ios");
+  const [deviceIdx, setDeviceIdx] = useState(2); // iPhone 13
+  const [items,     setItems]     = useState([]);
+  const [selected,  setSelected]  = useState(null);
+  const dragRef  = useRef(null);
+  const scaleRef = useRef(1);
 
-  const addItem = (type) => {
-    const item = type === "button"
-      ? { id: nextId(), type: "button", variant: "primary", size: "medium", label: "버튼" }
-      : { id: nextId(), type: "label",  color: "primary",   size: "medium", label: "라벨" };
-    setCanvasItems(prev => [...prev, item]);
+  const device = DEVICES[platform][deviceIdx];
+  const scale  = MAX_FRAME_H / device.h;
+  scaleRef.current = scale;
+
+  // ── drag (window-level) ──────────────────────────────────────────────────────
+  useEffect(() => {
+    const onMove = (e) => {
+      if (!dragRef.current) return;
+      const { id, startMX, startMY, startX, startY } = dragRef.current;
+      const dx = (e.clientX - startMX) / scaleRef.current;
+      const dy = (e.clientY - startMY) / scaleRef.current;
+      setItems(prev => prev.map(i => i.id === id
+        ? { ...i, x: Math.round(Math.max(0, startX + dx)), y: Math.round(Math.max(0, startY + dy)) }
+        : i));
+    };
+    const onUp = () => { dragRef.current = null; };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup",   onUp);
+    return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
+  }, []);
+
+  const startDrag = (e, item) => {
+    e.preventDefault(); e.stopPropagation();
+    dragRef.current = { id: item.id, startMX: e.clientX, startMY: e.clientY, startX: item.x, startY: item.y };
     setSelected(item.id);
   };
 
-  const removeItem = (id) => {
-    setCanvasItems(prev => prev.filter(i => i.id !== id));
-    if (selected === id) setSelected(null);
+  // ── item helpers ─────────────────────────────────────────────────────────────
+  const addItem = (type) => {
+    const id = Date.now();
+    const base = type === "labelButton"
+      ? { type:"labelButton", shape:"filled", colorStyle:"primary_v2", size:"medium", config:"labelOnly", iconPos:"left", labelText:"버튼" }
+      : { type:"text",        style:"Body/body_6",  content:"텍스트",   color:"#333333" };
+    setItems(prev => [...prev, { id, x: 16, y: Math.min(16 + prev.length * 64, 480), ...base }]);
+    setSelected(id);
   };
 
-  const updateItem = (id, key, val) => {
-    setCanvasItems(prev => prev.map(i => i.id === id ? { ...i, [key]: val } : i));
+  const updateItem = (id, updates) => setItems(prev => prev.map(i => i.id === id ? { ...i, ...updates } : i));
+  const removeItem = (id) => { setItems(prev => prev.filter(i => i.id !== id)); if (selected === id) setSelected(null); };
+  const sel = items.find(i => i.id === selected);
+
+  // shapeStyle 변경 시 colorStyle 자동 보정
+  const changeShape = (s) => {
+    const allowed = ALLOWED_COLORS[s];
+    const newColor = allowed.includes(sel.colorStyle) ? sel.colorStyle : allowed[0];
+    updateItem(sel.id, { shape: s, colorStyle: newColor });
   };
 
-  const sel = canvasItems.find(i => i.id === selected);
+  // ── render component in canvas ───────────────────────────────────────────────
+  const renderComp = (item) => {
+    if (item.type === "labelButton") {
+      const h  = item.size === "medium" ? 48 : 36;
+      const ph = item.size === "medium" ? 16 : 12;
+      const fs = item.size === "medium" ? 14 : 12;
+      const r  = item.size === "medium" ? 10 : 8;
+      const bgFilled = { primary_v2:"#FA0050", gray_v2:"#333333", gray250_v2:"#BFBFBF" };
+      const fgFilled = { primary_v2:"#fff",    gray_v2:"#fff",    gray250_v2:"#333" };
+      const accentC  = { primary_v2:"#FA0050", gray_v2:"#333333", gray250_v2:"#BFBFBF" };
+      const bg  = item.shape === "filled"   ? bgFilled[item.colorStyle] : "transparent";
+      const fg  = item.shape === "filled"   ? fgFilled[item.colorStyle] : accentC[item.colorStyle];
+      const bdr = item.shape === "outlined" ? `1px solid ${accentC[item.colorStyle]}` : "none";
+      const ico = <span style={{ fontSize:`${fs+2}px`, lineHeight:1 }}>✎</span>;
+      return (
+        <div style={{ height:`${h}px`, padding:`0 ${ph}px`, background:bg, border:bdr, borderRadius:`${r}px`, color:fg, fontSize:`${fs}px`, fontWeight:700, display:"inline-flex", alignItems:"center", gap:"5px", fontFamily: platform==="ios"?"system-ui":"Roboto,sans-serif", userSelect:"none", whiteSpace:"nowrap" }}>
+          {item.config === "labelWithIcon" && item.iconPos === "left"  && ico}
+          {item.labelText}
+          {item.config === "labelWithIcon" && item.iconPos === "right" && ico}
+        </div>
+      );
+    }
+    if (item.type === "text") {
+      const t = typography.find(t => t.name === item.style) || { size:14, weight:400, lineHeight:19 };
+      return (
+        <div style={{ fontSize:`${t.size}px`, fontWeight:t.weight, lineHeight:`${t.lineHeight}px`, color:item.color, fontFamily: platform==="ios"?"system-ui":"Roboto,sans-serif", userSelect:"none", whiteSpace:"pre-wrap" }}>
+          {item.content}
+        </div>
+      );
+    }
+  };
 
-  const bgMap  = { primary: "#fa0050", secondary: "#2591b5", outline: "transparent" };
-  const fgMap  = { primary: "#fff",    secondary: "#fff",    outline: "#fa0050" };
-  const lBgMap = { primary: "#fff5f8", secondary: "#f0f7fa", neutral: "#f6f6f6" };
-  const lFgMap = { primary: "#fa0050", secondary: "#2591b5", neutral: "#333" };
-  const fontMap = { large: "16px", medium: "14px", small: "12px" };
-  const padMap  = { large: "12px 20px", medium: "8px 16px", small: "6px 12px" };
+  // ── property panel ───────────────────────────────────────────────────────────
+  const pCtl = (label, opts, val, key, allowedSet) => (
+    <div style={{ marginBottom:"10px" }}>
+      <div style={{ fontSize:"10px", color:"#4a4a7a", marginBottom:"4px" }}>{label}</div>
+      <div style={{ display:"flex", gap:"3px", flexWrap:"wrap" }}>
+        {opts.map(o => {
+          const dis = allowedSet && !allowedSet.includes(o);
+          return (
+            <button key={o} disabled={dis} onClick={() => !dis && updateItem(sel.id, { [key]: o })}
+              style={{ padding:"3px 7px", borderRadius:"4px", background: val===o?"#1e1e3a":"transparent", border: val===o?"1px solid #3a3a6a":"1px solid #1a1a30", color: dis?"#252540": val===o?"#c0c0f0":"#5a5a8a", fontSize:"10px", cursor:dis?"default":"pointer", textDecoration:dis?"line-through":"none" }}>
+              {o}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
 
+  const renderProps = () => {
+    if (!sel) return (
+      <div style={{ padding:"28px 16px", textAlign:"center", color:"#2a2a4a", fontSize:"11px", lineHeight:1.8 }}>
+        컴포넌트를<br/>선택하세요
+      </div>
+    );
+    return (
+      <div style={{ padding:"14px", display:"flex", flexDirection:"column" }}>
+        <div style={{ fontSize:"10px", color:"#5a5a8a", letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:"12px", fontWeight:600 }}>
+          {sel.type === "labelButton" ? "LabelButton" : "Text"}
+        </div>
+
+        {sel.type === "labelButton" && <>
+          <div style={{ marginBottom:"10px" }}>
+            <div style={{ fontSize:"10px", color:"#4a4a7a", marginBottom:"4px" }}>labelText</div>
+            <input value={sel.labelText} onChange={e => updateItem(sel.id, { labelText: e.target.value })}
+              style={{ width:"100%", background:"#08081a", border:"1px solid #2a2a4a", borderRadius:"5px", padding:"5px 8px", color:"#e0e0f0", fontSize:"11px", outline:"none", boxSizing:"border-box" }} />
+          </div>
+          <div style={{ marginBottom:"10px" }}>
+            <div style={{ fontSize:"10px", color:"#4a4a7a", marginBottom:"4px" }}>shapeStyle</div>
+            <div style={{ display:"flex", gap:"3px" }}>
+              {["filled","outlined","text"].map(o => (
+                <button key={o} onClick={() => changeShape(o)}
+                  style={{ padding:"3px 7px", borderRadius:"4px", background: sel.shape===o?"#1e1e3a":"transparent", border: sel.shape===o?"1px solid #3a3a6a":"1px solid #1a1a30", color: sel.shape===o?"#c0c0f0":"#5a5a8a", fontSize:"10px", cursor:"pointer" }}>
+                  {o}
+                </button>
+              ))}
+            </div>
+          </div>
+          {pCtl("colorStyle", ["primary_v2","gray_v2","gray250_v2"], sel.colorStyle, "colorStyle", ALLOWED_COLORS[sel.shape])}
+          {pCtl("size",   ["medium","small"],              sel.size,   "size")}
+          {pCtl("config", ["labelOnly","labelWithIcon"],   sel.config, "config")}
+          {sel.config === "labelWithIcon" && pCtl("iconPos", ["left","right"], sel.iconPos, "iconPos")}
+        </>}
+
+        {sel.type === "text" && <>
+          <div style={{ marginBottom:"10px" }}>
+            <div style={{ fontSize:"10px", color:"#4a4a7a", marginBottom:"4px" }}>content</div>
+            <textarea value={sel.content} onChange={e => updateItem(sel.id, { content: e.target.value })}
+              style={{ width:"100%", background:"#08081a", border:"1px solid #2a2a4a", borderRadius:"5px", padding:"5px 8px", color:"#e0e0f0", fontSize:"11px", outline:"none", resize:"vertical", minHeight:"52px", boxSizing:"border-box" }} />
+          </div>
+          <div style={{ marginBottom:"10px" }}>
+            <div style={{ fontSize:"10px", color:"#4a4a7a", marginBottom:"4px" }}>typography</div>
+            <select value={sel.style} onChange={e => updateItem(sel.id, { style: e.target.value })}
+              style={{ width:"100%", background:"#08081a", border:"1px solid #2a2a4a", borderRadius:"5px", padding:"5px 8px", color:"#c0c0f0", fontSize:"10px", outline:"none" }}>
+              {typography.map(t => <option key={t.name} value={t.name}>{t.name}</option>)}
+            </select>
+          </div>
+          <div style={{ marginBottom:"10px" }}>
+            <div style={{ fontSize:"10px", color:"#4a4a7a", marginBottom:"4px" }}>color</div>
+            <div style={{ display:"flex", gap:"6px", alignItems:"center" }}>
+              <input type="color" value={sel.color} onChange={e => updateItem(sel.id, { color: e.target.value })}
+                style={{ width:"28px", height:"28px", border:"none", background:"none", cursor:"pointer", padding:0 }} />
+              <input value={sel.color} onChange={e => updateItem(sel.id, { color: e.target.value })}
+                style={{ flex:1, background:"#08081a", border:"1px solid #2a2a4a", borderRadius:"5px", padding:"5px 8px", color:"#e0e0f0", fontSize:"11px", outline:"none" }} />
+            </div>
+          </div>
+        </>}
+
+        {/* Position */}
+        <div style={{ paddingTop:"10px", borderTop:"1px solid #1a1a30", display:"flex", gap:"8px", marginBottom:"10px" }}>
+          {["x","y"].map(axis => (
+            <div key={axis} style={{ flex:1 }}>
+              <div style={{ fontSize:"9px", color:"#3a3a5a", marginBottom:"3px", textTransform:"uppercase" }}>{axis} dp</div>
+              <input type="number" value={sel[axis]} onChange={e => updateItem(sel.id, { [axis]: Number(e.target.value) })}
+                style={{ width:"100%", background:"#08081a", border:"1px solid #2a2a4a", borderRadius:"5px", padding:"4px 6px", color:"#e0e0f0", fontSize:"11px", outline:"none", boxSizing:"border-box" }} />
+            </div>
+          ))}
+        </div>
+
+        <button onClick={() => removeItem(sel.id)}
+          style={{ padding:"6px", borderRadius:"5px", background:"transparent", border:"1px solid #3a1a1a", color:"#6a2a2a", fontSize:"10px", cursor:"pointer" }}
+          onMouseEnter={e => { e.currentTarget.style.background="#1a0808"; e.currentTarget.style.color="#ff6060"; }}
+          onMouseLeave={e => { e.currentTarget.style.background="transparent"; e.currentTarget.style.color="#6a2a2a"; }}>
+          삭제
+        </button>
+      </div>
+    );
+  };
+
+  // ── layout ───────────────────────────────────────────────────────────────────
   return (
-    <div style={{ display: "flex", gap: "32px", height: "100%", alignItems: "flex-start" }}>
-      {/* Left: Controls */}
-      <div style={{ width: "220px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "16px" }}>
-        {/* Platform + Device */}
-        <div style={{ background: "#0c0c1e", border: "1px solid #1a1a30", borderRadius: "10px", padding: "14px" }}>
-          <div style={{ fontSize: "10px", color: "#5a5a8a", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "10px", fontWeight: 600 }}>Platform</div>
-          <div style={{ display: "flex", gap: "6px", marginBottom: "12px" }}>
-            {["ios", "android"].map(p => (
+    <div style={{ display:"flex", gap:"16px", alignItems:"flex-start" }}>
+
+      {/* Left: Device + Palette + Layers */}
+      <div style={{ width:"196px", flexShrink:0, display:"flex", flexDirection:"column", gap:"10px" }}>
+
+        <div style={{ background:"#0c0c1e", border:"1px solid #1a1a30", borderRadius:"10px", padding:"12px" }}>
+          <div style={{ fontSize:"10px", color:"#5a5a8a", letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:"8px", fontWeight:600 }}>Platform</div>
+          <div style={{ display:"flex", gap:"5px", marginBottom:"10px" }}>
+            {["ios","android"].map(p => (
               <button key={p} onClick={() => { setPlatform(p); setDeviceIdx(0); }}
-                style={{ flex: 1, padding: "7px", borderRadius: "7px", background: platform === p ? "#1e1e3a" : "transparent", border: platform === p ? "1px solid #3a3a6a" : "1px solid #1a1a30", color: platform === p ? "#c0c0f0" : "#5a5a8a", fontSize: "11px", cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: platform === p ? 700 : 400 }}>
+                style={{ flex:1, padding:"6px", borderRadius:"6px", background: platform===p?"#1e1e3a":"transparent", border: platform===p?"1px solid #3a3a6a":"1px solid #1a1a30", color: platform===p?"#c0c0f0":"#5a5a8a", fontSize:"11px", cursor:"pointer", fontWeight: platform===p?700:400, textTransform:"uppercase" }}>
                 {p === "ios" ? "iOS" : "Android"}
               </button>
             ))}
           </div>
-          <div style={{ fontSize: "10px", color: "#5a5a8a", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "8px", fontWeight: 600 }}>Device</div>
           <select value={deviceIdx} onChange={e => setDeviceIdx(Number(e.target.value))}
-            style={{ width: "100%", background: "#08081a", border: "1px solid #2a2a4a", borderRadius: "6px", padding: "6px 8px", color: "#c0c0f0", fontSize: "11px", outline: "none", cursor: "pointer" }}>
-            {DEVICES[platform].map((d, i) => (
-              <option key={i} value={i}>{d.name} ({d.w}×{d.h})</option>
-            ))}
+            style={{ width:"100%", background:"#08081a", border:"1px solid #2a2a4a", borderRadius:"6px", padding:"5px 8px", color:"#c0c0f0", fontSize:"10px", outline:"none" }}>
+            {DEVICES[platform].map((d, i) => <option key={i} value={i}>{d.name} ({d.w}×{d.h})</option>)}
           </select>
         </div>
 
-        {/* Add components */}
-        <div style={{ background: "#0c0c1e", border: "1px solid #1a1a30", borderRadius: "10px", padding: "14px" }}>
-          <div style={{ fontSize: "10px", color: "#5a5a8a", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "10px", fontWeight: 600 }}>Add Component</div>
-          <div style={{ display: "flex", gap: "6px" }}>
-            <button onClick={() => addItem("button")}
-              style={{ flex: 1, padding: "7px", borderRadius: "7px", background: "transparent", border: "1px solid #1a1a30", color: "#7070a0", fontSize: "11px", cursor: "pointer", transition: "all 0.2s" }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = "#3a3a6a"; e.currentTarget.style.color = "#b0b0e0"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = "#1a1a30"; e.currentTarget.style.color = "#7070a0"; }}>
-              + Button
-            </button>
-            <button onClick={() => addItem("label")}
-              style={{ flex: 1, padding: "7px", borderRadius: "7px", background: "transparent", border: "1px solid #1a1a30", color: "#7070a0", fontSize: "11px", cursor: "pointer", transition: "all 0.2s" }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = "#3a3a6a"; e.currentTarget.style.color = "#b0b0e0"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = "#1a1a30"; e.currentTarget.style.color = "#7070a0"; }}>
-              + Label
-            </button>
-          </div>
-        </div>
-
-        {/* Canvas items list */}
-        <div style={{ background: "#0c0c1e", border: "1px solid #1a1a30", borderRadius: "10px", padding: "14px" }}>
-          <div style={{ fontSize: "10px", color: "#5a5a8a", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "10px", fontWeight: 600 }}>Layers</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-            {canvasItems.map(item => (
-              <div key={item.id} onClick={() => setSelected(item.id)}
-                style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 8px", borderRadius: "6px", background: selected === item.id ? "#1a1a30" : "transparent", border: selected === item.id ? "1px solid #3a3a6a" : "1px solid transparent", cursor: "pointer" }}>
-                <span style={{ fontSize: "11px", color: selected === item.id ? "#c0c0f0" : "#6060a0" }}>{item.type === "button" ? "⬚" : "◷"} {item.label}</span>
-                <button onClick={e => { e.stopPropagation(); removeItem(item.id); }}
-                  style={{ background: "none", border: "none", color: "#3a3a5a", cursor: "pointer", fontSize: "12px", padding: "0 2px" }}>×</button>
-              </div>
+        {/* Palette */}
+        <div style={{ background:"#0c0c1e", border:"1px solid #1a1a30", borderRadius:"10px", padding:"12px" }}>
+          <div style={{ fontSize:"10px", color:"#5a5a8a", letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:"8px", fontWeight:600 }}>Add</div>
+          <div style={{ display:"flex", flexDirection:"column", gap:"5px" }}>
+            {[{ type:"labelButton", label:"⬚  LabelButton" }, { type:"text", label:"T   Text" }].map(c => (
+              <button key={c.type} onClick={() => addItem(c.type)}
+                style={{ padding:"8px 10px", borderRadius:"7px", background:"transparent", border:"1px solid #1a1a30", color:"#7070a0", fontSize:"11px", cursor:"pointer", textAlign:"left", transition:"all 0.15s" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor="#3a3a6a"; e.currentTarget.style.color="#c0c0f0"; e.currentTarget.style.background="#0e0e22"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor="#1a1a30"; e.currentTarget.style.color="#7070a0"; e.currentTarget.style.background="transparent"; }}>
+                + {c.label}
+              </button>
             ))}
           </div>
         </div>
 
-        {/* Selected item properties */}
-        {sel && (
-          <div style={{ background: "#0c0c1e", border: "1px solid #1a1a30", borderRadius: "10px", padding: "14px" }}>
-            <div style={{ fontSize: "10px", color: "#5a5a8a", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "12px", fontWeight: 600 }}>Properties</div>
-
-            {/* Label text */}
-            <div style={{ marginBottom: "10px" }}>
-              <div style={{ fontSize: "10px", color: "#4a4a7a", marginBottom: "5px" }}>Text</div>
-              <input value={sel.label} onChange={e => updateItem(sel.id, "label", e.target.value)}
-                style={{ width: "100%", background: "#08081a", border: "1px solid #2a2a4a", borderRadius: "6px", padding: "6px 8px", color: "#e0e0f0", fontSize: "11px", outline: "none" }} />
-            </div>
-
-            {sel.type === "button" && (
-              <>
-                <div style={{ marginBottom: "10px" }}>
-                  <div style={{ fontSize: "10px", color: "#4a4a7a", marginBottom: "5px" }}>Variant</div>
-                  <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
-                    {["primary","secondary","outline"].map(v => (
-                      <button key={v} onClick={() => updateItem(sel.id, "variant", v)}
-                        style={{ padding: "4px 8px", borderRadius: "5px", background: sel.variant === v ? "#1e1e3a" : "transparent", border: sel.variant === v ? "1px solid #3a3a6a" : "1px solid #1a1a30", color: sel.variant === v ? "#c0c0f0" : "#5a5a8a", fontSize: "10px", cursor: "pointer" }}>
-                        {v}
-                      </button>
-                    ))}
+        {/* Layers */}
+        <div style={{ background:"#0c0c1e", border:"1px solid #1a1a30", borderRadius:"10px", padding:"12px", flex:1 }}>
+          <div style={{ fontSize:"10px", color:"#5a5a8a", letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:"8px", fontWeight:600 }}>Layers</div>
+          {items.length === 0
+            ? <div style={{ fontSize:"10px", color:"#2a2a4a", textAlign:"center", padding:"12px 0" }}>비어있음</div>
+            : <div style={{ display:"flex", flexDirection:"column", gap:"3px" }}>
+                {[...items].reverse().map(item => (
+                  <div key={item.id} onClick={() => setSelected(item.id)}
+                    style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"5px 8px", borderRadius:"5px", background: selected===item.id?"#1a1a30":"transparent", border: selected===item.id?"1px solid #3a3a6a":"1px solid transparent", cursor:"pointer" }}>
+                    <span style={{ fontSize:"10px", color: selected===item.id?"#c0c0f0":"#6060a0", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                      {item.type==="labelButton"?"⬚":"T"} {item.type==="labelButton"?item.labelText:item.content}
+                    </span>
+                    <button onClick={e => { e.stopPropagation(); removeItem(item.id); }}
+                      style={{ background:"none", border:"none", color:"#3a3a5a", cursor:"pointer", fontSize:"12px", padding:"0 2px", flexShrink:0 }}>×</button>
                   </div>
-                </div>
-              </>
-            )}
-
-            {sel.type === "label" && (
-              <div style={{ marginBottom: "10px" }}>
-                <div style={{ fontSize: "10px", color: "#4a4a7a", marginBottom: "5px" }}>Color</div>
-                <div style={{ display: "flex", gap: "4px" }}>
-                  {["primary","secondary","neutral"].map(c => (
-                    <button key={c} onClick={() => updateItem(sel.id, "color", c)}
-                      style={{ padding: "4px 8px", borderRadius: "5px", background: sel.color === c ? "#1e1e3a" : "transparent", border: sel.color === c ? "1px solid #3a3a6a" : "1px solid #1a1a30", color: sel.color === c ? "#c0c0f0" : "#5a5a8a", fontSize: "10px", cursor: "pointer" }}>
-                      {c}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div>
-              <div style={{ fontSize: "10px", color: "#4a4a7a", marginBottom: "5px" }}>Size</div>
-              <div style={{ display: "flex", gap: "4px" }}>
-                {["large","medium","small"].map(s => (
-                  <button key={s} onClick={() => updateItem(sel.id, "size", s)}
-                    style={{ padding: "4px 8px", borderRadius: "5px", background: sel.size === s ? "#1e1e3a" : "transparent", border: sel.size === s ? "1px solid #3a3a6a" : "1px solid #1a1a30", color: sel.size === s ? "#c0c0f0" : "#5a5a8a", fontSize: "10px", cursor: "pointer" }}>
-                    {s}
-                  </button>
                 ))}
               </div>
-            </div>
-          </div>
-        )}
+          }
+        </div>
       </div>
 
-      {/* Right: Phone preview */}
-      <div style={{ flex: 1, display: "flex", justifyContent: "center", paddingTop: "8px" }}>
-        <PhoneFrame platform={platform} device={DEVICES[platform][deviceIdx]}>
-          {/* App bar */}
-          <div style={{ padding: platform === "ios" ? "16px 16px 12px" : "12px 16px", borderBottom: "1px solid #f0f0f0", display: "flex", alignItems: "center", gap: "12px" }}>
-            <div style={{ width: "32px", height: "32px", borderRadius: platform === "ios" ? "8px" : "4px", background: "#fa0050", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span style={{ color: "#fff", fontSize: "14px", fontWeight: 700, fontFamily: "Roboto, sans-serif" }}>Y</span>
-            </div>
-            <span style={{ fontSize: platform === "ios" ? "17px" : "16px", fontWeight: 700, color: "#111", fontFamily: platform === "ios" ? "system-ui" : "Roboto, sans-serif" }}>YDS Preview</span>
-          </div>
-          {/* Component canvas */}
-          <div style={{ padding: "20px 16px", display: "flex", flexDirection: "column", gap: "12px" }}>
-            {canvasItems.map(item => (
-              <div key={item.id} onClick={() => setSelected(item.id)}
-                style={{ outline: selected === item.id ? "2px solid #fa005066" : "none", borderRadius: "10px", display: "inline-block", cursor: "pointer" }}>
-                {item.type === "button" ? (
-                  <button style={{ padding: padMap[item.size], background: bgMap[item.variant], border: item.variant === "outline" ? "1px solid #fa0050" : "none", borderRadius: "10px", color: fgMap[item.variant], fontSize: fontMap[item.size], fontWeight: 700, cursor: "pointer", fontFamily: platform === "ios" ? "system-ui" : "Roboto, sans-serif", width: "100%" }}>
-                    {item.label}
-                  </button>
-                ) : (
-                  <span style={{ padding: item.size === "large" ? "3px 10px" : item.size === "medium" ? "2px 8px" : "1px 6px", background: lBgMap[item.color], borderRadius: "10px", color: lFgMap[item.color], fontSize: fontMap[item.size], fontWeight: 700, fontFamily: platform === "ios" ? "system-ui" : "Roboto, sans-serif" }}>
-                    {item.label}
-                  </span>
-                )}
+      {/* Center: Phone canvas */}
+      <div style={{ flex:1, display:"flex", justifyContent:"center" }}>
+        <PhoneFrame platform={platform} device={device} canvasMode>
+          <div style={{ position:"absolute", inset:0 }} onClick={() => setSelected(null)}>
+            {items.map(item => (
+              <div key={item.id}
+                style={{ position:"absolute", left:`${item.x}px`, top:`${item.y}px`, cursor:"grab", outline: selected===item.id?"1.5px dashed #fa005088":"none", outlineOffset:"4px", borderRadius:"4px" }}
+                onMouseDown={e => startDrag(e, item)}>
+                {renderComp(item)}
               </div>
             ))}
+            {items.length === 0 && (
+              <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", color:"#bbb", fontSize:"12px", fontFamily:"system-ui", pointerEvents:"none", flexDirection:"column", gap:"6px" }}>
+                <span style={{ fontSize:"24px", opacity:0.3 }}>+</span>
+                <span style={{ opacity:0.4 }}>Add에서 컴포넌트 추가</span>
+              </div>
+            )}
           </div>
         </PhoneFrame>
       </div>
+
+      {/* Right: Properties */}
+      <div style={{ width:"196px", flexShrink:0, background:"#0c0c1e", border:"1px solid #1a1a30", borderRadius:"10px", overflow:"hidden" }}>
+        {renderProps()}
+      </div>
+
     </div>
   );
 }
