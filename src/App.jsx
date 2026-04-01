@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { colors, typography, spacing, radius } from "./tokens";
+import { colors, typography, spacing, radius, elevation } from "./tokens";
 
 // ── Code generators ──────────────────────────────────────────────────────────
 
@@ -260,6 +260,60 @@ function SpacingSection() {
           ))}
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── Section: Elevation / Shadow ──────────────────────────────────────────────
+
+function ElevationSection() {
+  const [selPlatform, setSelPlatform] = useState("swiftui");
+  const platforms = ["swiftui", "ios", "compose", "android"];
+  const platLabel = { swiftui: "SwiftUI", ios: "UIKit", compose: "Jetpack Compose", android: "Android XML" };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
+      {/* Platform picker */}
+      <div style={{ display: "flex", gap: "4px" }}>
+        {platforms.map(p => (
+          <button key={p} onClick={() => setSelPlatform(p)}
+            style={{ padding: "5px 12px", borderRadius: "6px", background: selPlatform === p ? "#1e1e3a" : "transparent", border: selPlatform === p ? "1px solid #3a3a6a" : "1px solid #1a1a30", color: selPlatform === p ? "#c0c0f0" : "#5a5a8a", fontSize: "11px", cursor: "pointer" }}>
+            {platLabel[p]}
+          </button>
+        ))}
+      </div>
+
+      {elevation.map(lv => (
+        <div key={lv.name} style={{ background: "#0c0c1e", border: "1px solid #1a1a30", borderRadius: "12px", padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            <div style={{ fontFamily: "monospace", fontSize: "11px", color: "#5a5a8a", background: "#08081a", border: "1px solid #1a1a30", padding: "2px 8px", borderRadius: "4px" }}>{lv.name}</div>
+            <div style={{ fontSize: "13px", color: "#c0c0f0", fontWeight: 600 }}>{lv.label}</div>
+            <div style={{ fontSize: "10px", color: "#3a3a6a", textTransform: "uppercase", letterSpacing: "0.1em" }}>↕ {lv.direction === "up" ? "Upward" : "Downward"}</div>
+          </div>
+
+          {/* Visual preview */}
+          <div style={{ display: "flex", gap: "24px", alignItems: "center" }}>
+            <div style={{ width: "120px", height: "72px", background: "#ffffff", borderRadius: "12px", boxShadow: lv.css, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ fontSize: "10px", color: "#999", fontFamily: "monospace" }}>{lv.label}</div>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: "10px", color: "#5a5a8a", marginBottom: "6px", letterSpacing: "0.1em", textTransform: "uppercase" }}>CSS box-shadow</div>
+              <code style={{ fontSize: "11px", color: "#8080c0", fontFamily: "monospace", lineHeight: 1.6 }}>{lv.css}</code>
+            </div>
+          </div>
+
+          {/* Platform code */}
+          <div>
+            <div style={{ fontSize: "10px", color: "#5a5a8a", marginBottom: "6px", letterSpacing: "0.1em", textTransform: "uppercase" }}>{platLabel[selPlatform]}</div>
+            <pre style={{ background: "#060612", border: "1px solid #1a1a30", borderRadius: "8px", padding: "14px 16px", fontSize: "12px", color: "#9090d0", fontFamily: "monospace", overflowX: "auto", lineHeight: 1.6, margin: 0 }}>
+              {selPlatform === "swiftui" ? lv.swiftui
+               : selPlatform === "ios"     ? `layer.shadowColor = UIColor(red: 0.098, green: 0.188, blue: 0.251, alpha: 1).cgColor\nlayer.${lv.ios}`
+               : selPlatform === "compose" ? `Modifier.shadow(${lv.compose}, shape = RoundedCornerShape(12.dp))`
+               : `android:elevation="${lv.android.replace("elevation: ", "").replace("dp","")}" />`}
+            </pre>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -1247,6 +1301,7 @@ const NAV = [
   { id: "colors",      label: "Colors",        icon: "◈" },
   { id: "typography",  label: "Typography",    icon: "T" },
   { id: "spacing",     label: "Spacing",       icon: "↔" },
+  { id: "elevation",   label: "Elevation",     icon: "◻" },
   { id: "button",      label: "Button",        icon: "⬚" },
   { id: "label",       label: "Label",         icon: "◷" },
   { id: "simulator",   label: "Simulator",     icon: "📱" },
@@ -1260,14 +1315,15 @@ export default function App() {
     if (active === "colors")     return <ColorsSection />;
     if (active === "typography") return <TypographySection />;
     if (active === "spacing")    return <SpacingSection />;
+    if (active === "elevation")  return <ElevationSection />;
     if (active === "button")     return <ButtonSection />;
     if (active === "label")      return <LabelSection />;
     if (active === "simulator")  return <SimulatorSection />;
     if (active === "glassnav")   return <GlassNavSection />;
   };
 
-  const titles    = { colors: "Color Tokens", typography: "Typography", spacing: "Spacing & Radius", button: "Button", label: "Label", simulator: "Simulator", glassnav: "Liquid Glass Nav" };
-  const subtitles = { colors: "YDS 2.0 Customer Token", typography: "Roboto 기반 타입 스케일", spacing: "스페이싱 및 보더 라디우스", button: "버튼 컴포넌트 — 멀티 플랫폼 코드", label: "라벨 컴포넌트 — 멀티 플랫폼 코드", simulator: "iOS / Android 실시간 화면 시뮬레이션", glassnav: "OS 버전별 Glass Nav Bar — 호환성 + 코드 생성" };
+  const titles    = { colors: "Color Tokens", typography: "Typography", spacing: "Spacing & Radius", elevation: "Elevation / Shadow", button: "Button", label: "Label", simulator: "Simulator", glassnav: "Liquid Glass Nav" };
+  const subtitles = { colors: "YDS 2.0 Customer Token", typography: "Roboto 기반 타입 스케일", spacing: "스페이싱 및 보더 라디우스", elevation: "YDS 2.0 Elevation — Level 1 · 2 (normal & inverse)", button: "버튼 컴포넌트 — 멀티 플랫폼 코드", label: "라벨 컴포넌트 — 멀티 플랫폼 코드", simulator: "iOS / Android 실시간 화면 시뮬레이션", glassnav: "OS 버전별 Glass Nav Bar — 호환성 + 코드 생성" };
 
   return (
     <div style={{ display: "flex", height: "100vh", background: "#060612", color: "#e0e0f0", fontFamily: "'Pretendard', -apple-system, sans-serif" }}>
@@ -1278,28 +1334,28 @@ export default function App() {
           <div style={{ fontSize: "10px", color: "#4a4a7a", marginTop: "3px" }}>YDS 2.0 Design System</div>
         </div>
         <div style={{ fontSize: "9px", color: "#3a3a5a", letterSpacing: "0.15em", textTransform: "uppercase", padding: "0 16px", marginBottom: "6px", fontWeight: 600 }}>Tokens</div>
-        {NAV.slice(0, 3).map(n => (
+        {NAV.slice(0, 4).map(n => (
           <button key={n.id} onClick={() => setActive(n.id)}
             style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#1a1a30" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #fa0050" : "2px solid transparent", color: active === n.id ? "#e0e0f0" : "#6060a0", fontSize: "12px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
             <span style={{ fontSize: "13px", opacity: 0.7 }}>{n.icon}</span>{n.label}
           </button>
         ))}
         <div style={{ fontSize: "9px", color: "#3a3a5a", letterSpacing: "0.15em", textTransform: "uppercase", padding: "16px 16px 6px", fontWeight: 600 }}>Components</div>
-        {NAV.slice(3, 5).map(n => (
+        {NAV.slice(4, 6).map(n => (
           <button key={n.id} onClick={() => setActive(n.id)}
             style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#1a1a30" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #fa0050" : "2px solid transparent", color: active === n.id ? "#e0e0f0" : "#6060a0", fontSize: "12px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
             <span style={{ fontSize: "13px", opacity: 0.7 }}>{n.icon}</span>{n.label}
           </button>
         ))}
         <div style={{ fontSize: "9px", color: "#3a3a5a", letterSpacing: "0.15em", textTransform: "uppercase", padding: "16px 16px 6px", fontWeight: 600 }}>Simulate</div>
-        {NAV.slice(5, 7).map(n => (
+        {NAV.slice(6, 8).map(n => (
           <button key={n.id} onClick={() => setActive(n.id)}
             style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#1a1a30" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #fa0050" : "2px solid transparent", color: active === n.id ? "#e0e0f0" : "#6060a0", fontSize: "12px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
             <span style={{ fontSize: "13px", opacity: 0.7 }}>{n.icon}</span>{n.label}
           </button>
         ))}
         <div style={{ fontSize: "9px", color: "#3a3a5a", letterSpacing: "0.15em", textTransform: "uppercase", padding: "16px 16px 6px", fontWeight: 600 }}>Labs</div>
-        {NAV.slice(7).map(n => (
+        {NAV.slice(8).map(n => (
           <button key={n.id} onClick={() => setActive(n.id)}
             style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#1a1a30" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #fa0050" : "2px solid transparent", color: active === n.id ? "#e0e0f0" : "#6060a0", fontSize: "12px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
             <span style={{ fontSize: "13px", opacity: 0.7 }}>{n.icon}</span>{n.label}

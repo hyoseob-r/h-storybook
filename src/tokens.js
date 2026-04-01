@@ -74,4 +74,53 @@ export const spacing = [
 
 export const radius = [
   { name: "r3", value: 10 },
+  { name: "r4", value: 12 },
+];
+
+// shadow color: #193040 with opacity
+// level_1: box-shadow 0 1px 8px rgba(25,48,64,0.10), 0 0 2px rgba(25,48,64,0.08)
+// level_1_i: inverse (upward) 0 -1px 8px rgba(25,48,64,0.10), 0 0 2px rgba(25,48,64,0.08)
+// level_2: box-shadow 0 2px 12px rgba(25,48,64,0.24), 0 0 4px rgba(25,48,64,0.12)
+// level_2_i: inverse (upward) 0 -2px 12px rgba(25,48,64,0.24), 0 0 4px rgba(25,48,64,0.12)
+export const elevation = [
+  {
+    name: "level_1",
+    label: "Level 1",
+    direction: "down",
+    css: "0 1px 8px rgba(25,48,64,0.10), 0 0 2px rgba(25,48,64,0.08)",
+    android: "elevation: 2dp",
+    compose: "elevation = 2.dp",
+    ios: "shadowRadius: 8, shadowOpacity: 0.10, shadowOffset: (0, 1)",
+    swiftui: ".shadow(color: .black.opacity(0.10), radius: 8, x: 0, y: 1)",
+  },
+  {
+    name: "level_1_i",
+    label: "Level 1 (Inverse)",
+    direction: "up",
+    css: "0 -1px 8px rgba(25,48,64,0.10), 0 0 2px rgba(25,48,64,0.08)",
+    android: "elevation: 2dp (inverted context)",
+    compose: "elevation = 2.dp",
+    ios: "shadowRadius: 8, shadowOpacity: 0.10, shadowOffset: (0, -1)",
+    swiftui: ".shadow(color: .black.opacity(0.10), radius: 8, x: 0, y: -1)",
+  },
+  {
+    name: "level_2",
+    label: "Level 2",
+    direction: "down",
+    css: "0 2px 12px rgba(25,48,64,0.24), 0 0 4px rgba(25,48,64,0.12)",
+    android: "elevation: 6dp",
+    compose: "elevation = 6.dp",
+    ios: "shadowRadius: 12, shadowOpacity: 0.24, shadowOffset: (0, 2)",
+    swiftui: ".shadow(color: .black.opacity(0.24), radius: 12, x: 0, y: 2)",
+  },
+  {
+    name: "level_2_i",
+    label: "Level 2 (Inverse)",
+    direction: "up",
+    css: "0 -2px 12px rgba(25,48,64,0.24), 0 0 4px rgba(25,48,64,0.12)",
+    android: "elevation: 6dp (inverted context)",
+    compose: "elevation = 6.dp",
+    ios: "shadowRadius: 12, shadowOpacity: 0.24, shadowOffset: (0, -2)",
+    swiftui: ".shadow(color: .black.opacity(0.24), radius: 12, x: 0, y: -2)",
+  },
 ];
