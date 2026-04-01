@@ -13,6 +13,21 @@ export const colors = {
     white:       { name: "white",       value: "#ffffff" },
     black:       { name: "black",       value: "#000000" },
   },
+  // Light mode extended palette (from btn_Text_Color 규칙 노드)
+  // 규칙: _100 suffix = Lightness variant → text color uses base token
+  light: {
+    primary_a:       { name: "primary_a",       value: "#fa0050" },
+    primary_a_100:   { name: "primary_a_100",   value: "#feccdc" },
+    primary_b:       { name: "primary_b",       value: "#28343c" },
+    primary_b_100:   { name: "primary_b_100",   value: "#dee5ea" },
+    accent:          { name: "accent",          value: "#0c80e4" },
+    accent_100:      { name: "accent_100",      value: "#c5e2fb" },
+    ygy_green:       { name: "ygy_green",       value: "#05947f" },
+    ygy_green_100:   { name: "ygy_green_100",   value: "#cdeae6" },
+    ygy_orange:      { name: "ygy_orange",      value: "#f04600" },
+    ygy_orange_100:  { name: "ygy_orange_100",  value: "#fcdacc" },
+    gray_c:          { name: "gray_c",          value: "#000000" },
+  },
   gray: {
     gray800: { name: "gray800 (33)", value: "#333333" },
     gray600: { name: "gray600 (66)", value: "#666666" },

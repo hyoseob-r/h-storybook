@@ -194,19 +194,71 @@ function ColorSwatch({ name, value }) {
 function ColorsSection() {
   const groups = [
     { title: "Foundation", tokens: Object.values(colors.foundation) },
+    { title: "Light / Extended Palette", tokens: Object.values(colors.light), textRule: true },
     { title: "Gray Scale", tokens: Object.values(colors.gray) },
     { title: "Background", tokens: Object.values(colors.background) },
     { title: "Variant", tokens: Object.values(colors.variant) },
   ];
   const overlays = Object.values(states.overlay);
+  // Light palette: _100 토큰은 base 토큰과 쌍으로 표시
+  const lightPairs = [
+    ["primary_a", "primary_a_100"],
+    ["primary_b", "primary_b_100"],
+    ["accent",    "accent_100"],
+    ["ygy_green", "ygy_green_100"],
+    ["ygy_orange","ygy_orange_100"],
+  ];
+  // text color rule: base → white text, _100 → base color text
+  const lightTextColor = { primary_a: "#fff", primary_b: "#fff", accent: "#fff", ygy_green: "#fff", ygy_orange: "#fff", primary_a_100: "#fa0050", primary_b_100: "#28343c", accent_100: "#0c80e4", ygy_green_100: "#05947f", ygy_orange_100: "#f04600", gray_c: "#fff" };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
       {groups.map(g => (
         <div key={g.title}>
           <div style={{ fontSize: "11px", color: "#5a5a8a", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "14px", fontWeight: 600 }}>{g.title}</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: "12px" }}>
-            {g.tokens.map(t => <ColorSwatch key={t.name} name={t.name} value={t.value} />)}
-          </div>
+          {g.textRule ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              {/* rule badge */}
+              <div style={{ display: "flex", gap: "8px", marginBottom: "4px" }}>
+                <div style={{ fontSize: "10px", color: "#5a5a8a", background: "#0c0c1e", border: "1px solid #1a1a30", padding: "2px 8px", borderRadius: "4px" }}>규칙.1 숫자 없음 → TextColor #FFF or #333</div>
+                <div style={{ fontSize: "10px", color: "#5a5a8a", background: "#0c0c1e", border: "1px solid #1a1a30", padding: "2px 8px", borderRadius: "4px" }}>규칙.2 _100 suffix → TextColor = base 색</div>
+              </div>
+              {lightPairs.map(([base, light]) => {
+                const bt = colors.light[base];
+                const lt = colors.light[light];
+                return (
+                  <div key={base} style={{ display: "flex", gap: "10px", alignItems: "stretch" }}>
+                    {/* base */}
+                    <div style={{ flex: 1, background: bt.value, borderRadius: "10px", padding: "14px 16px", display: "flex", flexDirection: "column", gap: "4px" }}>
+                      <span style={{ fontFamily: "monospace", fontSize: "10px", color: lightTextColor[base], opacity: 0.7 }}>{bt.name}</span>
+                      <span style={{ fontFamily: "monospace", fontSize: "11px", color: lightTextColor[base], fontWeight: 600 }}>버튼</span>
+                      <span style={{ fontFamily: "monospace", fontSize: "9px", color: lightTextColor[base], opacity: 0.6 }}>{bt.value.toUpperCase()}</span>
+                    </div>
+                    {/* arrow */}
+                    <div style={{ display: "flex", alignItems: "center", color: "#3a3a5a", fontSize: "12px" }}>→</div>
+                    {/* _100 */}
+                    <div style={{ flex: 1, background: lt.value, borderRadius: "10px", padding: "14px 16px", display: "flex", flexDirection: "column", gap: "4px", border: "1px solid #1a1a30" }}>
+                      <span style={{ fontFamily: "monospace", fontSize: "10px", color: lightTextColor[light], opacity: 0.7 }}>{lt.name}</span>
+                      <span style={{ fontFamily: "monospace", fontSize: "11px", color: lightTextColor[light], fontWeight: 600 }}>버튼</span>
+                      <span style={{ fontFamily: "monospace", fontSize: "9px", color: lightTextColor[light], opacity: 0.6 }}>{lt.value.toUpperCase()}</span>
+                    </div>
+                  </div>
+                );
+              })}
+              {/* gray_c 단독 */}
+              <div style={{ display: "flex", gap: "10px" }}>
+                <div style={{ width: "calc(50% - 16px)", background: colors.light.gray_c.value, borderRadius: "10px", padding: "14px 16px", display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <span style={{ fontFamily: "monospace", fontSize: "10px", color: "#fff", opacity: 0.7 }}>gray_c</span>
+                  <span style={{ fontFamily: "monospace", fontSize: "11px", color: "#fff", fontWeight: 600 }}>버튼</span>
+                  <span style={{ fontFamily: "monospace", fontSize: "9px", color: "#fff", opacity: 0.6 }}>#000000</span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: "12px" }}>
+              {g.tokens.map(t => <ColorSwatch key={t.name} name={t.name} value={t.value} />)}
+            </div>
+          )}
         </div>
       ))}
       {/* States / Overlay */}
