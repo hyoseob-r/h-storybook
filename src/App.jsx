@@ -395,12 +395,259 @@ function LabelSection() {
 
 // ── Main App ──────────────────────────────────────────────────────────────────
 
+// ── Section: Simulator ────────────────────────────────────────────────────────
+
+function PhoneFrame({ platform, children }) {
+  const isIOS = platform === "ios";
+  return (
+    <div style={{ position: "relative", width: "320px", flexShrink: 0 }}>
+      {/* Phone shell */}
+      <div style={{
+        width: "320px", height: "620px", borderRadius: isIOS ? "48px" : "36px",
+        background: isIOS ? "#1a1a1a" : "#111",
+        border: `${isIOS ? "10px" : "8px"} solid ${isIOS ? "#2a2a2a" : "#222"}`,
+        boxShadow: "0 30px 80px rgba(0,0,0,0.6), inset 0 0 0 1px #333",
+        display: "flex", flexDirection: "column", overflow: "hidden", position: "relative"
+      }}>
+        {/* Status bar */}
+        {isIOS ? (
+          <div style={{ height: "44px", background: "#fff", display: "flex", alignItems: "flex-end", justifyContent: "space-between", padding: "0 24px 8px", flexShrink: 0 }}>
+            <span style={{ fontSize: "11px", fontWeight: 700, color: "#000", fontFamily: "system-ui" }}>9:41</span>
+            <div style={{ width: "120px", height: "28px", background: "#111", borderRadius: "20px", position: "absolute", left: "50%", transform: "translateX(-50%)", top: "0" }} />
+            <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
+              <span style={{ fontSize: "9px", color: "#000" }}>●●●</span>
+              <span style={{ fontSize: "9px", color: "#000" }}>WiFi</span>
+              <span style={{ fontSize: "9px", color: "#000" }}>🔋</span>
+            </div>
+          </div>
+        ) : (
+          <div style={{ height: "28px", background: "#fff", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", flexShrink: 0 }}>
+            <span style={{ fontSize: "10px", fontWeight: 700, color: "#000", fontFamily: "Roboto, sans-serif" }}>9:41</span>
+            <div style={{ display: "flex", gap: "3px", alignItems: "center" }}>
+              <span style={{ fontSize: "8px", color: "#000" }}>▲▲▲ WiFi 🔋</span>
+            </div>
+          </div>
+        )}
+        {/* Screen content */}
+        <div style={{ flex: 1, background: "#fff", overflowY: "auto", position: "relative" }}>
+          {children}
+        </div>
+        {/* Home indicator */}
+        {isIOS ? (
+          <div style={{ height: "28px", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: "120px", height: "4px", background: "#000", borderRadius: "2px", opacity: 0.2 }} />
+          </div>
+        ) : (
+          <div style={{ height: "36px", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", gap: "24px" }}>
+            <span style={{ fontSize: "16px", opacity: 0.4 }}>◁</span>
+            <div style={{ width: "20px", height: "20px", borderRadius: "50%", border: "1.5px solid #0006" }} />
+            <span style={{ fontSize: "14px", opacity: 0.4 }}>□</span>
+          </div>
+        )}
+      </div>
+      {/* Side buttons */}
+      {isIOS ? (
+        <>
+          <div style={{ position: "absolute", right: "-14px", top: "100px", width: "4px", height: "60px", background: "#2a2a2a", borderRadius: "2px" }} />
+          <div style={{ position: "absolute", left: "-14px", top: "90px", width: "4px", height: "36px", background: "#2a2a2a", borderRadius: "2px" }} />
+          <div style={{ position: "absolute", left: "-14px", top: "138px", width: "4px", height: "56px", background: "#2a2a2a", borderRadius: "2px" }} />
+          <div style={{ position: "absolute", left: "-14px", top: "206px", width: "4px", height: "56px", background: "#2a2a2a", borderRadius: "2px" }} />
+        </>
+      ) : (
+        <>
+          <div style={{ position: "absolute", right: "-12px", top: "80px", width: "4px", height: "48px", background: "#222", borderRadius: "2px" }} />
+          <div style={{ position: "absolute", left: "-12px", top: "110px", width: "4px", height: "36px", background: "#222", borderRadius: "2px" }} />
+          <div style={{ position: "absolute", left: "-12px", top: "158px", width: "4px", height: "56px", background: "#222", borderRadius: "2px" }} />
+        </>
+      )}
+    </div>
+  );
+}
+
+function SimulatorSection() {
+  const [platform, setPlatform] = useState("ios");
+  const [canvasItems, setCanvasItems] = useState([
+    { id: 1, type: "button", variant: "primary", size: "medium", label: "주문하기" },
+    { id: 2, type: "label",  color: "primary",   size: "medium", label: "인기" },
+    { id: 3, type: "button", variant: "outline",  size: "medium", label: "장바구니" },
+  ]);
+  const [selected, setSelected] = useState(null);
+  const nextId = () => Date.now();
+
+  const addItem = (type) => {
+    const item = type === "button"
+      ? { id: nextId(), type: "button", variant: "primary", size: "medium", label: "버튼" }
+      : { id: nextId(), type: "label",  color: "primary",   size: "medium", label: "라벨" };
+    setCanvasItems(prev => [...prev, item]);
+    setSelected(item.id);
+  };
+
+  const removeItem = (id) => {
+    setCanvasItems(prev => prev.filter(i => i.id !== id));
+    if (selected === id) setSelected(null);
+  };
+
+  const updateItem = (id, key, val) => {
+    setCanvasItems(prev => prev.map(i => i.id === id ? { ...i, [key]: val } : i));
+  };
+
+  const sel = canvasItems.find(i => i.id === selected);
+
+  const bgMap  = { primary: "#fa0050", secondary: "#2591b5", outline: "transparent" };
+  const fgMap  = { primary: "#fff",    secondary: "#fff",    outline: "#fa0050" };
+  const lBgMap = { primary: "#fff5f8", secondary: "#f0f7fa", neutral: "#f6f6f6" };
+  const lFgMap = { primary: "#fa0050", secondary: "#2591b5", neutral: "#333" };
+  const fontMap = { large: "16px", medium: "14px", small: "12px" };
+  const padMap  = { large: "12px 20px", medium: "8px 16px", small: "6px 12px" };
+
+  return (
+    <div style={{ display: "flex", gap: "32px", height: "100%", alignItems: "flex-start" }}>
+      {/* Left: Controls */}
+      <div style={{ width: "220px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "16px" }}>
+        {/* Platform toggle */}
+        <div style={{ background: "#0c0c1e", border: "1px solid #1a1a30", borderRadius: "10px", padding: "14px" }}>
+          <div style={{ fontSize: "10px", color: "#5a5a8a", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "10px", fontWeight: 600 }}>Platform</div>
+          <div style={{ display: "flex", gap: "6px" }}>
+            {["ios", "android"].map(p => (
+              <button key={p} onClick={() => setPlatform(p)}
+                style={{ flex: 1, padding: "7px", borderRadius: "7px", background: platform === p ? "#1e1e3a" : "transparent", border: platform === p ? "1px solid #3a3a6a" : "1px solid #1a1a30", color: platform === p ? "#c0c0f0" : "#5a5a8a", fontSize: "11px", cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: platform === p ? 700 : 400 }}>
+                {p === "ios" ? "iOS" : "Android"}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Add components */}
+        <div style={{ background: "#0c0c1e", border: "1px solid #1a1a30", borderRadius: "10px", padding: "14px" }}>
+          <div style={{ fontSize: "10px", color: "#5a5a8a", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "10px", fontWeight: 600 }}>Add Component</div>
+          <div style={{ display: "flex", gap: "6px" }}>
+            <button onClick={() => addItem("button")}
+              style={{ flex: 1, padding: "7px", borderRadius: "7px", background: "transparent", border: "1px solid #1a1a30", color: "#7070a0", fontSize: "11px", cursor: "pointer", transition: "all 0.2s" }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = "#3a3a6a"; e.currentTarget.style.color = "#b0b0e0"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = "#1a1a30"; e.currentTarget.style.color = "#7070a0"; }}>
+              + Button
+            </button>
+            <button onClick={() => addItem("label")}
+              style={{ flex: 1, padding: "7px", borderRadius: "7px", background: "transparent", border: "1px solid #1a1a30", color: "#7070a0", fontSize: "11px", cursor: "pointer", transition: "all 0.2s" }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = "#3a3a6a"; e.currentTarget.style.color = "#b0b0e0"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = "#1a1a30"; e.currentTarget.style.color = "#7070a0"; }}>
+              + Label
+            </button>
+          </div>
+        </div>
+
+        {/* Canvas items list */}
+        <div style={{ background: "#0c0c1e", border: "1px solid #1a1a30", borderRadius: "10px", padding: "14px" }}>
+          <div style={{ fontSize: "10px", color: "#5a5a8a", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "10px", fontWeight: 600 }}>Layers</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+            {canvasItems.map(item => (
+              <div key={item.id} onClick={() => setSelected(item.id)}
+                style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 8px", borderRadius: "6px", background: selected === item.id ? "#1a1a30" : "transparent", border: selected === item.id ? "1px solid #3a3a6a" : "1px solid transparent", cursor: "pointer" }}>
+                <span style={{ fontSize: "11px", color: selected === item.id ? "#c0c0f0" : "#6060a0" }}>{item.type === "button" ? "⬚" : "◷"} {item.label}</span>
+                <button onClick={e => { e.stopPropagation(); removeItem(item.id); }}
+                  style={{ background: "none", border: "none", color: "#3a3a5a", cursor: "pointer", fontSize: "12px", padding: "0 2px" }}>×</button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Selected item properties */}
+        {sel && (
+          <div style={{ background: "#0c0c1e", border: "1px solid #1a1a30", borderRadius: "10px", padding: "14px" }}>
+            <div style={{ fontSize: "10px", color: "#5a5a8a", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "12px", fontWeight: 600 }}>Properties</div>
+
+            {/* Label text */}
+            <div style={{ marginBottom: "10px" }}>
+              <div style={{ fontSize: "10px", color: "#4a4a7a", marginBottom: "5px" }}>Text</div>
+              <input value={sel.label} onChange={e => updateItem(sel.id, "label", e.target.value)}
+                style={{ width: "100%", background: "#08081a", border: "1px solid #2a2a4a", borderRadius: "6px", padding: "6px 8px", color: "#e0e0f0", fontSize: "11px", outline: "none" }} />
+            </div>
+
+            {sel.type === "button" && (
+              <>
+                <div style={{ marginBottom: "10px" }}>
+                  <div style={{ fontSize: "10px", color: "#4a4a7a", marginBottom: "5px" }}>Variant</div>
+                  <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+                    {["primary","secondary","outline"].map(v => (
+                      <button key={v} onClick={() => updateItem(sel.id, "variant", v)}
+                        style={{ padding: "4px 8px", borderRadius: "5px", background: sel.variant === v ? "#1e1e3a" : "transparent", border: sel.variant === v ? "1px solid #3a3a6a" : "1px solid #1a1a30", color: sel.variant === v ? "#c0c0f0" : "#5a5a8a", fontSize: "10px", cursor: "pointer" }}>
+                        {v}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {sel.type === "label" && (
+              <div style={{ marginBottom: "10px" }}>
+                <div style={{ fontSize: "10px", color: "#4a4a7a", marginBottom: "5px" }}>Color</div>
+                <div style={{ display: "flex", gap: "4px" }}>
+                  {["primary","secondary","neutral"].map(c => (
+                    <button key={c} onClick={() => updateItem(sel.id, "color", c)}
+                      style={{ padding: "4px 8px", borderRadius: "5px", background: sel.color === c ? "#1e1e3a" : "transparent", border: sel.color === c ? "1px solid #3a3a6a" : "1px solid #1a1a30", color: sel.color === c ? "#c0c0f0" : "#5a5a8a", fontSize: "10px", cursor: "pointer" }}>
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div>
+              <div style={{ fontSize: "10px", color: "#4a4a7a", marginBottom: "5px" }}>Size</div>
+              <div style={{ display: "flex", gap: "4px" }}>
+                {["large","medium","small"].map(s => (
+                  <button key={s} onClick={() => updateItem(sel.id, "size", s)}
+                    style={{ padding: "4px 8px", borderRadius: "5px", background: sel.size === s ? "#1e1e3a" : "transparent", border: sel.size === s ? "1px solid #3a3a6a" : "1px solid #1a1a30", color: sel.size === s ? "#c0c0f0" : "#5a5a8a", fontSize: "10px", cursor: "pointer" }}>
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Right: Phone preview */}
+      <div style={{ flex: 1, display: "flex", justifyContent: "center", paddingTop: "8px" }}>
+        <PhoneFrame platform={platform}>
+          {/* App bar */}
+          <div style={{ padding: platform === "ios" ? "16px 16px 12px" : "12px 16px", borderBottom: "1px solid #f0f0f0", display: "flex", alignItems: "center", gap: "12px" }}>
+            <div style={{ width: "32px", height: "32px", borderRadius: platform === "ios" ? "8px" : "4px", background: "#fa0050", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ color: "#fff", fontSize: "14px", fontWeight: 700, fontFamily: "Roboto, sans-serif" }}>Y</span>
+            </div>
+            <span style={{ fontSize: platform === "ios" ? "17px" : "16px", fontWeight: 700, color: "#111", fontFamily: platform === "ios" ? "system-ui" : "Roboto, sans-serif" }}>YDS Preview</span>
+          </div>
+          {/* Component canvas */}
+          <div style={{ padding: "20px 16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+            {canvasItems.map(item => (
+              <div key={item.id} onClick={() => setSelected(item.id)}
+                style={{ outline: selected === item.id ? "2px solid #fa005066" : "none", borderRadius: "10px", display: "inline-block", cursor: "pointer" }}>
+                {item.type === "button" ? (
+                  <button style={{ padding: padMap[item.size], background: bgMap[item.variant], border: item.variant === "outline" ? "1px solid #fa0050" : "none", borderRadius: "10px", color: fgMap[item.variant], fontSize: fontMap[item.size], fontWeight: 700, cursor: "pointer", fontFamily: platform === "ios" ? "system-ui" : "Roboto, sans-serif", width: "100%" }}>
+                    {item.label}
+                  </button>
+                ) : (
+                  <span style={{ padding: item.size === "large" ? "3px 10px" : item.size === "medium" ? "2px 8px" : "1px 6px", background: lBgMap[item.color], borderRadius: "10px", color: lFgMap[item.color], fontSize: fontMap[item.size], fontWeight: 700, fontFamily: platform === "ios" ? "system-ui" : "Roboto, sans-serif" }}>
+                    {item.label}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </PhoneFrame>
+      </div>
+    </div>
+  );
+}
+
 const NAV = [
   { id: "colors",     label: "Colors",      icon: "◈" },
   { id: "typography", label: "Typography",  icon: "T" },
   { id: "spacing",    label: "Spacing",     icon: "↔" },
   { id: "button",     label: "Button",      icon: "⬚" },
   { id: "label",      label: "Label",       icon: "◷" },
+  { id: "simulator",  label: "Simulator",   icon: "📱" },
 ];
 
 export default function App() {
@@ -412,10 +659,11 @@ export default function App() {
     if (active === "spacing")    return <SpacingSection />;
     if (active === "button")     return <ButtonSection />;
     if (active === "label")      return <LabelSection />;
+    if (active === "simulator")  return <SimulatorSection />;
   };
 
-  const titles = { colors: "Color Tokens", typography: "Typography", spacing: "Spacing & Radius", button: "Button", label: "Label" };
-  const subtitles = { colors: "YDS 2.0 Customer Token", typography: "Roboto 기반 타입 스케일", spacing: "스페이싱 및 보더 라디우스", button: "버튼 컴포넌트 — 멀티 플랫폼 코드", label: "라벨 컴포넌트 — 멀티 플랫폼 코드" };
+  const titles    = { colors: "Color Tokens", typography: "Typography", spacing: "Spacing & Radius", button: "Button", label: "Label", simulator: "Simulator" };
+  const subtitles = { colors: "YDS 2.0 Customer Token", typography: "Roboto 기반 타입 스케일", spacing: "스페이싱 및 보더 라디우스", button: "버튼 컴포넌트 — 멀티 플랫폼 코드", label: "라벨 컴포넌트 — 멀티 플랫폼 코드", simulator: "iOS / Android 실시간 화면 시뮬레이션" };
 
   return (
     <div style={{ display: "flex", height: "100vh", background: "#060612", color: "#e0e0f0", fontFamily: "'Pretendard', -apple-system, sans-serif" }}>
@@ -433,7 +681,14 @@ export default function App() {
           </button>
         ))}
         <div style={{ fontSize: "9px", color: "#3a3a5a", letterSpacing: "0.15em", textTransform: "uppercase", padding: "16px 16px 6px", fontWeight: 600 }}>Components</div>
-        {NAV.slice(3).map(n => (
+        {NAV.slice(3, 5).map(n => (
+          <button key={n.id} onClick={() => setActive(n.id)}
+            style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#1a1a30" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #fa0050" : "2px solid transparent", color: active === n.id ? "#e0e0f0" : "#6060a0", fontSize: "12px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
+            <span style={{ fontSize: "13px", opacity: 0.7 }}>{n.icon}</span>{n.label}
+          </button>
+        ))}
+        <div style={{ fontSize: "9px", color: "#3a3a5a", letterSpacing: "0.15em", textTransform: "uppercase", padding: "16px 16px 6px", fontWeight: 600 }}>Simulate</div>
+        {NAV.slice(5).map(n => (
           <button key={n.id} onClick={() => setActive(n.id)}
             style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#1a1a30" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #fa0050" : "2px solid transparent", color: active === n.id ? "#e0e0f0" : "#6060a0", fontSize: "12px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
             <span style={{ fontSize: "13px", opacity: 0.7 }}>{n.icon}</span>{n.label}
