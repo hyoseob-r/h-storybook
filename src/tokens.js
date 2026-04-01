@@ -69,7 +69,9 @@ export const typography = [
 export const spacing = [
   { name: "s1", value: 2 },
   { name: "s2", value: 4 },
+  { name: "s6", value: 12 },
   { name: "s7", value: 16 },
+  { name: "s12", value: 36 },
 ];
 
 export const states = {
@@ -81,6 +83,7 @@ export const states = {
 };
 
 export const radius = [
+  { name: "r2", value: 8 },
   { name: "r3", value: 10 },
   { name: "r4", value: 12 },
 ];

@@ -340,68 +340,164 @@ function ElevationSection() {
   );
 }
 
-// ── Section: Button Component ─────────────────────────────────────────────────
+// ── LabelButton code generator (YDS 2.0) ─────────────────────────────────────
+
+function genLabelButtonCode(platform, shape, colorStyle, size, config) {
+  const h   = size === "medium" ? 48 : 36;
+  const ph  = size === "medium" ? 16 : 12;
+  const fs  = size === "medium" ? 14 : 12;
+  const r   = size === "medium" ? 10 : 8;
+
+  const bgFilled  = { primary_v2: "#FA0050", gray_v2: "#333333", gray250_v2: "#BFBFBF" };
+  const fgFilled  = { primary_v2: "#FFFFFF", gray_v2: "#FFFFFF", gray250_v2: "#333333" };
+  const accent    = { primary_v2: "#FA0050", gray_v2: "#333333", gray250_v2: "#BFBFBF" };
+
+  const bg = shape === "filled"   ? bgFilled[colorStyle]  : "transparent";
+  const fg = shape === "filled"   ? fgFilled[colorStyle]  : accent[colorStyle];
+  const border = shape === "outlined" ? accent[colorStyle] : null;
+  const iconNote = config === "labelWithIcon" ? " + icon" : "";
+
+  if (platform === "xml") return `<com.google.android.material.button.MaterialButton
+    android:layout_width="wrap_content"
+    android:layout_height="${h}dp"
+    android:text="버튼${iconNote}"
+    android:textColor="${fg}"
+    android:textSize="${fs}sp"
+    android:fontFamily="@font/roboto_bold"
+    android:paddingStart="${ph}dp"
+    android:paddingEnd="${ph}dp"
+    app:backgroundTint="${bg}"
+    app:cornerRadius="${r}dp"${shape === "outlined" ? `\n    style="@style/Widget.MaterialComponents.Button.OutlinedButton"\n    app:strokeColor="${border}"\n    app:strokeWidth="1dp"` : ""}${shape === "text" ? `\n    style="@style/Widget.MaterialComponents.Button.TextButton"` : ""} />`;
+
+  if (platform === "compose") return `Button(
+    onClick = { },
+    modifier = Modifier.height(${h}.dp),
+    colors = ButtonDefaults.buttonColors(
+        containerColor = Color(0xFF${bg.replace("#","")}),
+        contentColor = Color(0xFF${fg.replace("#","")})
+    ),
+    shape = RoundedCornerShape(${r}.dp),
+    contentPadding = PaddingValues(horizontal = ${ph}.dp),${shape === "outlined" ? `\n    border = BorderStroke(1.dp, Color(0xFF${(border||"").replace("#","")})),` : ""}
+) {${config === "labelWithIcon" ? `\n    Icon(/* icon */, contentDescription = null)\n    Spacer(Modifier.width(4.dp))` : ""}
+    Text("버튼", fontSize = ${fs}.sp, fontWeight = FontWeight.Bold)
+}`;
+
+  if (platform === "swiftui") return `Button(action: {}) {${config === "labelWithIcon" ? `\n    Label("버튼", systemImage: "pencil")` : `\n    Text("버튼")`}
+}
+.frame(height: ${h})
+.padding(.horizontal, ${ph})${shape === "filled" ? `\n.background(Color(hex: "${bg}"))\n.foregroundColor(Color(hex: "${fg}"))` : shape === "outlined" ? `\n.overlay(RoundedRectangle(cornerRadius: ${r}).stroke(Color(hex: "${border}"), lineWidth: 1))\n.foregroundColor(Color(hex: "${fg}"))` : `\n.foregroundColor(Color(hex: "${fg}"))`}
+.cornerRadius(${r})
+.font(.system(size: ${fs}, weight: .bold))`;
+
+  if (platform === "flutter") {
+    const child = config === "labelWithIcon"
+      ? `Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.edit, size: ${fs + 2}), SizedBox(width: 4), Text('버튼', style: TextStyle(fontSize: ${fs}, fontWeight: FontWeight.bold))])`
+      : `Text('버튼', style: TextStyle(fontSize: ${fs}, fontWeight: FontWeight.bold))`;
+    return `${shape === "outlined" ? "OutlinedButton" : shape === "text" ? "TextButton" : "ElevatedButton"}(
+  onPressed: () {},
+  style: ${shape === "outlined" ? "OutlinedButton" : shape === "text" ? "TextButton" : "ElevatedButton"}.styleFrom(
+    ${shape === "filled" ? `backgroundColor: Color(0xFF${bg.replace("#","")}),\n    foregroundColor: Color(0xFF${fg.replace("#","")}),` : `foregroundColor: Color(0xFF${fg.replace("#","")}),`}
+    minimumSize: Size(0, ${h}),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(${r})),
+    padding: EdgeInsets.symmetric(horizontal: ${ph}),
+  ),
+  child: ${child},
+)`;
+  }
+  return "";
+}
+
+// ── Section: LabelButton Component (YDS 2.0) ─────────────────────────────────
 
 function ButtonSection() {
-  const [variant, setVariant] = useState("primary");
-  const [size, setSize] = useState("medium");
+  const [shape, setShape]   = useState("filled");
+  const [color, setColor]   = useState("primary_v2");
+  const [size,  setSize]    = useState("medium");
+  const [config, setConfig] = useState("labelOnly");
+  const [selPlat, setSelPlat] = useState("compose");
 
-  const variants = ["primary", "secondary", "outline"];
-  const sizes = ["large", "medium", "small"];
-
-  const bgMap = { primary: "#fa0050", secondary: "#2591b5", outline: "transparent" };
-  const fgMap = { primary: "#ffffff", secondary: "#ffffff", outline: "#fa0050" };
-  const borderMap = { primary: "none", secondary: "none", outline: "1px solid #fa0050" };
-  const padMap = { large: "12px 20px", medium: "8px 16px", small: "6px 12px" };
-  const fontMap = { large: "16px", medium: "14px", small: "12px" };
-
-  const platforms = [
-    { id: "xml",     label: "Android XML",       code: genButtonCode("xml", variant, size) },
-    { id: "compose", label: "Jetpack Compose",    code: genButtonCode("compose", variant, size) },
-    { id: "swiftui", label: "SwiftUI",            code: genButtonCode("swiftui", variant, size) },
-    { id: "flutter", label: "Flutter",            code: genButtonCode("flutter", variant, size) },
+  const shapes  = ["filled", "outlined", "text"];
+  const colors3 = ["primary_v2", "gray_v2", "gray250_v2"];
+  const sizes   = ["medium", "small"];
+  const configs = ["labelOnly", "labelWithIcon"];
+  const plats   = [
+    { id: "compose", label: "Jetpack Compose" },
+    { id: "xml",     label: "Android XML" },
+    { id: "swiftui", label: "SwiftUI" },
+    { id: "flutter", label: "Flutter" },
   ];
+
+  // preview styles
+  const h   = size === "medium" ? 48 : 36;
+  const ph  = size === "medium" ? 16 : 12;
+  const fs  = size === "medium" ? 14 : 12;
+  const r   = size === "medium" ? 10 : 8;
+  const bgFilled  = { primary_v2: "#FA0050", gray_v2: "#333333", gray250_v2: "#BFBFBF" };
+  const fgFilled  = { primary_v2: "#fff",    gray_v2: "#fff",    gray250_v2: "#333" };
+  const accent    = { primary_v2: "#FA0050", gray_v2: "#333333", gray250_v2: "#BFBFBF" };
+  const previewBg = shape === "filled" ? bgFilled[color] : "transparent";
+  const previewFg = shape === "filled" ? fgFilled[color] : accent[color];
+  const previewBorder = shape === "outlined" ? `1px solid ${accent[color]}` : "none";
+
+  const code = genLabelButtonCode(selPlat, shape, color, size, config);
+
+  const ctl = (label, options, val, set) => (
+    <div>
+      <div style={{ fontSize: "10px", color: "#5a5a8a", marginBottom: "6px", letterSpacing: "0.1em", textTransform: "uppercase" }}>{label}</div>
+      <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+        {options.map(o => (
+          <button key={o} onClick={() => set(o)}
+            style={{ padding: "4px 10px", borderRadius: "6px", background: val === o ? "#1e1e3a" : "transparent", border: val === o ? "1px solid #3a3a6a" : "1px solid #1a1a30", color: val === o ? "#c0c0f0" : "#5a5a8a", fontSize: "11px", cursor: "pointer" }}>
+            {o}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+      {/* Spec badge */}
+      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+        {[["height", size === "medium" ? "48dp" : "36dp"], ["padding-h", size === "medium" ? "s7 (16dp)" : "s6 (12dp)"], ["font", size === "medium" ? "body_5 14px Bold" : "body_9 12px Bold"], ["radius", size === "medium" ? "r3 (10dp)" : "r2 (8dp)"]].map(([k, v]) => (
+          <div key={k} style={{ padding: "3px 10px", background: "#0c0c1e", border: "1px solid #1a1a30", borderRadius: "6px", fontSize: "10px", color: "#6060a0" }}>
+            <span style={{ color: "#3a3a6a" }}>{k} </span>{v}
+          </div>
+        ))}
+      </div>
+
       {/* Controls */}
-      <div style={{ display: "flex", gap: "24px", flexWrap: "wrap" }}>
-        <div>
-          <div style={{ fontSize: "10px", color: "#5a5a8a", marginBottom: "8px", letterSpacing: "0.1em", textTransform: "uppercase" }}>Variant</div>
-          <div style={{ display: "flex", gap: "4px" }}>
-            {variants.map(v => (
-              <button key={v} onClick={() => setVariant(v)}
-                style={{ padding: "5px 12px", borderRadius: "6px", background: variant === v ? "#1e1e3a" : "transparent", border: variant === v ? "1px solid #3a3a6a" : "1px solid #1a1a30", color: variant === v ? "#c0c0f0" : "#5a5a8a", fontSize: "11px", cursor: "pointer", textTransform: "capitalize" }}>
-                {v}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div>
-          <div style={{ fontSize: "10px", color: "#5a5a8a", marginBottom: "8px", letterSpacing: "0.1em", textTransform: "uppercase" }}>Size</div>
-          <div style={{ display: "flex", gap: "4px" }}>
-            {sizes.map(s => (
-              <button key={s} onClick={() => setSize(s)}
-                style={{ padding: "5px 12px", borderRadius: "6px", background: size === s ? "#1e1e3a" : "transparent", border: size === s ? "1px solid #3a3a6a" : "1px solid #1a1a30", color: size === s ? "#c0c0f0" : "#5a5a8a", fontSize: "11px", cursor: "pointer", textTransform: "capitalize" }}>
-                {s}
-              </button>
-            ))}
-          </div>
-        </div>
+      <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
+        {ctl("shapeStyle", shapes,  shape,  setShape)}
+        {ctl("colorStyle", colors3, color,  setColor)}
+        {ctl("size",       sizes,   size,   setSize)}
+        {ctl("config",     configs, config, setConfig)}
       </div>
 
       {/* Preview */}
       <div style={{ padding: "40px", background: "#0c0c1e", border: "1px solid #1a1a30", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", gap: "16px", flexWrap: "wrap" }}>
-        <button style={{ padding: padMap[size], background: bgMap[variant], border: borderMap[variant], borderRadius: "10px", color: fgMap[variant], fontSize: fontMap[size], fontWeight: 700, cursor: "pointer", fontFamily: "Roboto, sans-serif", transition: "all 0.2s" }}>
+        <button style={{ height: `${h}px`, padding: `0 ${ph}px`, background: previewBg, border: previewBorder, borderRadius: `${r}px`, color: previewFg, fontSize: `${fs}px`, fontWeight: 700, cursor: "pointer", fontFamily: "Roboto, sans-serif", display: "flex", alignItems: "center", gap: "6px" }}>
+          {config === "labelWithIcon" && <span style={{ fontSize: `${fs + 2}px` }}>✎</span>}
           버튼
         </button>
-        <button disabled style={{ padding: padMap[size], background: bgMap[variant], border: borderMap[variant], borderRadius: "10px", color: fgMap[variant], fontSize: fontMap[size], fontWeight: 700, cursor: "not-allowed", fontFamily: "Roboto, sans-serif", opacity: 0.4 }}>
-          비활성
+        <button disabled style={{ height: `${h}px`, padding: `0 ${ph}px`, background: previewBg, border: previewBorder, borderRadius: `${r}px`, color: previewFg, fontSize: `${fs}px`, fontWeight: 700, cursor: "not-allowed", fontFamily: "Roboto, sans-serif", opacity: 0.35, display: "flex", alignItems: "center", gap: "6px" }}>
+          {config === "labelWithIcon" && <span style={{ fontSize: `${fs + 2}px` }}>✎</span>}
+          disabled
         </button>
       </div>
 
-      {/* Code */}
-      <PlatformTabs tabs={platforms} />
+      {/* Platform code */}
+      <div style={{ display: "flex", gap: "4px", marginBottom: "-16px" }}>
+        {plats.map(p => (
+          <button key={p.id} onClick={() => setSelPlat(p.id)}
+            style={{ padding: "5px 12px", borderRadius: "6px 6px 0 0", background: selPlat === p.id ? "#0c0c1e" : "transparent", border: selPlat === p.id ? "1px solid #1a1a30" : "1px solid transparent", borderBottom: selPlat === p.id ? "1px solid #0c0c1e" : "none", color: selPlat === p.id ? "#c0c0f0" : "#5a5a8a", fontSize: "11px", cursor: "pointer" }}>
+            {p.label}
+          </button>
+        ))}
+      </div>
+      <pre style={{ background: "#0c0c1e", border: "1px solid #1a1a30", borderRadius: "0 8px 8px 8px", padding: "16px", fontSize: "12px", color: "#9090d0", fontFamily: "monospace", overflowX: "auto", lineHeight: 1.65, margin: 0 }}>
+        {code}
+      </pre>
     </div>
   );
 }
