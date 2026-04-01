@@ -393,79 +393,118 @@ function LabelSection() {
   );
 }
 
-// ── Main App ──────────────────────────────────────────────────────────────────
+// ── Device definitions ────────────────────────────────────────────────────────
+
+const DEVICES = {
+  ios: [
+    { name: "iPhone SE (3rd)",     w: 375, h: 667 },
+    { name: "iPhone 13 mini",      w: 360, h: 780 },
+    { name: "iPhone 13",           w: 390, h: 844 },
+    { name: "iPhone 13 Pro",       w: 390, h: 844 },
+    { name: "iPhone 13 Pro Max",   w: 428, h: 926 },
+    { name: "iPhone 14",           w: 390, h: 844 },
+    { name: "iPhone 14 Plus",      w: 428, h: 926 },
+    { name: "iPhone 14 Pro",       w: 393, h: 852 },
+    { name: "iPhone 14 Pro Max",   w: 430, h: 932 },
+    { name: "iPhone 15",           w: 393, h: 852 },
+    { name: "iPhone 15 Plus",      w: 430, h: 932 },
+    { name: "iPhone 15 Pro",       w: 393, h: 852 },
+    { name: "iPhone 15 Pro Max",   w: 430, h: 932 },
+    { name: "iPhone 16",           w: 393, h: 852 },
+    { name: "iPhone 16 Plus",      w: 430, h: 932 },
+    { name: "iPhone 16 Pro",       w: 402, h: 874 },
+    { name: "iPhone 16 Pro Max",   w: 440, h: 956 },
+  ],
+  android: [
+    { name: "Nokia 1 (320dp)",     w: 320, h: 569  },
+    { name: "Galaxy A54 (360dp)",  w: 360, h: 780  },
+    { name: "Galaxy S20 (412dp)",  w: 412, h: 915  },
+  ],
+};
 
 // ── Section: Simulator ────────────────────────────────────────────────────────
 
-function PhoneFrame({ platform, children }) {
+const MAX_FRAME_H = 560;
+
+function PhoneFrame({ platform, device, children }) {
   const isIOS = platform === "ios";
+  const scale = MAX_FRAME_H / device.h;
+  const fw = Math.round(device.w * scale);
+  const fh = MAX_FRAME_H;
+  const border = isIOS ? 10 : 8;
+  const radius = isIOS ? Math.round(48 * scale) : Math.round(36 * scale);
   return (
-    <div style={{ position: "relative", width: "320px", flexShrink: 0 }}>
-      {/* Phone shell */}
-      <div style={{
-        width: "320px", height: "620px", borderRadius: isIOS ? "48px" : "36px",
-        background: isIOS ? "#1a1a1a" : "#111",
-        border: `${isIOS ? "10px" : "8px"} solid ${isIOS ? "#2a2a2a" : "#222"}`,
-        boxShadow: "0 30px 80px rgba(0,0,0,0.6), inset 0 0 0 1px #333",
-        display: "flex", flexDirection: "column", overflow: "hidden", position: "relative"
-      }}>
-        {/* Status bar */}
-        {isIOS ? (
-          <div style={{ height: "44px", background: "#fff", display: "flex", alignItems: "flex-end", justifyContent: "space-between", padding: "0 24px 8px", flexShrink: 0 }}>
-            <span style={{ fontSize: "11px", fontWeight: 700, color: "#000", fontFamily: "system-ui" }}>9:41</span>
-            <div style={{ width: "120px", height: "28px", background: "#111", borderRadius: "20px", position: "absolute", left: "50%", transform: "translateX(-50%)", top: "0" }} />
-            <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
-              <span style={{ fontSize: "9px", color: "#000" }}>●●●</span>
-              <span style={{ fontSize: "9px", color: "#000" }}>WiFi</span>
-              <span style={{ fontSize: "9px", color: "#000" }}>🔋</span>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
+      {/* Device label */}
+      <div style={{ fontSize: "10px", color: "#4a4a7a", letterSpacing: "0.1em" }}>
+        {device.name} · {device.w} × {device.h}dp
+      </div>
+      <div style={{ position: "relative", width: `${fw}px`, flexShrink: 0 }}>
+        {/* Phone shell */}
+        <div style={{
+          width: `${fw}px`, height: `${fh}px`, borderRadius: `${radius}px`,
+          background: isIOS ? "#1a1a1a" : "#111",
+          border: `${border}px solid ${isIOS ? "#2a2a2a" : "#222"}`,
+          boxShadow: "0 30px 80px rgba(0,0,0,0.6), inset 0 0 0 1px #333",
+          display: "flex", flexDirection: "column", overflow: "hidden", position: "relative"
+        }}>
+          {/* Status bar */}
+          {isIOS ? (
+            <div style={{ height: `${Math.round(44 * scale)}px`, background: "#fff", display: "flex", alignItems: "flex-end", justifyContent: "space-between", padding: `0 ${Math.round(24*scale)}px ${Math.round(8*scale)}px`, flexShrink: 0 }}>
+              <span style={{ fontSize: `${Math.round(11*scale)}px`, fontWeight: 700, color: "#000", fontFamily: "system-ui" }}>9:41</span>
+              <div style={{ width: `${Math.round(100*scale)}px`, height: `${Math.round(26*scale)}px`, background: "#111", borderRadius: `${Math.round(20*scale)}px`, position: "absolute", left: "50%", transform: "translateX(-50%)", top: "0" }} />
+              <div style={{ display: "flex", gap: "3px", alignItems: "center" }}>
+                <span style={{ fontSize: `${Math.round(9*scale)}px`, color: "#000" }}>●●● WiFi 🔋</span>
+              </div>
+            </div>
+          ) : (
+            <div style={{ height: `${Math.round(28*scale)}px`, background: "#fff", display: "flex", alignItems: "center", justifyContent: "space-between", padding: `0 ${Math.round(16*scale)}px`, flexShrink: 0 }}>
+              <span style={{ fontSize: `${Math.round(10*scale)}px`, fontWeight: 700, color: "#000", fontFamily: "Roboto, sans-serif" }}>9:41</span>
+              <span style={{ fontSize: `${Math.round(8*scale)}px`, color: "#000" }}>▲▲▲ WiFi 🔋</span>
+            </div>
+          )}
+          {/* Screen content — scaled via transform */}
+          <div style={{ flex: 1, background: "#fff", overflow: "hidden", position: "relative" }}>
+            <div style={{ transformOrigin: "top left", transform: `scale(${scale})`, width: `${device.w}px`, height: `${Math.round(device.h * (1 - (isIOS ? 72 : 64) / device.h))}px`, overflowY: "auto" }}>
+              {children}
             </div>
           </div>
-        ) : (
-          <div style={{ height: "28px", background: "#fff", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", flexShrink: 0 }}>
-            <span style={{ fontSize: "10px", fontWeight: 700, color: "#000", fontFamily: "Roboto, sans-serif" }}>9:41</span>
-            <div style={{ display: "flex", gap: "3px", alignItems: "center" }}>
-              <span style={{ fontSize: "8px", color: "#000" }}>▲▲▲ WiFi 🔋</span>
+          {/* Home indicator */}
+          {isIOS ? (
+            <div style={{ height: `${Math.round(28*scale)}px`, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ width: `${Math.round(100*scale)}px`, height: `${Math.round(4*scale)}px`, background: "#000", borderRadius: "2px", opacity: 0.2 }} />
             </div>
-          </div>
-        )}
-        {/* Screen content */}
-        <div style={{ flex: 1, background: "#fff", overflowY: "auto", position: "relative" }}>
-          {children}
+          ) : (
+            <div style={{ height: `${Math.round(36*scale)}px`, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", gap: `${Math.round(20*scale)}px` }}>
+              <span style={{ fontSize: `${Math.round(14*scale)}px`, opacity: 0.4 }}>◁</span>
+              <div style={{ width: `${Math.round(18*scale)}px`, height: `${Math.round(18*scale)}px`, borderRadius: "50%", border: "1.5px solid #0006" }} />
+              <span style={{ fontSize: `${Math.round(12*scale)}px`, opacity: 0.4 }}>□</span>
+            </div>
+          )}
         </div>
-        {/* Home indicator */}
+        {/* Side buttons */}
         {isIOS ? (
-          <div style={{ height: "28px", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <div style={{ width: "120px", height: "4px", background: "#000", borderRadius: "2px", opacity: 0.2 }} />
-          </div>
+          <>
+            <div style={{ position: "absolute", right: `-${border+4}px`, top: `${Math.round(100*scale)}px`, width: "3px", height: `${Math.round(60*scale)}px`, background: "#2a2a2a", borderRadius: "2px" }} />
+            <div style={{ position: "absolute", left: `-${border+4}px`, top: `${Math.round(90*scale)}px`, width: "3px", height: `${Math.round(32*scale)}px`, background: "#2a2a2a", borderRadius: "2px" }} />
+            <div style={{ position: "absolute", left: `-${border+4}px`, top: `${Math.round(135*scale)}px`, width: "3px", height: `${Math.round(52*scale)}px`, background: "#2a2a2a", borderRadius: "2px" }} />
+            <div style={{ position: "absolute", left: `-${border+4}px`, top: `${Math.round(200*scale)}px`, width: "3px", height: `${Math.round(52*scale)}px`, background: "#2a2a2a", borderRadius: "2px" }} />
+          </>
         ) : (
-          <div style={{ height: "36px", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", gap: "24px" }}>
-            <span style={{ fontSize: "16px", opacity: 0.4 }}>◁</span>
-            <div style={{ width: "20px", height: "20px", borderRadius: "50%", border: "1.5px solid #0006" }} />
-            <span style={{ fontSize: "14px", opacity: 0.4 }}>□</span>
-          </div>
+          <>
+            <div style={{ position: "absolute", right: `-${border+4}px`, top: `${Math.round(80*scale)}px`, width: "3px", height: `${Math.round(44*scale)}px`, background: "#222", borderRadius: "2px" }} />
+            <div style={{ position: "absolute", left: `-${border+4}px`, top: `${Math.round(110*scale)}px`, width: "3px", height: `${Math.round(32*scale)}px`, background: "#222", borderRadius: "2px" }} />
+            <div style={{ position: "absolute", left: `-${border+4}px`, top: `${Math.round(155*scale)}px`, width: "3px", height: `${Math.round(52*scale)}px`, background: "#222", borderRadius: "2px" }} />
+          </>
         )}
       </div>
-      {/* Side buttons */}
-      {isIOS ? (
-        <>
-          <div style={{ position: "absolute", right: "-14px", top: "100px", width: "4px", height: "60px", background: "#2a2a2a", borderRadius: "2px" }} />
-          <div style={{ position: "absolute", left: "-14px", top: "90px", width: "4px", height: "36px", background: "#2a2a2a", borderRadius: "2px" }} />
-          <div style={{ position: "absolute", left: "-14px", top: "138px", width: "4px", height: "56px", background: "#2a2a2a", borderRadius: "2px" }} />
-          <div style={{ position: "absolute", left: "-14px", top: "206px", width: "4px", height: "56px", background: "#2a2a2a", borderRadius: "2px" }} />
-        </>
-      ) : (
-        <>
-          <div style={{ position: "absolute", right: "-12px", top: "80px", width: "4px", height: "48px", background: "#222", borderRadius: "2px" }} />
-          <div style={{ position: "absolute", left: "-12px", top: "110px", width: "4px", height: "36px", background: "#222", borderRadius: "2px" }} />
-          <div style={{ position: "absolute", left: "-12px", top: "158px", width: "4px", height: "56px", background: "#222", borderRadius: "2px" }} />
-        </>
-      )}
     </div>
   );
 }
 
 function SimulatorSection() {
   const [platform, setPlatform] = useState("ios");
+  const [deviceIdx, setDeviceIdx] = useState(0);
   const [canvasItems, setCanvasItems] = useState([
     { id: 1, type: "button", variant: "primary", size: "medium", label: "주문하기" },
     { id: 2, type: "label",  color: "primary",   size: "medium", label: "인기" },
@@ -504,17 +543,24 @@ function SimulatorSection() {
     <div style={{ display: "flex", gap: "32px", height: "100%", alignItems: "flex-start" }}>
       {/* Left: Controls */}
       <div style={{ width: "220px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "16px" }}>
-        {/* Platform toggle */}
+        {/* Platform + Device */}
         <div style={{ background: "#0c0c1e", border: "1px solid #1a1a30", borderRadius: "10px", padding: "14px" }}>
           <div style={{ fontSize: "10px", color: "#5a5a8a", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "10px", fontWeight: 600 }}>Platform</div>
-          <div style={{ display: "flex", gap: "6px" }}>
+          <div style={{ display: "flex", gap: "6px", marginBottom: "12px" }}>
             {["ios", "android"].map(p => (
-              <button key={p} onClick={() => setPlatform(p)}
+              <button key={p} onClick={() => { setPlatform(p); setDeviceIdx(0); }}
                 style={{ flex: 1, padding: "7px", borderRadius: "7px", background: platform === p ? "#1e1e3a" : "transparent", border: platform === p ? "1px solid #3a3a6a" : "1px solid #1a1a30", color: platform === p ? "#c0c0f0" : "#5a5a8a", fontSize: "11px", cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: platform === p ? 700 : 400 }}>
                 {p === "ios" ? "iOS" : "Android"}
               </button>
             ))}
           </div>
+          <div style={{ fontSize: "10px", color: "#5a5a8a", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "8px", fontWeight: 600 }}>Device</div>
+          <select value={deviceIdx} onChange={e => setDeviceIdx(Number(e.target.value))}
+            style={{ width: "100%", background: "#08081a", border: "1px solid #2a2a4a", borderRadius: "6px", padding: "6px 8px", color: "#c0c0f0", fontSize: "11px", outline: "none", cursor: "pointer" }}>
+            {DEVICES[platform].map((d, i) => (
+              <option key={i} value={i}>{d.name} ({d.w}×{d.h})</option>
+            ))}
+          </select>
         </div>
 
         {/* Add components */}
@@ -610,7 +656,7 @@ function SimulatorSection() {
 
       {/* Right: Phone preview */}
       <div style={{ flex: 1, display: "flex", justifyContent: "center", paddingTop: "8px" }}>
-        <PhoneFrame platform={platform}>
+        <PhoneFrame platform={platform} device={DEVICES[platform][deviceIdx]}>
           {/* App bar */}
           <div style={{ padding: platform === "ios" ? "16px 16px 12px" : "12px 16px", borderBottom: "1px solid #f0f0f0", display: "flex", alignItems: "center", gap: "12px" }}>
             <div style={{ width: "32px", height: "32px", borderRadius: platform === "ios" ? "8px" : "4px", background: "#fa0050", display: "flex", alignItems: "center", justifyContent: "center" }}>
