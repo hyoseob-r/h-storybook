@@ -355,7 +355,9 @@ function genLabelButtonCode(platform, shape, colorStyle, size, config) {
   const bg = shape === "filled"   ? bgFilled[colorStyle]  : "transparent";
   const fg = shape === "filled"   ? fgFilled[colorStyle]  : accent[colorStyle];
   const border = shape === "outlined" ? accent[colorStyle] : null;
-  const iconNote = config === "labelWithIcon" ? " + icon" : "";
+  const hasLeftIcon  = config === "labelWithLeftIcon";
+  const hasRightIcon = config === "labelWithRightIcon";
+  const iconNote = hasLeftIcon ? " (leftIcon)" : hasRightIcon ? " (rightIcon)" : "";
 
   if (platform === "xml") return `<com.google.android.material.button.MaterialButton
     android:layout_width="wrap_content"
@@ -378,11 +380,11 @@ function genLabelButtonCode(platform, shape, colorStyle, size, config) {
     ),
     shape = RoundedCornerShape(${r}.dp),
     contentPadding = PaddingValues(horizontal = ${ph}.dp),${shape === "outlined" ? `\n    border = BorderStroke(1.dp, Color(0xFF${(border||"").replace("#","")})),` : ""}
-) {${config === "labelWithIcon" ? `\n    Icon(/* icon */, contentDescription = null)\n    Spacer(Modifier.width(4.dp))` : ""}
-    Text("버튼", fontSize = ${fs}.sp, fontWeight = FontWeight.Bold)
+) {${hasLeftIcon ? `\n    Icon(/* leftIcon */, contentDescription = null)\n    Spacer(Modifier.width(4.dp))` : ""}
+    Text("버튼", fontSize = ${fs}.sp, fontWeight = FontWeight.Bold)${hasRightIcon ? `\n    Spacer(Modifier.width(4.dp))\n    Icon(Icons.Default.ChevronRight, contentDescription = null)` : ""}
 }`;
 
-  if (platform === "swiftui") return `Button(action: {}) {${config === "labelWithIcon" ? `\n    Label("버튼", systemImage: "pencil")` : `\n    Text("버튼")`}
+  if (platform === "swiftui") return `Button(action: {}) {${hasLeftIcon ? `\n    HStack(spacing: 4) {\n        Image(systemName: "pencil")\n        Text("버튼")\n    }` : hasRightIcon ? `\n    HStack(spacing: 4) {\n        Text("버튼")\n        Image(systemName: "chevron.right")\n    }` : `\n    Text("버튼")`}
 }
 .frame(height: ${h})
 .padding(.horizontal, ${ph})${shape === "filled" ? `\n.background(Color(hex: "${bg}"))\n.foregroundColor(Color(hex: "${fg}"))` : shape === "outlined" ? `\n.overlay(RoundedRectangle(cornerRadius: ${r}).stroke(Color(hex: "${border}"), lineWidth: 1))\n.foregroundColor(Color(hex: "${fg}"))` : `\n.foregroundColor(Color(hex: "${fg}"))`}
@@ -390,8 +392,10 @@ function genLabelButtonCode(platform, shape, colorStyle, size, config) {
 .font(.system(size: ${fs}, weight: .bold))`;
 
   if (platform === "flutter") {
-    const child = config === "labelWithIcon"
+    const child = hasLeftIcon
       ? `Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.edit, size: ${fs + 2}), SizedBox(width: 4), Text('버튼', style: TextStyle(fontSize: ${fs}, fontWeight: FontWeight.bold))])`
+      : hasRightIcon
+      ? `Row(mainAxisSize: MainAxisSize.min, children: [Text('버튼', style: TextStyle(fontSize: ${fs}, fontWeight: FontWeight.bold)), SizedBox(width: 4), Icon(Icons.chevron_right, size: ${fs + 2})])`
       : `Text('버튼', style: TextStyle(fontSize: ${fs}, fontWeight: FontWeight.bold))`;
     return `${shape === "outlined" ? "OutlinedButton" : shape === "text" ? "TextButton" : "ElevatedButton"}(
   onPressed: () {},
@@ -409,57 +413,78 @@ function genLabelButtonCode(platform, shape, colorStyle, size, config) {
 
 // ── Section: LabelButton Component (YDS 2.0) ─────────────────────────────────
 
-function ButtonSection() {
-  const [shape, setShape]   = useState("filled");
-  const [color, setColor]   = useState("primary_v2");
-  const [size,  setSize]    = useState("medium");
-  const [config, setConfig] = useState("labelOnly");
-  const [selPlat, setSelPlat] = useState("compose");
+// shapeStyle → 허용된 colorStyle (YDS 2.0 스펙)
+const ALLOWED_COLORS = {
+  filled:   ["primary_v2"],
+  outlined: ["primary_v2", "gray250_v2"],
+  text:     ["gray_v2"],
+};
 
-  const shapes  = ["filled", "outlined", "text"];
-  const colors3 = ["primary_v2", "gray_v2", "gray250_v2"];
-  const sizes   = ["medium", "small"];
+function ButtonSection() {
+  const [shape,   setShapeRaw] = useState("filled");
+  const [color,   setColor]    = useState("primary_v2");
+  const [size,    setSize]     = useState("medium");
+  const [config,  setConfig]   = useState("labelOnly");
+  const [iconPos, setIconPos]  = useState("left");   // "left" | "right"
+  const [selPlat, setSelPlat]  = useState("compose");
+
+  // shapeStyle 변경 시 허용 colorStyle로 자동 리셋
+  const setShape = (s) => {
+    setShapeRaw(s);
+    const allowed = ALLOWED_COLORS[s];
+    if (!allowed.includes(color)) setColor(allowed[0]);
+  };
+
+  const shapes = ["filled", "outlined", "text"];
+  const sizes  = ["medium", "small"];
   const configs = ["labelOnly", "labelWithIcon"];
-  const plats   = [
+  const plats  = [
     { id: "compose", label: "Jetpack Compose" },
     { id: "xml",     label: "Android XML" },
     { id: "swiftui", label: "SwiftUI" },
     { id: "flutter", label: "Flutter" },
   ];
 
-  // preview styles
-  const h   = size === "medium" ? 48 : 36;
-  const ph  = size === "medium" ? 16 : 12;
-  const fs  = size === "medium" ? 14 : 12;
-  const r   = size === "medium" ? 10 : 8;
-  const bgFilled  = { primary_v2: "#FA0050", gray_v2: "#333333", gray250_v2: "#BFBFBF" };
-  const fgFilled  = { primary_v2: "#fff",    gray_v2: "#fff",    gray250_v2: "#333" };
-  const accent    = { primary_v2: "#FA0050", gray_v2: "#333333", gray250_v2: "#BFBFBF" };
-  const previewBg = shape === "filled" ? bgFilled[color] : "transparent";
-  const previewFg = shape === "filled" ? fgFilled[color] : accent[color];
+  // preview
+  const h  = size === "medium" ? 48 : 36;
+  const ph = size === "medium" ? 16 : 12;
+  const fs = size === "medium" ? 14 : 12;
+  const r  = size === "medium" ? 10 : 8;
+  const bgFilled = { primary_v2: "#FA0050", gray_v2: "#333333", gray250_v2: "#BFBFBF" };
+  const fgFilled = { primary_v2: "#fff",    gray_v2: "#fff",    gray250_v2: "#333" };
+  const accent   = { primary_v2: "#FA0050", gray_v2: "#333333", gray250_v2: "#BFBFBF" };
+  const previewBg     = shape === "filled"   ? bgFilled[color] : "transparent";
+  const previewFg     = shape === "filled"   ? fgFilled[color] : accent[color];
   const previewBorder = shape === "outlined" ? `1px solid ${accent[color]}` : "none";
 
-  const code = genLabelButtonCode(selPlat, shape, color, size, config);
+  const iconEl = <span style={{ fontSize: `${fs + 2}px`, lineHeight: 1 }}>✎</span>;
+  const configForCode = config === "labelWithIcon"
+    ? (iconPos === "left" ? "labelWithLeftIcon" : "labelWithRightIcon")
+    : "labelOnly";
+  const code = genLabelButtonCode(selPlat, shape, color, size, configForCode);
 
-  const ctl = (label, options, val, set) => (
+  const ctl = (label, options, val, set, allowedSet) => (
     <div>
       <div style={{ fontSize: "10px", color: "#5a5a8a", marginBottom: "6px", letterSpacing: "0.1em", textTransform: "uppercase" }}>{label}</div>
       <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
-        {options.map(o => (
-          <button key={o} onClick={() => set(o)}
-            style={{ padding: "4px 10px", borderRadius: "6px", background: val === o ? "#1e1e3a" : "transparent", border: val === o ? "1px solid #3a3a6a" : "1px solid #1a1a30", color: val === o ? "#c0c0f0" : "#5a5a8a", fontSize: "11px", cursor: "pointer" }}>
-            {o}
-          </button>
-        ))}
+        {options.map(o => {
+          const disabled = allowedSet && !allowedSet.includes(o);
+          return (
+            <button key={o} onClick={() => !disabled && set(o)} disabled={disabled}
+              style={{ padding: "4px 10px", borderRadius: "6px", background: val === o ? "#1e1e3a" : "transparent", border: val === o ? "1px solid #3a3a6a" : "1px solid #1a1a30", color: disabled ? "#2a2a4a" : val === o ? "#c0c0f0" : "#5a5a8a", fontSize: "11px", cursor: disabled ? "default" : "pointer", textDecoration: disabled ? "line-through" : "none" }}>
+              {o}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-      {/* Spec badge */}
+      {/* Spec badges */}
       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-        {[["height", size === "medium" ? "48dp" : "36dp"], ["padding-h", size === "medium" ? "s7 (16dp)" : "s6 (12dp)"], ["font", size === "medium" ? "body_5 14px Bold" : "body_9 12px Bold"], ["radius", size === "medium" ? "r3 (10dp)" : "r2 (8dp)"]].map(([k, v]) => (
+        {[["height", size === "medium" ? "48dp" : "36dp"], ["padding-h", size === "medium" ? "s7 · 16dp" : "s6 · 12dp"], ["font", size === "medium" ? "body_5 · 14px Bold" : "body_9 · 12px Bold"], ["radius", size === "medium" ? "r3 · 10dp" : "r2 · 8dp"]].map(([k, v]) => (
           <div key={k} style={{ padding: "3px 10px", background: "#0c0c1e", border: "1px solid #1a1a30", borderRadius: "6px", fontSize: "10px", color: "#6060a0" }}>
             <span style={{ color: "#3a3a6a" }}>{k} </span>{v}
           </div>
@@ -467,26 +492,37 @@ function ButtonSection() {
       </div>
 
       {/* Controls */}
-      <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
-        {ctl("shapeStyle", shapes,  shape,  setShape)}
-        {ctl("colorStyle", colors3, color,  setColor)}
-        {ctl("size",       sizes,   size,   setSize)}
-        {ctl("config",     configs, config, setConfig)}
+      <div style={{ display: "flex", gap: "20px", flexWrap: "wrap", alignItems: "flex-start" }}>
+        {ctl("shapeStyle", shapes,   shape,  setShape)}
+        {ctl("colorStyle", ["primary_v2","gray_v2","gray250_v2"], color, setColor, ALLOWED_COLORS[shape])}
+        {ctl("size",       sizes,    size,   setSize)}
+        {ctl("config",     configs,  config, setConfig)}
+        {config === "labelWithIcon" && ctl("iconPos", ["left","right"], iconPos, setIconPos)}
       </div>
 
       {/* Preview */}
       <div style={{ padding: "40px", background: "#0c0c1e", border: "1px solid #1a1a30", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", gap: "16px", flexWrap: "wrap" }}>
-        <button style={{ height: `${h}px`, padding: `0 ${ph}px`, background: previewBg, border: previewBorder, borderRadius: `${r}px`, color: previewFg, fontSize: `${fs}px`, fontWeight: 700, cursor: "pointer", fontFamily: "Roboto, sans-serif", display: "flex", alignItems: "center", gap: "6px" }}>
-          {config === "labelWithIcon" && <span style={{ fontSize: `${fs + 2}px` }}>✎</span>}
-          버튼
-        </button>
-        <button disabled style={{ height: `${h}px`, padding: `0 ${ph}px`, background: previewBg, border: previewBorder, borderRadius: `${r}px`, color: previewFg, fontSize: `${fs}px`, fontWeight: 700, cursor: "not-allowed", fontFamily: "Roboto, sans-serif", opacity: 0.35, display: "flex", alignItems: "center", gap: "6px" }}>
-          {config === "labelWithIcon" && <span style={{ fontSize: `${fs + 2}px` }}>✎</span>}
-          disabled
-        </button>
+        {/* enabled */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
+          <button style={{ height: `${h}px`, padding: `0 ${ph}px`, background: previewBg, border: previewBorder, borderRadius: `${r}px`, color: previewFg, fontSize: `${fs}px`, fontWeight: 700, cursor: "pointer", fontFamily: "Roboto, sans-serif", display: "flex", alignItems: "center", gap: "5px" }}>
+            {config === "labelWithIcon" && iconPos === "left" && iconEl}
+            버튼
+            {config === "labelWithIcon" && iconPos === "right" && iconEl}
+          </button>
+          <span style={{ fontSize: "9px", color: "#3a3a5a", letterSpacing: "0.1em" }}>ENABLED</span>
+        </div>
+        {/* disabled */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
+          <button disabled style={{ height: `${h}px`, padding: `0 ${ph}px`, background: previewBg, border: previewBorder, borderRadius: `${r}px`, color: previewFg, fontSize: `${fs}px`, fontWeight: 700, cursor: "not-allowed", fontFamily: "Roboto, sans-serif", opacity: 0.35, display: "flex", alignItems: "center", gap: "5px" }}>
+            {config === "labelWithIcon" && iconPos === "left" && iconEl}
+            버튼
+            {config === "labelWithIcon" && iconPos === "right" && iconEl}
+          </button>
+          <span style={{ fontSize: "9px", color: "#3a3a5a", letterSpacing: "0.1em" }}>DISABLED</span>
+        </div>
       </div>
 
-      {/* Platform code */}
+      {/* Platform tabs */}
       <div style={{ display: "flex", gap: "4px", marginBottom: "-16px" }}>
         {plats.map(p => (
           <button key={p.id} onClick={() => setSelPlat(p.id)}
