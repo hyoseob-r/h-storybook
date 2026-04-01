@@ -433,68 +433,76 @@ function PhoneFrame({ platform, device, children }) {
   const fh = MAX_FRAME_H;
   const border = isIOS ? 10 : 8;
   const radius = isIOS ? Math.round(48 * scale) : Math.round(36 * scale);
+  // 폰 전체를 실제 dp 크기로 렌더링 후 scale로 축소
+  const totalW = device.w + border * 2;
+  const totalH = device.h + border * 2;
+
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
       {/* Device label */}
       <div style={{ fontSize: "10px", color: "#4a4a7a", letterSpacing: "0.1em" }}>
         {device.name} · {device.w} × {device.h}dp
       </div>
-      <div style={{ position: "relative", width: `${fw}px`, flexShrink: 0 }}>
-        {/* Phone shell */}
-        <div style={{
-          width: `${fw}px`, height: `${fh}px`, borderRadius: `${radius}px`,
-          background: isIOS ? "#1a1a1a" : "#111",
-          border: `${border}px solid ${isIOS ? "#2a2a2a" : "#222"}`,
-          boxShadow: "0 30px 80px rgba(0,0,0,0.6), inset 0 0 0 1px #333",
-          display: "flex", flexDirection: "column", overflow: "hidden", position: "relative"
-        }}>
-          {/* Status bar */}
-          {isIOS ? (
-            <div style={{ height: `${Math.round(44 * scale)}px`, background: "#fff", display: "flex", alignItems: "flex-end", justifyContent: "space-between", padding: `0 ${Math.round(24*scale)}px ${Math.round(8*scale)}px`, flexShrink: 0 }}>
-              <span style={{ fontSize: `${Math.round(11*scale)}px`, fontWeight: 700, color: "#000", fontFamily: "system-ui" }}>9:41</span>
-              <div style={{ width: `${Math.round(100*scale)}px`, height: `${Math.round(26*scale)}px`, background: "#111", borderRadius: `${Math.round(20*scale)}px`, position: "absolute", left: "50%", transform: "translateX(-50%)", top: "0" }} />
-              <div style={{ display: "flex", gap: "3px", alignItems: "center" }}>
-                <span style={{ fontSize: `${Math.round(9*scale)}px`, color: "#000" }}>●●● WiFi 🔋</span>
+      {/* Layout placeholder — actual size after scale */}
+      <div style={{ width: `${totalW * scale}px`, height: `${totalH * scale}px`, position: "relative", flexShrink: 0 }}>
+        {/* Phone at full dp size, scaled down */}
+        <div style={{ transformOrigin: "top left", transform: `scale(${scale})`, position: "absolute", top: 0, left: 0, width: `${totalW}px` }}>
+          <div style={{ position: "relative", width: `${device.w}px` }}>
+            {/* Phone shell */}
+            <div style={{
+              width: `${device.w}px`, height: `${device.h}px`, borderRadius: isIOS ? "48px" : "36px",
+              background: isIOS ? "#1a1a1a" : "#111",
+              border: `${border}px solid ${isIOS ? "#2a2a2a" : "#222"}`,
+              boxShadow: "0 30px 80px rgba(0,0,0,0.6), inset 0 0 0 1px #333",
+              display: "flex", flexDirection: "column", overflow: "hidden", position: "relative"
+            }}>
+              {/* Status bar */}
+              {isIOS ? (
+                <div style={{ height: "44px", background: "#fff", display: "flex", alignItems: "flex-end", justifyContent: "space-between", padding: "0 24px 8px", flexShrink: 0 }}>
+                  <span style={{ fontSize: "11px", fontWeight: 700, color: "#000", fontFamily: "system-ui" }}>9:41</span>
+                  <div style={{ width: "100px", height: "26px", background: "#111", borderRadius: "20px", position: "absolute", left: "50%", transform: "translateX(-50%)", top: "0" }} />
+                  <span style={{ fontSize: "9px", color: "#000" }}>●●● WiFi 🔋</span>
+                </div>
+              ) : (
+                <div style={{ height: "28px", background: "#fff", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", flexShrink: 0 }}>
+                  <span style={{ fontSize: "10px", fontWeight: 700, color: "#000", fontFamily: "Roboto, sans-serif" }}>9:41</span>
+                  <span style={{ fontSize: "8px", color: "#000" }}>▲▲▲ WiFi 🔋</span>
+                </div>
+              )}
+              {/* Screen content — renders at actual dp */}
+              <div style={{ flex: 1, background: "#fff", overflowY: "auto", overflowX: "hidden" }}>
+                {children}
               </div>
+              {/* Home indicator */}
+              {isIOS ? (
+                <div style={{ height: "28px", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{ width: "100px", height: "4px", background: "#000", borderRadius: "2px", opacity: 0.2 }} />
+                </div>
+              ) : (
+                <div style={{ height: "36px", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", gap: "20px" }}>
+                  <span style={{ fontSize: "14px", opacity: 0.4 }}>◁</span>
+                  <div style={{ width: "18px", height: "18px", borderRadius: "50%", border: "1.5px solid #0006" }} />
+                  <span style={{ fontSize: "12px", opacity: 0.4 }}>□</span>
+                </div>
+              )}
             </div>
-          ) : (
-            <div style={{ height: `${Math.round(28*scale)}px`, background: "#fff", display: "flex", alignItems: "center", justifyContent: "space-between", padding: `0 ${Math.round(16*scale)}px`, flexShrink: 0 }}>
-              <span style={{ fontSize: `${Math.round(10*scale)}px`, fontWeight: 700, color: "#000", fontFamily: "Roboto, sans-serif" }}>9:41</span>
-              <span style={{ fontSize: `${Math.round(8*scale)}px`, color: "#000" }}>▲▲▲ WiFi 🔋</span>
-            </div>
-          )}
-          {/* Screen content */}
-          <div style={{ flex: 1, background: "#fff", overflowY: "auto", overflowX: "hidden" }}>
-            {children}
+            {/* Side buttons */}
+            {isIOS ? (
+              <>
+                <div style={{ position: "absolute", right: `-${border+4}px`, top: "100px", width: "3px", height: "60px", background: "#2a2a2a", borderRadius: "2px" }} />
+                <div style={{ position: "absolute", left: `-${border+4}px`, top: "90px",  width: "3px", height: "32px", background: "#2a2a2a", borderRadius: "2px" }} />
+                <div style={{ position: "absolute", left: `-${border+4}px`, top: "135px", width: "3px", height: "52px", background: "#2a2a2a", borderRadius: "2px" }} />
+                <div style={{ position: "absolute", left: `-${border+4}px`, top: "200px", width: "3px", height: "52px", background: "#2a2a2a", borderRadius: "2px" }} />
+              </>
+            ) : (
+              <>
+                <div style={{ position: "absolute", right: `-${border+4}px`, top: "80px",  width: "3px", height: "44px", background: "#222", borderRadius: "2px" }} />
+                <div style={{ position: "absolute", left: `-${border+4}px`, top: "110px", width: "3px", height: "32px", background: "#222", borderRadius: "2px" }} />
+                <div style={{ position: "absolute", left: `-${border+4}px`, top: "155px", width: "3px", height: "52px", background: "#222", borderRadius: "2px" }} />
+              </>
+            )}
           </div>
-          {/* Home indicator */}
-          {isIOS ? (
-            <div style={{ height: `${Math.round(28*scale)}px`, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <div style={{ width: `${Math.round(100*scale)}px`, height: `${Math.round(4*scale)}px`, background: "#000", borderRadius: "2px", opacity: 0.2 }} />
-            </div>
-          ) : (
-            <div style={{ height: `${Math.round(36*scale)}px`, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", gap: `${Math.round(20*scale)}px` }}>
-              <span style={{ fontSize: `${Math.round(14*scale)}px`, opacity: 0.4 }}>◁</span>
-              <div style={{ width: `${Math.round(18*scale)}px`, height: `${Math.round(18*scale)}px`, borderRadius: "50%", border: "1.5px solid #0006" }} />
-              <span style={{ fontSize: `${Math.round(12*scale)}px`, opacity: 0.4 }}>□</span>
-            </div>
-          )}
         </div>
-        {/* Side buttons */}
-        {isIOS ? (
-          <>
-            <div style={{ position: "absolute", right: `-${border+4}px`, top: `${Math.round(100*scale)}px`, width: "3px", height: `${Math.round(60*scale)}px`, background: "#2a2a2a", borderRadius: "2px" }} />
-            <div style={{ position: "absolute", left: `-${border+4}px`, top: `${Math.round(90*scale)}px`, width: "3px", height: `${Math.round(32*scale)}px`, background: "#2a2a2a", borderRadius: "2px" }} />
-            <div style={{ position: "absolute", left: `-${border+4}px`, top: `${Math.round(135*scale)}px`, width: "3px", height: `${Math.round(52*scale)}px`, background: "#2a2a2a", borderRadius: "2px" }} />
-            <div style={{ position: "absolute", left: `-${border+4}px`, top: `${Math.round(200*scale)}px`, width: "3px", height: `${Math.round(52*scale)}px`, background: "#2a2a2a", borderRadius: "2px" }} />
-          </>
-        ) : (
-          <>
-            <div style={{ position: "absolute", right: `-${border+4}px`, top: `${Math.round(80*scale)}px`, width: "3px", height: `${Math.round(44*scale)}px`, background: "#222", borderRadius: "2px" }} />
-            <div style={{ position: "absolute", left: `-${border+4}px`, top: `${Math.round(110*scale)}px`, width: "3px", height: `${Math.round(32*scale)}px`, background: "#222", borderRadius: "2px" }} />
-            <div style={{ position: "absolute", left: `-${border+4}px`, top: `${Math.round(155*scale)}px`, width: "3px", height: `${Math.round(52*scale)}px`, background: "#222", borderRadius: "2px" }} />
-          </>
-        )}
       </div>
     </div>
   );
