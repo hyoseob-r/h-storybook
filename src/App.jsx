@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { colors, typography, spacing, radius, elevation, states } from "./tokens";
+import { YdsIcon, YDS_ICONS, ICON_NAMES } from "./icons.jsx";
 
 // ── Code generators ──────────────────────────────────────────────────────────
 
@@ -808,7 +809,7 @@ function SimulatorSection() {
   const addItem = (type) => {
     const id = Date.now();
     const base = type === "labelButton"
-      ? { type:"labelButton", shape:"filled", colorStyle:"primary_v2", size:"medium", config:"labelOnly", iconPos:"left", labelText:"버튼", isMaster:false }
+      ? { type:"labelButton", shape:"filled", colorStyle:"primary_v2", size:"medium", config:"labelOnly", iconPos:"left", iconName:"chevron_right", labelText:"버튼", isMaster:false }
       : { type:"text",        style:"Body/body_6",  content:"텍스트",   color:"#333333", isMaster:false };
     setItems(prev => [...prev, { id, x: 16, y: Math.min(16 + prev.length * 64, 480), ...base }]);
     setSelected(id);
@@ -843,7 +844,7 @@ function SimulatorSection() {
       const bg  = item.shape === "filled"   ? bgFilled[item.colorStyle] : "transparent";
       const fg  = item.shape === "filled"   ? fgFilled[item.colorStyle] : accentC[item.colorStyle];
       const bdr = item.shape === "outlined" ? `1px solid ${accentC[item.colorStyle]}` : "none";
-      const ico = <span style={{ fontSize:`${fs+2}px`, lineHeight:1 }}>✎</span>;
+      const ico = <YdsIcon name={item.iconName || "chevron_right"} size={fs + 2} color={fg} />;
       return (
         <div style={{ height:`${h}px`, padding:`0 ${ph}px`, background:bg, border:bdr, borderRadius:`${r}px`, color:fg, fontSize:`${fs}px`, fontWeight:700, display:"inline-flex", alignItems:"center", gap:"5px", fontFamily: platform==="ios"?"system-ui":"Roboto,sans-serif", userSelect:"none", whiteSpace:"nowrap" }}>
           {item.config === "labelWithIcon" && item.iconPos === "left"  && ico}
@@ -935,6 +936,20 @@ function SimulatorSection() {
           {pCtl("size",   ["medium","small"],            sel.size,   "size",   locked ? [] : undefined)}
           {pCtl("config", ["labelOnly","labelWithIcon"], sel.config, "config", locked ? [] : undefined)}
           {sel.config === "labelWithIcon" && pCtl("iconPos", ["left","right"], sel.iconPos, "iconPos", locked ? [] : undefined)}
+          {sel.config === "labelWithIcon" && (
+            <div style={{ marginBottom:"10px" }}>
+              <div style={{ fontSize:"10px", color:"#4a4a7a", marginBottom:"6px" }}>icon</div>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:"4px" }}>
+                {ICON_NAMES.map(name => (
+                  <button key={name} disabled={locked} onClick={() => !locked && updateItem(sel.id, { iconName: name })}
+                    title={name}
+                    style={{ padding:"5px", borderRadius:"5px", background: sel.iconName===name?"#1e1e3a":"transparent", border: sel.iconName===name?"1px solid #3a3a6a":"1px solid #1a1a30", cursor: locked?"default":"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                    <YdsIcon name={name} size={14} color={locked?"#333350": sel.iconName===name?"#c0c0f0":"#6060a0"} />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </>}
 
         {sel.type === "text" && <>
@@ -1638,6 +1653,38 @@ function GlassNavSection() {
   );
 }
 
+// ── Section: Icons ────────────────────────────────────────────────────────────
+
+function IconsSection() {
+  const [copied, setCopied] = useState(null);
+  const copy = (name) => {
+    navigator.clipboard.writeText(name).then(() => {
+      setCopied(name);
+      setTimeout(() => setCopied(null), 1500);
+    });
+  };
+  return (
+    <div>
+      <div style={{ fontSize:"11px", color:"#5a5a8a", marginBottom:"16px" }}>
+        YDS 2.0 System Icon — {ICON_NAMES.length}개 · 클릭하면 이름 복사
+      </div>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(100px, 1fr))", gap:"8px" }}>
+        {ICON_NAMES.map(name => (
+          <button key={name} onClick={() => copy(name)}
+            style={{ background: copied===name?"#1a2a1a":"#0c0c1e", border: copied===name?"1px solid #3a6a3a":"1px solid #1a1a30", borderRadius:"10px", padding:"16px 8px 12px", display:"flex", flexDirection:"column", alignItems:"center", gap:"10px", cursor:"pointer", transition:"all 0.15s" }}
+            onMouseEnter={e => { if (copied!==name) { e.currentTarget.style.background="#10102a"; e.currentTarget.style.borderColor="#3a3a6a"; }}}
+            onMouseLeave={e => { if (copied!==name) { e.currentTarget.style.background="#0c0c1e"; e.currentTarget.style.borderColor="#1a1a30"; }}}>
+            <YdsIcon name={name} size={24} color={copied===name?"#60cc90":"#c0c0f0"} />
+            <div style={{ fontSize:"9px", color: copied===name?"#60cc90":"#5a5a8a", textAlign:"center", wordBreak:"break-all", lineHeight:1.4 }}>
+              {copied===name ? "복사됨" : name}
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const NAV = [
   { id: "colors",      label: "Colors",        icon: "◈" },
   { id: "typography",  label: "Typography",    icon: "T" },
@@ -1645,6 +1692,7 @@ const NAV = [
   { id: "elevation",   label: "Elevation",     icon: "◻" },
   { id: "button",      label: "Button",        icon: "⬚" },
   { id: "label",       label: "Label",         icon: "◷" },
+  { id: "icons",       label: "Icons",         icon: "◎" },
   { id: "simulator",   label: "Simulator",     icon: "📱" },
   { id: "glassnav",    label: "Liquid Glass",  icon: "✦" },
 ];
@@ -1659,12 +1707,13 @@ export default function App() {
     if (active === "elevation")  return <ElevationSection />;
     if (active === "button")     return <ButtonSection />;
     if (active === "label")      return <LabelSection />;
+    if (active === "icons")      return <IconsSection />;
     if (active === "simulator")  return <SimulatorSection />;
     if (active === "glassnav")   return <GlassNavSection />;
   };
 
-  const titles    = { colors: "Color Tokens", typography: "Typography", spacing: "Spacing & Radius", elevation: "Elevation / Shadow", button: "Button", label: "Label", simulator: "Simulator", glassnav: "Liquid Glass Nav" };
-  const subtitles = { colors: "YDS 2.0 Customer Token", typography: "Roboto 기반 타입 스케일", spacing: "스페이싱 및 보더 라디우스", elevation: "YDS 2.0 Elevation — Level 1 · 2 (normal & inverse)", button: "버튼 컴포넌트 — 멀티 플랫폼 코드", label: "라벨 컴포넌트 — 멀티 플랫폼 코드", simulator: "iOS / Android 실시간 화면 시뮬레이션", glassnav: "OS 버전별 Glass Nav Bar — 호환성 + 코드 생성" };
+  const titles    = { colors: "Color Tokens", typography: "Typography", spacing: "Spacing & Radius", elevation: "Elevation / Shadow", button: "Button", label: "Label", icons: "Icons", simulator: "Simulator", glassnav: "Liquid Glass Nav" };
+  const subtitles = { colors: "YDS 2.0 Customer Token", typography: "Roboto 기반 타입 스케일", spacing: "스페이싱 및 보더 라디우스", elevation: "YDS 2.0 Elevation — Level 1 · 2 (normal & inverse)", button: "버튼 컴포넌트 — 멀티 플랫폼 코드", label: "라벨 컴포넌트 — 멀티 플랫폼 코드", icons: "YDS 2.0 System Icon — Figma 원본 기반", simulator: "iOS / Android 실시간 화면 시뮬레이션", glassnav: "OS 버전별 Glass Nav Bar — 호환성 + 코드 생성" };
 
   return (
     <div style={{ display: "flex", height: "100vh", background: "#060612", color: "#e0e0f0", fontFamily: "'Pretendard', -apple-system, sans-serif" }}>
@@ -1682,14 +1731,14 @@ export default function App() {
           </button>
         ))}
         <div style={{ fontSize: "9px", color: "#3a3a5a", letterSpacing: "0.15em", textTransform: "uppercase", padding: "16px 16px 6px", fontWeight: 600 }}>Components</div>
-        {NAV.slice(4, 6).map(n => (
+        {NAV.slice(4, 7).map(n => (
           <button key={n.id} onClick={() => setActive(n.id)}
             style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#1a1a30" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #fa0050" : "2px solid transparent", color: active === n.id ? "#e0e0f0" : "#6060a0", fontSize: "12px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
             <span style={{ fontSize: "13px", opacity: 0.7 }}>{n.icon}</span>{n.label}
           </button>
         ))}
         <div style={{ fontSize: "9px", color: "#3a3a5a", letterSpacing: "0.15em", textTransform: "uppercase", padding: "16px 16px 6px", fontWeight: 600 }}>Simulate</div>
-        {NAV.slice(6, 8).map(n => (
+        {NAV.slice(7, 9).map(n => (
           <button key={n.id} onClick={() => setActive(n.id)}
             style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#1a1a30" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #fa0050" : "2px solid transparent", color: active === n.id ? "#e0e0f0" : "#6060a0", fontSize: "12px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
             <span style={{ fontSize: "13px", opacity: 0.7 }}>{n.icon}</span>{n.label}
