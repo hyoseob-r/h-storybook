@@ -799,6 +799,7 @@ function SimulatorSection() {
 
   const startDrag = (e, item) => {
     e.preventDefault(); e.stopPropagation();
+    if (item.isMaster) { setSelected(item.id); return; }
     dragRef.current = { id: item.id, startMX: e.clientX, startMY: e.clientY, startX: item.x, startY: item.y };
     setSelected(item.id);
   };
@@ -807,14 +808,19 @@ function SimulatorSection() {
   const addItem = (type) => {
     const id = Date.now();
     const base = type === "labelButton"
-      ? { type:"labelButton", shape:"filled", colorStyle:"primary_v2", size:"medium", config:"labelOnly", iconPos:"left", labelText:"버튼" }
-      : { type:"text",        style:"Body/body_6",  content:"텍스트",   color:"#333333" };
+      ? { type:"labelButton", shape:"filled", colorStyle:"primary_v2", size:"medium", config:"labelOnly", iconPos:"left", labelText:"버튼", isMaster:false }
+      : { type:"text",        style:"Body/body_6",  content:"텍스트",   color:"#333333", isMaster:false };
     setItems(prev => [...prev, { id, x: 16, y: Math.min(16 + prev.length * 64, 480), ...base }]);
     setSelected(id);
   };
 
   const updateItem = (id, updates) => setItems(prev => prev.map(i => i.id === id ? { ...i, ...updates } : i));
   const removeItem = (id) => { setItems(prev => prev.filter(i => i.id !== id)); if (selected === id) setSelected(null); };
+  const duplicateItem = (item) => {
+    const id = Date.now();
+    setItems(prev => [...prev, { ...item, id, x: item.x + 24, y: item.y + 24, isMaster: false }]);
+    setSelected(id);
+  };
   const sel = items.find(i => i.id === selected);
 
   // shapeStyle 변경 시 colorStyle 자동 보정
@@ -857,15 +863,17 @@ function SimulatorSection() {
   };
 
   // ── property panel ───────────────────────────────────────────────────────────
-  const pCtl = (label, opts, val, key, allowedSet) => (
+  const pCtl = (label, opts, val, key, allowedSet) => {
+    const isLocked = allowedSet && allowedSet.length === 0;
+    return (
     <div style={{ marginBottom:"10px" }}>
       <div style={{ fontSize:"10px", color:"#4a4a7a", marginBottom:"4px" }}>{label}</div>
       <div style={{ display:"flex", gap:"3px", flexWrap:"wrap" }}>
         {opts.map(o => {
-          const dis = allowedSet && !allowedSet.includes(o);
+          const dis = !isLocked && allowedSet && !allowedSet.includes(o);
           return (
-            <button key={o} disabled={dis} onClick={() => !dis && updateItem(sel.id, { [key]: o })}
-              style={{ padding:"3px 7px", borderRadius:"4px", background: val===o?"#1e1e3a":"transparent", border: val===o?"1px solid #3a3a6a":"1px solid #1a1a30", color: dis?"#252540": val===o?"#c0c0f0":"#5a5a8a", fontSize:"10px", cursor:dis?"default":"pointer", textDecoration:dis?"line-through":"none" }}>
+            <button key={o} disabled={dis || isLocked} onClick={() => !dis && !isLocked && updateItem(sel.id, { [key]: o })}
+              style={{ padding:"3px 7px", borderRadius:"4px", background: val===o?"#1e1e3a":"transparent", border: val===o?"1px solid #3a3a6a":"1px solid #1a1a30", color: isLocked?"#333350": dis?"#252540": val===o?"#c0c0f0":"#5a5a8a", fontSize:"10px", cursor:(dis||isLocked)?"default":"pointer", textDecoration:dis?"line-through":"none" }}>
               {o}
             </button>
           );
@@ -873,6 +881,7 @@ function SimulatorSection() {
       </div>
     </div>
   );
+  };
 
   const renderProps = () => {
     if (!sel) return (
@@ -880,55 +889,75 @@ function SimulatorSection() {
         컴포넌트를<br/>선택하세요
       </div>
     );
+    const locked = sel.isMaster;
     return (
       <div style={{ padding:"14px", display:"flex", flexDirection:"column" }}>
-        <div style={{ fontSize:"10px", color:"#5a5a8a", letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:"12px", fontWeight:600 }}>
-          {sel.type === "labelButton" ? "LabelButton" : "Text"}
+
+        {/* Header: type name + master toggle */}
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"10px" }}>
+          <div style={{ fontSize:"10px", color: locked?"#ccaa00":"#5a5a8a", letterSpacing:"0.12em", textTransform:"uppercase", fontWeight:600 }}>
+            {locked && "🔒 "}{sel.type === "labelButton" ? "LabelButton" : "Text"}
+          </div>
+          <button onClick={() => updateItem(sel.id, { isMaster: !locked })}
+            style={{ padding:"2px 6px", borderRadius:"4px", background: locked?"#2a2200":"transparent", border: locked?"1px solid #665500":"1px solid #2a2a4a", color: locked?"#ccaa00":"#4a4a6a", fontSize:"9px", cursor:"pointer", letterSpacing:"0.05em" }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor=locked?"#998800":"#4a4a8a"; e.currentTarget.style.color=locked?"#ffdd00":"#8080c0"; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor=locked?"#665500":"#2a2a4a"; e.currentTarget.style.color=locked?"#ccaa00":"#4a4a6a"; }}>
+            {locked ? "Master 해제" : "Master 지정"}
+          </button>
         </div>
+
+        {/* Master lock notice */}
+        {locked && (
+          <div style={{ marginBottom:"10px", padding:"7px 9px", background:"#1a1500", border:"1px solid #443300", borderRadius:"6px", fontSize:"10px", color:"#998800", lineHeight:1.6 }}>
+            편집이 잠겨있습니다.<br/>복제 후 수정하세요.
+          </div>
+        )}
 
         {sel.type === "labelButton" && <>
           <div style={{ marginBottom:"10px" }}>
             <div style={{ fontSize:"10px", color:"#4a4a7a", marginBottom:"4px" }}>labelText</div>
-            <input value={sel.labelText} onChange={e => updateItem(sel.id, { labelText: e.target.value })}
-              style={{ width:"100%", background:"#08081a", border:"1px solid #2a2a4a", borderRadius:"5px", padding:"5px 8px", color:"#e0e0f0", fontSize:"11px", outline:"none", boxSizing:"border-box" }} />
+            <input value={sel.labelText} onChange={e => !locked && updateItem(sel.id, { labelText: e.target.value })}
+              readOnly={locked}
+              style={{ width:"100%", background:"#08081a", border:"1px solid #2a2a4a", borderRadius:"5px", padding:"5px 8px", color: locked?"#555570":"#e0e0f0", fontSize:"11px", outline:"none", boxSizing:"border-box", cursor: locked?"default":"text" }} />
           </div>
           <div style={{ marginBottom:"10px" }}>
             <div style={{ fontSize:"10px", color:"#4a4a7a", marginBottom:"4px" }}>shapeStyle</div>
             <div style={{ display:"flex", gap:"3px" }}>
               {["filled","outlined","text"].map(o => (
-                <button key={o} onClick={() => changeShape(o)}
-                  style={{ padding:"3px 7px", borderRadius:"4px", background: sel.shape===o?"#1e1e3a":"transparent", border: sel.shape===o?"1px solid #3a3a6a":"1px solid #1a1a30", color: sel.shape===o?"#c0c0f0":"#5a5a8a", fontSize:"10px", cursor:"pointer" }}>
+                <button key={o} onClick={() => !locked && changeShape(o)} disabled={locked}
+                  style={{ padding:"3px 7px", borderRadius:"4px", background: sel.shape===o?"#1e1e3a":"transparent", border: sel.shape===o?"1px solid #3a3a6a":"1px solid #1a1a30", color: locked?"#333350": sel.shape===o?"#c0c0f0":"#5a5a8a", fontSize:"10px", cursor: locked?"default":"pointer" }}>
                   {o}
                 </button>
               ))}
             </div>
           </div>
-          {pCtl("colorStyle", ["primary_v2","gray_v2","gray250_v2"], sel.colorStyle, "colorStyle", ALLOWED_COLORS[sel.shape])}
-          {pCtl("size",   ["medium","small"],              sel.size,   "size")}
-          {pCtl("config", ["labelOnly","labelWithIcon"],   sel.config, "config")}
-          {sel.config === "labelWithIcon" && pCtl("iconPos", ["left","right"], sel.iconPos, "iconPos")}
+          {pCtl("colorStyle", ["primary_v2","gray_v2","gray250_v2"], sel.colorStyle, "colorStyle", locked ? [] : ALLOWED_COLORS[sel.shape])}
+          {pCtl("size",   ["medium","small"],            sel.size,   "size",   locked ? [] : undefined)}
+          {pCtl("config", ["labelOnly","labelWithIcon"], sel.config, "config", locked ? [] : undefined)}
+          {sel.config === "labelWithIcon" && pCtl("iconPos", ["left","right"], sel.iconPos, "iconPos", locked ? [] : undefined)}
         </>}
 
         {sel.type === "text" && <>
           <div style={{ marginBottom:"10px" }}>
             <div style={{ fontSize:"10px", color:"#4a4a7a", marginBottom:"4px" }}>content</div>
-            <textarea value={sel.content} onChange={e => updateItem(sel.id, { content: e.target.value })}
-              style={{ width:"100%", background:"#08081a", border:"1px solid #2a2a4a", borderRadius:"5px", padding:"5px 8px", color:"#e0e0f0", fontSize:"11px", outline:"none", resize:"vertical", minHeight:"52px", boxSizing:"border-box" }} />
+            <textarea value={sel.content} onChange={e => !locked && updateItem(sel.id, { content: e.target.value })}
+              readOnly={locked}
+              style={{ width:"100%", background:"#08081a", border:"1px solid #2a2a4a", borderRadius:"5px", padding:"5px 8px", color: locked?"#555570":"#e0e0f0", fontSize:"11px", outline:"none", resize:"vertical", minHeight:"52px", boxSizing:"border-box", cursor: locked?"default":"text" }} />
           </div>
           <div style={{ marginBottom:"10px" }}>
             <div style={{ fontSize:"10px", color:"#4a4a7a", marginBottom:"4px" }}>typography</div>
-            <select value={sel.style} onChange={e => updateItem(sel.id, { style: e.target.value })}
-              style={{ width:"100%", background:"#08081a", border:"1px solid #2a2a4a", borderRadius:"5px", padding:"5px 8px", color:"#c0c0f0", fontSize:"10px", outline:"none" }}>
+            <select value={sel.style} onChange={e => !locked && updateItem(sel.id, { style: e.target.value })} disabled={locked}
+              style={{ width:"100%", background:"#08081a", border:"1px solid #2a2a4a", borderRadius:"5px", padding:"5px 8px", color: locked?"#555570":"#c0c0f0", fontSize:"10px", outline:"none" }}>
               {typography.map(t => <option key={t.name} value={t.name}>{t.name}</option>)}
             </select>
           </div>
           <div style={{ marginBottom:"10px" }}>
             <div style={{ fontSize:"10px", color:"#4a4a7a", marginBottom:"4px" }}>color</div>
             <div style={{ display:"flex", gap:"6px", alignItems:"center" }}>
-              <input type="color" value={sel.color} onChange={e => updateItem(sel.id, { color: e.target.value })}
-                style={{ width:"28px", height:"28px", border:"none", background:"none", cursor:"pointer", padding:0 }} />
-              <input value={sel.color} onChange={e => updateItem(sel.id, { color: e.target.value })}
-                style={{ flex:1, background:"#08081a", border:"1px solid #2a2a4a", borderRadius:"5px", padding:"5px 8px", color:"#e0e0f0", fontSize:"11px", outline:"none" }} />
+              <input type="color" value={sel.color} onChange={e => !locked && updateItem(sel.id, { color: e.target.value })} disabled={locked}
+                style={{ width:"28px", height:"28px", border:"none", background:"none", cursor: locked?"default":"pointer", padding:0, opacity: locked?0.3:1 }} />
+              <input value={sel.color} onChange={e => !locked && updateItem(sel.id, { color: e.target.value })} readOnly={locked}
+                style={{ flex:1, background:"#08081a", border:"1px solid #2a2a4a", borderRadius:"5px", padding:"5px 8px", color: locked?"#555570":"#e0e0f0", fontSize:"11px", outline:"none" }} />
             </div>
           </div>
         </>}
@@ -938,18 +967,27 @@ function SimulatorSection() {
           {["x","y"].map(axis => (
             <div key={axis} style={{ flex:1 }}>
               <div style={{ fontSize:"9px", color:"#3a3a5a", marginBottom:"3px", textTransform:"uppercase" }}>{axis} dp</div>
-              <input type="number" value={sel[axis]} onChange={e => updateItem(sel.id, { [axis]: Number(e.target.value) })}
-                style={{ width:"100%", background:"#08081a", border:"1px solid #2a2a4a", borderRadius:"5px", padding:"4px 6px", color:"#e0e0f0", fontSize:"11px", outline:"none", boxSizing:"border-box" }} />
+              <input type="number" value={sel[axis]} onChange={e => !locked && updateItem(sel.id, { [axis]: Number(e.target.value) })} readOnly={locked}
+                style={{ width:"100%", background:"#08081a", border:"1px solid #2a2a4a", borderRadius:"5px", padding:"4px 6px", color: locked?"#555570":"#e0e0f0", fontSize:"11px", outline:"none", boxSizing:"border-box", cursor: locked?"default":"text" }} />
             </div>
           ))}
         </div>
 
-        <button onClick={() => removeItem(sel.id)}
-          style={{ padding:"6px", borderRadius:"5px", background:"transparent", border:"1px solid #3a1a1a", color:"#6a2a2a", fontSize:"10px", cursor:"pointer" }}
-          onMouseEnter={e => { e.currentTarget.style.background="#1a0808"; e.currentTarget.style.color="#ff6060"; }}
-          onMouseLeave={e => { e.currentTarget.style.background="transparent"; e.currentTarget.style.color="#6a2a2a"; }}>
-          삭제
-        </button>
+        {/* Duplicate + Delete */}
+        <div style={{ display:"flex", gap:"6px" }}>
+          <button onClick={() => duplicateItem(sel)}
+            style={{ flex:1, padding:"6px", borderRadius:"5px", background:"transparent", border:"1px solid #1a3a2a", color:"#2a6a4a", fontSize:"10px", cursor:"pointer" }}
+            onMouseEnter={e => { e.currentTarget.style.background="#081a10"; e.currentTarget.style.color="#60cc90"; }}
+            onMouseLeave={e => { e.currentTarget.style.background="transparent"; e.currentTarget.style.color="#2a6a4a"; }}>
+            복제
+          </button>
+          <button onClick={() => !locked && removeItem(sel.id)} disabled={locked}
+            style={{ flex:1, padding:"6px", borderRadius:"5px", background:"transparent", border: locked?"1px solid #1a1a2a":"1px solid #3a1a1a", color: locked?"#2a2a3a":"#6a2a2a", fontSize:"10px", cursor: locked?"default":"pointer" }}
+            onMouseEnter={e => { if (!locked) { e.currentTarget.style.background="#1a0808"; e.currentTarget.style.color="#ff6060"; }}}
+            onMouseLeave={e => { if (!locked) { e.currentTarget.style.background="transparent"; e.currentTarget.style.color="#6a2a2a"; }}}>
+            삭제
+          </button>
+        </div>
       </div>
     );
   };
@@ -1000,12 +1038,14 @@ function SimulatorSection() {
             : <div style={{ display:"flex", flexDirection:"column", gap:"3px" }}>
                 {[...items].reverse().map(item => (
                   <div key={item.id} onClick={() => setSelected(item.id)}
-                    style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"5px 8px", borderRadius:"5px", background: selected===item.id?"#1a1a30":"transparent", border: selected===item.id?"1px solid #3a3a6a":"1px solid transparent", cursor:"pointer" }}>
-                    <span style={{ fontSize:"10px", color: selected===item.id?"#c0c0f0":"#6060a0", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
-                      {item.type==="labelButton"?"⬚":"T"} {item.type==="labelButton"?item.labelText:item.content}
+                    style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"5px 8px", borderRadius:"5px", background: selected===item.id?"#1a1a30":"transparent", border: selected===item.id ? (item.isMaster?"1px solid #665500":"1px solid #3a3a6a") : "1px solid transparent", cursor:"pointer" }}>
+                    <span style={{ fontSize:"10px", color: item.isMaster?"#ccaa00": selected===item.id?"#c0c0f0":"#6060a0", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", flex:1 }}>
+                      {item.isMaster ? "🔒 " : ""}{item.type==="labelButton"?"⬚":"T"} {item.type==="labelButton"?item.labelText:item.content}
                     </span>
-                    <button onClick={e => { e.stopPropagation(); removeItem(item.id); }}
-                      style={{ background:"none", border:"none", color:"#3a3a5a", cursor:"pointer", fontSize:"12px", padding:"0 2px", flexShrink:0 }}>×</button>
+                    <button onClick={e => { e.stopPropagation(); if (!item.isMaster) removeItem(item.id); }}
+                      style={{ background:"none", border:"none", color: item.isMaster?"#333330":"#3a3a5a", cursor: item.isMaster?"default":"pointer", fontSize:"12px", padding:"0 2px", flexShrink:0 }}>
+                      {item.isMaster ? "🔒" : "×"}
+                    </button>
                   </div>
                 ))}
               </div>
@@ -1019,9 +1059,14 @@ function SimulatorSection() {
           <div style={{ position:"absolute", inset:0 }} onClick={() => setSelected(null)}>
             {items.map(item => (
               <div key={item.id}
-                style={{ position:"absolute", left:`${item.x}px`, top:`${item.y}px`, cursor:"grab", outline: selected===item.id?"1.5px dashed #fa005088":"none", outlineOffset:"4px", borderRadius:"4px" }}
+                style={{ position:"absolute", left:`${item.x}px`, top:`${item.y}px`, cursor: item.isMaster?"pointer":"grab", outline: selected===item.id ? (item.isMaster?"1.5px dashed #ccaa0088":"1.5px dashed #fa005088") : "none", outlineOffset:"4px", borderRadius:"4px" }}
                 onMouseDown={e => startDrag(e, item)}>
                 {renderComp(item)}
+                {item.isMaster && (
+                  <div style={{ position:"absolute", top:"-7px", right:"-7px", background:"#ccaa00", borderRadius:"50%", width:"13px", height:"13px", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"7px", fontWeight:700, color:"#000", pointerEvents:"none", lineHeight:1 }}>
+                    M
+                  </div>
+                )}
               </div>
             ))}
             {items.length === 0 && (
