@@ -298,7 +298,7 @@ function TypographySection() {
             <div style={{ fontSize: "10px", color: "#3a3a6a" }}>{t.size}px · {t.style} · lh {t.lineHeight}</div>
           </div>
           <div style={{ fontFamily: "Roboto, sans-serif", fontSize: `${t.size}px`, fontWeight: t.weight, lineHeight: `${t.lineHeight}px`, color: "#e0e0f0" }}>
-            배달의민족 Delivery Hero
+            요기요-배달할때마다 포인트 적립 Points earned with every delivery
           </div>
         </div>
       ))}
