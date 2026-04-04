@@ -82,11 +82,19 @@ export const typography = [
 ];
 
 export const spacing = [
-  { name: "s1", value: 2 },
-  { name: "s2", value: 4 },
-  { name: "s6", value: 12 },
-  { name: "s7", value: 16 },
-  { name: "s12", value: 36 },
+  { name: "s1",  value: 2  },
+  { name: "s2",  value: 4  },
+  { name: "s3",  value: 8  },
+  { name: "s4",  value: 12 },
+  { name: "s5",  value: 16 },
+  { name: "s6",  value: 20 },
+  { name: "s7",  value: 24 },
+  { name: "s8",  value: 28 },
+  { name: "s9",  value: 32 },
+  { name: "s10", value: 36 },
+  { name: "s11", value: 40 },
+  { name: "s12", value: 44 },
+  { name: "s13", value: 48 },
 ];
 
 export const states = {
