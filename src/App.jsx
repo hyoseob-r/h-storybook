@@ -771,67 +771,134 @@ function PhoneFrame({ platform, device, children, canvasMode }) {
 
 function SimulatorSection() {
   const [platform,  setPlatform]  = useState("ios");
-  const [deviceIdx, setDeviceIdx] = useState(2); // iPhone 13
+  const [deviceIdx, setDeviceIdx] = useState(2);
   const [items,     setItems]     = useState([]);
   const [selected,  setSelected]  = useState(null);
-  const dragRef  = useRef(null);
-  const scaleRef = useRef(1);
+  const [hovered,   setHovered]   = useState(null);
+  const [snapGrid,  setSnapGrid]  = useState(true);
+
+  const dragRef   = useRef(null); // { id, startMX, startMY, startX, startY }
+  const resizeRef = useRef(null); // { id, handle, startMX, startW, startX }
+  const scaleRef  = useRef(1);
+  const snapRef   = useRef(true);
+  const compRefs  = useRef({});   // id → DOM element
 
   const device = DEVICES[platform][deviceIdx];
   const scale  = MAX_FRAME_H / device.h;
   scaleRef.current = scale;
+  snapRef.current  = snapGrid;
 
-  // ── drag (window-level) ──────────────────────────────────────────────────────
+  const GRID   = 8;
+  const snap   = (v) => snapRef.current ? Math.round(v / GRID) * GRID : Math.round(v);
+  // convert desired screen-px to dp (for handles/borders inside the scaled frame)
+  const sdp    = (px) => px / scale;
+
+  // ── window-level mouse (drag + resize) ───────────────────────────────────────
   useEffect(() => {
     const onMove = (e) => {
-      if (!dragRef.current) return;
-      const { id, startMX, startMY, startX, startY } = dragRef.current;
-      const dx = (e.clientX - startMX) / scaleRef.current;
-      const dy = (e.clientY - startMY) / scaleRef.current;
-      setItems(prev => prev.map(i => i.id === id
-        ? { ...i, x: Math.round(Math.max(0, startX + dx)), y: Math.round(Math.max(0, startY + dy)) }
-        : i));
+      if (dragRef.current) {
+        const { id, startMX, startMY, startX, startY } = dragRef.current;
+        const dx = (e.clientX - startMX) / scaleRef.current;
+        const dy = (e.clientY - startMY) / scaleRef.current;
+        setItems(prev => prev.map(i => i.id === id
+          ? { ...i, x: Math.max(0, snap(startX + dx)), y: Math.max(0, snap(startY + dy)) }
+          : i));
+      }
+      if (resizeRef.current) {
+        const { id, handle, startMX, startW, startX } = resizeRef.current;
+        const dx = (e.clientX - startMX) / scaleRef.current;
+        let upd = {};
+        if (handle.includes("e")) { upd.w = Math.max(60, snap(startW + dx)); }
+        if (handle.includes("w")) {
+          const nw = Math.max(60, snap(startW - dx));
+          upd.w = nw;
+          upd.x = Math.max(0, snap(startX + (startW - nw)));
+        }
+        setItems(prev => prev.map(i => i.id === id ? { ...i, ...upd } : i));
+      }
     };
-    const onUp = () => { dragRef.current = null; };
+    const onUp = () => { dragRef.current = null; resizeRef.current = null; };
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup",   onUp);
     return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
   }, []);
 
-  const startDrag = (e, item) => {
-    e.preventDefault(); e.stopPropagation();
-    if (item.isMaster) { setSelected(item.id); return; }
-    dragRef.current = { id: item.id, startMX: e.clientX, startMY: e.clientY, startX: item.x, startY: item.y };
-    setSelected(item.id);
-  };
+  // ── keyboard shortcuts ───────────────────────────────────────────────────────
+  useEffect(() => {
+    const onKey = (e) => {
+      const tag = document.activeElement?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if (!selected) return;
+      const item = items.find(i => i.id === selected);
+      if (!item) return;
+
+      if ((e.key === "Delete" || e.key === "Backspace") && !item.isMaster) {
+        e.preventDefault();
+        setItems(prev => prev.filter(i => i.id !== selected));
+        setSelected(null);
+        return;
+      }
+      if (e.key === "Escape") { setSelected(null); return; }
+      if ((e.metaKey || e.ctrlKey) && e.key === "d") {
+        e.preventDefault();
+        const nid = Date.now();
+        setItems(prev => [...prev, { ...item, id: nid, x: item.x + 24, y: item.y + 24, isMaster: false }]);
+        setSelected(nid);
+        return;
+      }
+      if (!item.isMaster) {
+        const N = e.shiftKey ? 10 : 1;
+        if (e.key === "ArrowLeft")  { e.preventDefault(); setItems(p => p.map(i => i.id===selected ? { ...i, x: Math.max(0, i.x-N) } : i)); }
+        if (e.key === "ArrowRight") { e.preventDefault(); setItems(p => p.map(i => i.id===selected ? { ...i, x: i.x+N } : i)); }
+        if (e.key === "ArrowUp")    { e.preventDefault(); setItems(p => p.map(i => i.id===selected ? { ...i, y: Math.max(0, i.y-N) } : i)); }
+        if (e.key === "ArrowDown")  { e.preventDefault(); setItems(p => p.map(i => i.id===selected ? { ...i, y: i.y+N } : i)); }
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selected, items]);
 
   // ── item helpers ─────────────────────────────────────────────────────────────
   const addItem = (type) => {
     const id = Date.now();
     const base = type === "labelButton"
       ? { type:"labelButton", shape:"filled", colorStyle:"primary_v2", size:"medium", config:"labelOnly", iconPos:"left", iconName:"chevron_right", labelText:"버튼", isMaster:false }
-      : { type:"text",        style:"Body/body_6",  content:"텍스트",   color:"#333333", isMaster:false };
+      : { type:"text", style:"Body/body_6", content:"텍스트", color:"#333333", isMaster:false };
     setItems(prev => [...prev, { id, x: 16, y: Math.min(16 + prev.length * 64, 480), ...base }]);
     setSelected(id);
   };
 
-  const updateItem = (id, updates) => setItems(prev => prev.map(i => i.id === id ? { ...i, ...updates } : i));
-  const removeItem = (id) => { setItems(prev => prev.filter(i => i.id !== id)); if (selected === id) setSelected(null); };
+  const updateItem    = (id, upd) => setItems(prev => prev.map(i => i.id === id ? { ...i, ...upd } : i));
+  const removeItem    = (id) => { setItems(prev => prev.filter(i => i.id !== id)); if (selected === id) setSelected(null); };
   const duplicateItem = (item) => {
-    const id = Date.now();
-    setItems(prev => [...prev, { ...item, id, x: item.x + 24, y: item.y + 24, isMaster: false }]);
-    setSelected(id);
+    const nid = Date.now();
+    setItems(prev => [...prev, { ...item, id: nid, x: item.x + 24, y: item.y + 24, isMaster: false }]);
+    setSelected(nid);
   };
   const sel = items.find(i => i.id === selected);
 
-  // shapeStyle 변경 시 colorStyle 자동 보정
   const changeShape = (s) => {
+    if (!sel) return;
     const allowed = ALLOWED_COLORS[s];
-    const newColor = allowed.includes(sel.colorStyle) ? sel.colorStyle : allowed[0];
-    updateItem(sel.id, { shape: s, colorStyle: newColor });
+    updateItem(sel.id, { shape: s, colorStyle: allowed.includes(sel.colorStyle) ? sel.colorStyle : allowed[0] });
   };
 
-  // ── render component in canvas ───────────────────────────────────────────────
+  const startDrag = (e, item) => {
+    e.preventDefault(); e.stopPropagation();
+    setSelected(item.id);
+    if (!item.isMaster) {
+      dragRef.current = { id: item.id, startMX: e.clientX, startMY: e.clientY, startX: item.x, startY: item.y };
+    }
+  };
+
+  const startResize = (e, item, handle) => {
+    e.preventDefault(); e.stopPropagation();
+    const el = compRefs.current[item.id];
+    const cw = item.w || (el ? el.offsetWidth : 120);
+    resizeRef.current = { id: item.id, handle, startMX: e.clientX, startW: cw, startX: item.x };
+  };
+
+  // ── render component ─────────────────────────────────────────────────────────
   const renderComp = (item) => {
     if (item.type === "labelButton") {
       const h  = item.size === "medium" ? 48 : 36;
@@ -846,7 +913,7 @@ function SimulatorSection() {
       const bdr = item.shape === "outlined" ? `1px solid ${accentC[item.colorStyle]}` : "none";
       const ico = <YdsIcon name={item.iconName || "chevron_right"} size={fs + 2} color={fg} />;
       return (
-        <div style={{ height:`${h}px`, padding:`0 ${ph}px`, background:bg, border:bdr, borderRadius:`${r}px`, color:fg, fontSize:`${fs}px`, fontWeight:700, display:"inline-flex", alignItems:"center", gap:"5px", fontFamily: platform==="ios"?"system-ui":"Roboto,sans-serif", userSelect:"none", whiteSpace:"nowrap" }}>
+        <div style={{ height:`${h}px`, padding:`0 ${ph}px`, background:bg, border:bdr, borderRadius:`${r}px`, color:fg, fontSize:`${fs}px`, fontWeight:700, display:"flex", alignItems:"center", justifyContent:"center", gap:"5px", fontFamily: platform==="ios"?"system-ui":"Roboto,sans-serif", userSelect:"none", whiteSpace:"nowrap", width:"100%", boxSizing:"border-box" }}>
           {item.config === "labelWithIcon" && item.iconPos === "left"  && ico}
           {item.labelText}
           {item.config === "labelWithIcon" && item.iconPos === "right" && ico}
@@ -863,51 +930,94 @@ function SimulatorSection() {
     }
   };
 
+  // ── selection / hover overlay with resize handles ────────────────────────────
+  const renderSelectionBox = (item, isHover) => {
+    const color  = item.isMaster ? "#ccaa00" : "#fa0050";
+    const bw     = sdp(isHover ? 1 : 1.5);   // border width in dp
+    const hSize  = sdp(7);                    // handle square size in dp
+    const hOff   = hSize / 2;                 // half, for centering
+    const rDp    = sdp(3);                    // border-radius in dp
+    const inset  = -(bw + sdp(1));
+
+    // Handle descriptors: key, positioning style (dp), whether it resizes
+    const handles = [
+      { key:"nw", s:{ top:`-${hOff}px`,  left:`-${hOff}px`  },                        resize:true  },
+      { key:"n",  s:{ top:`-${hOff}px`,  left:"50%", transform:`translateX(-${hOff}px)` }, resize:false },
+      { key:"ne", s:{ top:`-${hOff}px`,  right:`-${hOff}px` },                        resize:true  },
+      { key:"e",  s:{ top:"50%", transform:`translateY(-${hOff}px)`, right:`-${hOff}px` }, resize:true  },
+      { key:"se", s:{ bottom:`-${hOff}px`, right:`-${hOff}px` },                      resize:true  },
+      { key:"s",  s:{ bottom:`-${hOff}px`, left:"50%", transform:`translateX(-${hOff}px)` }, resize:false },
+      { key:"sw", s:{ bottom:`-${hOff}px`, left:`-${hOff}px` },                       resize:true  },
+      { key:"w",  s:{ top:"50%", transform:`translateY(-${hOff}px)`, left:`-${hOff}px` }, resize:true  },
+    ];
+    const cursorMap = { nw:"nw-resize", n:"ns-resize", ne:"ne-resize", e:"ew-resize", se:"se-resize", s:"ns-resize", sw:"sw-resize", w:"ew-resize" };
+
+    return (
+      <div style={{ position:"absolute", inset:`${inset}px`, border:`${bw}px solid ${color}${isHover?"88":"ff"}`, borderRadius:`${rDp}px`, pointerEvents:"none", zIndex:20 }}>
+        {!isHover && !item.isMaster && handles.map(h => (
+          <div key={h.key}
+            style={{ position:"absolute", width:`${hSize}px`, height:`${hSize}px`, background:"#fff", border:`${bw}px solid ${color}`, borderRadius:`${sdp(2)}px`, cursor: cursorMap[h.key], pointerEvents:"all", zIndex:21, ...h.s }}
+            onMouseDown={h.resize ? (e => startResize(e, item, h.key)) : undefined}
+          />
+        ))}
+        {!isHover && item.isMaster && (
+          <div style={{ position:"absolute", top:`-${sdp(8)}px`, right:`-${sdp(8)}px`, background:"#ccaa00", borderRadius:"50%", width:`${sdp(14)}px`, height:`${sdp(14)}px`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:`${sdp(7)}px`, fontWeight:700, color:"#000", pointerEvents:"none" }}>M</div>
+        )}
+      </div>
+    );
+  };
+
   // ── property panel ───────────────────────────────────────────────────────────
   const pCtl = (label, opts, val, key, allowedSet) => {
     const isLocked = allowedSet && allowedSet.length === 0;
     return (
-    <div style={{ marginBottom:"10px" }}>
-      <div style={{ fontSize:"10px", color:"#4a4a7a", marginBottom:"4px" }}>{label}</div>
-      <div style={{ display:"flex", gap:"3px", flexWrap:"wrap" }}>
-        {opts.map(o => {
-          const dis = !isLocked && allowedSet && !allowedSet.includes(o);
-          return (
-            <button key={o} disabled={dis || isLocked} onClick={() => !dis && !isLocked && updateItem(sel.id, { [key]: o })}
-              style={{ padding:"3px 7px", borderRadius:"4px", background: val===o?"#1e1e3a":"transparent", border: val===o?"1px solid #3a3a6a":"1px solid #1a1a30", color: isLocked?"#333350": dis?"#252540": val===o?"#c0c0f0":"#5a5a8a", fontSize:"10px", cursor:(dis||isLocked)?"default":"pointer", textDecoration:dis?"line-through":"none" }}>
-              {o}
-            </button>
-          );
-        })}
+      <div style={{ marginBottom:"10px" }}>
+        <div style={{ fontSize:"10px", color:"#4a4a7a", marginBottom:"4px" }}>{label}</div>
+        <div style={{ display:"flex", gap:"3px", flexWrap:"wrap" }}>
+          {opts.map(o => {
+            const dis = !isLocked && allowedSet && !allowedSet.includes(o);
+            return (
+              <button key={o} disabled={dis || isLocked} onClick={() => !dis && !isLocked && updateItem(sel.id, { [key]: o })}
+                style={{ padding:"3px 7px", borderRadius:"4px", background: val===o?"#1e1e3a":"transparent", border: val===o?"1px solid #3a3a6a":"1px solid #1a1a30", color: isLocked?"#333350": dis?"#252540": val===o?"#c0c0f0":"#5a5a8a", fontSize:"10px", cursor:(dis||isLocked)?"default":"pointer", textDecoration:dis?"line-through":"none" }}>
+                {o}
+              </button>
+            );
+          })}
+        </div>
       </div>
-    </div>
-  );
+    );
   };
 
   const renderProps = () => {
     if (!sel) return (
-      <div style={{ padding:"28px 16px", textAlign:"center", color:"#2a2a4a", fontSize:"11px", lineHeight:1.8 }}>
+      <div style={{ padding:"24px 16px", textAlign:"center", color:"#2a2a4a", fontSize:"11px", lineHeight:2 }}>
         컴포넌트를<br/>선택하세요
+        <div style={{ marginTop:"14px", padding:"10px", background:"#080812", borderRadius:"7px", textAlign:"left" }}>
+          <div style={{ fontSize:"9px", color:"#3a3a5a", lineHeight:2.2 }}>
+            <span style={{ color:"#4a4a6a" }}>⌫</span> 삭제<br/>
+            <span style={{ color:"#4a4a6a" }}>↑↓←→</span> 1dp 이동<br/>
+            <span style={{ color:"#4a4a6a" }}>⇧ + 화살표</span> 10dp<br/>
+            <span style={{ color:"#4a4a6a" }}>⌘D</span> 복제<br/>
+            <span style={{ color:"#4a4a6a" }}>Esc</span> 선택 해제
+          </div>
+        </div>
       </div>
     );
     const locked = sel.isMaster;
     return (
       <div style={{ padding:"14px", display:"flex", flexDirection:"column" }}>
-
-        {/* Header: type name + master toggle */}
+        {/* Header */}
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"10px" }}>
           <div style={{ fontSize:"10px", color: locked?"#ccaa00":"#5a5a8a", letterSpacing:"0.12em", textTransform:"uppercase", fontWeight:600 }}>
             {locked && "🔒 "}{sel.type === "labelButton" ? "LabelButton" : "Text"}
           </div>
           <button onClick={() => updateItem(sel.id, { isMaster: !locked })}
-            style={{ padding:"2px 6px", borderRadius:"4px", background: locked?"#2a2200":"transparent", border: locked?"1px solid #665500":"1px solid #2a2a4a", color: locked?"#ccaa00":"#4a4a6a", fontSize:"9px", cursor:"pointer", letterSpacing:"0.05em" }}
+            style={{ padding:"2px 6px", borderRadius:"4px", background: locked?"#2a2200":"transparent", border: locked?"1px solid #665500":"1px solid #2a2a4a", color: locked?"#ccaa00":"#4a4a6a", fontSize:"9px", cursor:"pointer" }}
             onMouseEnter={e => { e.currentTarget.style.borderColor=locked?"#998800":"#4a4a8a"; e.currentTarget.style.color=locked?"#ffdd00":"#8080c0"; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor=locked?"#665500":"#2a2a4a"; e.currentTarget.style.color=locked?"#ccaa00":"#4a4a6a"; }}>
             {locked ? "Master 해제" : "Master 지정"}
           </button>
         </div>
-
-        {/* Master lock notice */}
         {locked && (
           <div style={{ marginBottom:"10px", padding:"7px 9px", background:"#1a1500", border:"1px solid #443300", borderRadius:"6px", fontSize:"10px", color:"#998800", lineHeight:1.6 }}>
             편집이 잠겨있습니다.<br/>복제 후 수정하세요.
@@ -917,9 +1027,8 @@ function SimulatorSection() {
         {sel.type === "labelButton" && <>
           <div style={{ marginBottom:"10px" }}>
             <div style={{ fontSize:"10px", color:"#4a4a7a", marginBottom:"4px" }}>labelText</div>
-            <input value={sel.labelText} onChange={e => !locked && updateItem(sel.id, { labelText: e.target.value })}
-              readOnly={locked}
-              style={{ width:"100%", background:"#08081a", border:"1px solid #2a2a4a", borderRadius:"5px", padding:"5px 8px", color: locked?"#555570":"#e0e0f0", fontSize:"11px", outline:"none", boxSizing:"border-box", cursor: locked?"default":"text" }} />
+            <input value={sel.labelText} onChange={e => !locked && updateItem(sel.id, { labelText: e.target.value })} readOnly={locked}
+              style={{ width:"100%", background:"#08081a", border:"1px solid #2a2a4a", borderRadius:"5px", padding:"5px 8px", color: locked?"#555570":"#e0e0f0", fontSize:"11px", outline:"none", boxSizing:"border-box" }} />
           </div>
           <div style={{ marginBottom:"10px" }}>
             <div style={{ fontSize:"10px", color:"#4a4a7a", marginBottom:"4px" }}>shapeStyle</div>
@@ -941,8 +1050,7 @@ function SimulatorSection() {
               <div style={{ fontSize:"10px", color:"#4a4a7a", marginBottom:"6px" }}>icon</div>
               <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:"4px" }}>
                 {ICON_NAMES.map(name => (
-                  <button key={name} disabled={locked} onClick={() => !locked && updateItem(sel.id, { iconName: name })}
-                    title={name}
+                  <button key={name} disabled={locked} onClick={() => !locked && updateItem(sel.id, { iconName: name })} title={name}
                     style={{ padding:"5px", borderRadius:"5px", background: sel.iconName===name?"#1e1e3a":"transparent", border: sel.iconName===name?"1px solid #3a3a6a":"1px solid #1a1a30", cursor: locked?"default":"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
                     <YdsIcon name={name} size={14} color={locked?"#333350": sel.iconName===name?"#c0c0f0":"#6060a0"} />
                   </button>
@@ -955,9 +1063,8 @@ function SimulatorSection() {
         {sel.type === "text" && <>
           <div style={{ marginBottom:"10px" }}>
             <div style={{ fontSize:"10px", color:"#4a4a7a", marginBottom:"4px" }}>content</div>
-            <textarea value={sel.content} onChange={e => !locked && updateItem(sel.id, { content: e.target.value })}
-              readOnly={locked}
-              style={{ width:"100%", background:"#08081a", border:"1px solid #2a2a4a", borderRadius:"5px", padding:"5px 8px", color: locked?"#555570":"#e0e0f0", fontSize:"11px", outline:"none", resize:"vertical", minHeight:"52px", boxSizing:"border-box", cursor: locked?"default":"text" }} />
+            <textarea value={sel.content} onChange={e => !locked && updateItem(sel.id, { content: e.target.value })} readOnly={locked}
+              style={{ width:"100%", background:"#08081a", border:"1px solid #2a2a4a", borderRadius:"5px", padding:"5px 8px", color: locked?"#555570":"#e0e0f0", fontSize:"11px", outline:"none", resize:"vertical", minHeight:"52px", boxSizing:"border-box" }} />
           </div>
           <div style={{ marginBottom:"10px" }}>
             <div style={{ fontSize:"10px", color:"#4a4a7a", marginBottom:"4px" }}>typography</div>
@@ -977,15 +1084,30 @@ function SimulatorSection() {
           </div>
         </>}
 
-        {/* Position */}
-        <div style={{ paddingTop:"10px", borderTop:"1px solid #1a1a30", display:"flex", gap:"8px", marginBottom:"10px" }}>
-          {["x","y"].map(axis => (
-            <div key={axis} style={{ flex:1 }}>
-              <div style={{ fontSize:"9px", color:"#3a3a5a", marginBottom:"3px", textTransform:"uppercase" }}>{axis} dp</div>
-              <input type="number" value={sel[axis]} onChange={e => !locked && updateItem(sel.id, { [axis]: Number(e.target.value) })} readOnly={locked}
-                style={{ width:"100%", background:"#08081a", border:"1px solid #2a2a4a", borderRadius:"5px", padding:"4px 6px", color: locked?"#555570":"#e0e0f0", fontSize:"11px", outline:"none", boxSizing:"border-box", cursor: locked?"default":"text" }} />
+        {/* Position & Size */}
+        <div style={{ paddingTop:"10px", borderTop:"1px solid #1a1a30", marginBottom:"10px" }}>
+          <div style={{ fontSize:"10px", color:"#4a4a7a", marginBottom:"6px" }}>Position &amp; Size</div>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"6px" }}>
+            {["x","y"].map(axis => (
+              <div key={axis}>
+                <div style={{ fontSize:"9px", color:"#3a3a5a", marginBottom:"3px" }}>{axis.toUpperCase()} (dp)</div>
+                <input type="number" value={sel[axis]} onChange={e => !locked && updateItem(sel.id, { [axis]: Number(e.target.value) })} readOnly={locked}
+                  style={{ width:"100%", background:"#08081a", border:"1px solid #2a2a4a", borderRadius:"5px", padding:"4px 6px", color: locked?"#555570":"#e0e0f0", fontSize:"11px", outline:"none", boxSizing:"border-box" }} />
+              </div>
+            ))}
+            <div>
+              <div style={{ fontSize:"9px", color:"#3a3a5a", marginBottom:"3px" }}>W (dp)</div>
+              <input type="number" value={sel.w || ""} placeholder="auto" onChange={e => !locked && updateItem(sel.id, { w: e.target.value ? Number(e.target.value) : undefined })} readOnly={locked}
+                style={{ width:"100%", background:"#08081a", border:"1px solid #2a2a4a", borderRadius:"5px", padding:"4px 6px", color: locked?"#555570":"#e0e0f0", fontSize:"11px", outline:"none", boxSizing:"border-box" }} />
             </div>
-          ))}
+            <div>
+              <div style={{ fontSize:"9px", color:"#3a3a5a", marginBottom:"3px" }}>Snap</div>
+              <button onClick={() => setSnapGrid(v => !v)}
+                style={{ width:"100%", padding:"4px 0", borderRadius:"5px", background: snapGrid?"#1e1e3a":"transparent", border: snapGrid?"1px solid #3a3a6a":"1px solid #1a1a30", color: snapGrid?"#c0c0f0":"#5a5a8a", fontSize:"10px", cursor:"pointer" }}>
+                {snapGrid ? "8dp ✓" : "free"}
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Duplicate + Delete */}
@@ -1074,19 +1196,20 @@ function SimulatorSection() {
           <div style={{ position:"absolute", inset:0 }} onClick={() => setSelected(null)}>
             {items.map(item => (
               <div key={item.id}
-                style={{ position:"absolute", left:`${item.x}px`, top:`${item.y}px`, cursor: item.isMaster?"pointer":"grab", outline: selected===item.id ? (item.isMaster?"1.5px dashed #ccaa0088":"1.5px dashed #fa005088") : "none", outlineOffset:"4px", borderRadius:"4px" }}
-                onMouseDown={e => startDrag(e, item)}>
+                ref={el => compRefs.current[item.id] = el}
+                style={{ position:"absolute", left:`${item.x}px`, top:`${item.y}px`, cursor: item.isMaster?"pointer":"grab", ...(item.w ? { width:`${item.w}px` } : {}) }}
+                onMouseDown={e => startDrag(e, item)}
+                onMouseEnter={() => setHovered(item.id)}
+                onMouseLeave={() => setHovered(null)}
+              >
                 {renderComp(item)}
-                {item.isMaster && (
-                  <div style={{ position:"absolute", top:"-7px", right:"-7px", background:"#ccaa00", borderRadius:"50%", width:"13px", height:"13px", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"7px", fontWeight:700, color:"#000", pointerEvents:"none", lineHeight:1 }}>
-                    M
-                  </div>
-                )}
+                {hovered === item.id && selected !== item.id && renderSelectionBox(item, true)}
+                {selected === item.id && renderSelectionBox(item, false)}
               </div>
             ))}
             {items.length === 0 && (
-              <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", color:"#bbb", fontSize:"12px", fontFamily:"system-ui", pointerEvents:"none", flexDirection:"column", gap:"6px" }}>
-                <span style={{ fontSize:"24px", opacity:0.3 }}>+</span>
+              <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", color:"#bbb", fontSize:`${sdp(12)}px`, fontFamily:"system-ui", pointerEvents:"none", flexDirection:"column", gap:`${sdp(6)}px` }}>
+                <span style={{ fontSize:`${sdp(24)}px`, opacity:0.3 }}>+</span>
                 <span style={{ opacity:0.4 }}>Add에서 컴포넌트 추가</span>
               </div>
             )}
