@@ -395,7 +395,7 @@ function ElevationSection() {
 
 // ── LabelButton code generator (YDS 2.0) ─────────────────────────────────────
 
-function genLabelButtonCode(platform, shape, colorStyle, size, config) {
+function genLabelButtonCode(platform, shape, colorStyle, size, config, iconName = "chevron_right") {
   const h   = size === "medium" ? 48 : 36;
   const ph  = size === "medium" ? 16 : 12;
   const fs  = size === "medium" ? 14 : 12;
@@ -410,19 +410,22 @@ function genLabelButtonCode(platform, shape, colorStyle, size, config) {
   const border = shape === "outlined" ? accent[colorStyle] : null;
   const hasLeftIcon  = config === "labelWithLeftIcon";
   const hasRightIcon = config === "labelWithRightIcon";
-  const iconNote = hasLeftIcon ? " (leftIcon)" : hasRightIcon ? " (rightIcon)" : "";
+  const icAndroid = `ic_${iconName}_v2`;
+  const icCompose  = `YdsIcon.${iconName.split('_').map(w=>w[0].toUpperCase()+w.slice(1)).join('')}`;
+  const icSwiftUI  = `YdsIcon.${iconName}`;
+  const icFlutter  = `YdsIcons.${iconName}`;
 
   if (platform === "xml") return `<com.google.android.material.button.MaterialButton
     android:layout_width="wrap_content"
     android:layout_height="${h}dp"
-    android:text="버튼${iconNote}"
+    android:text="버튼"
     android:textColor="${fg}"
     android:textSize="${fs}sp"
     android:fontFamily="@font/roboto_bold"
     android:paddingStart="${ph}dp"
     android:paddingEnd="${ph}dp"
     app:backgroundTint="${bg}"
-    app:cornerRadius="${r}dp"${shape === "outlined" ? `\n    style="@style/Widget.MaterialComponents.Button.OutlinedButton"\n    app:strokeColor="${border}"\n    app:strokeWidth="1dp"` : ""}${shape === "text" ? `\n    style="@style/Widget.MaterialComponents.Button.TextButton"` : ""} />`;
+    app:cornerRadius="${r}dp"${hasLeftIcon ? `\n    app:icon="@drawable/${icAndroid}"\n    app:iconGravity="start"\n    app:iconSize="${fs+2}dp"\n    app:iconPadding="4dp"` : hasRightIcon ? `\n    app:icon="@drawable/${icAndroid}"\n    app:iconGravity="end"\n    app:iconSize="${fs+2}dp"\n    app:iconPadding="4dp"` : ""}${shape === "outlined" ? `\n    style="@style/Widget.MaterialComponents.Button.OutlinedButton"\n    app:strokeColor="${border}"\n    app:strokeWidth="1dp"` : ""}${shape === "text" ? `\n    style="@style/Widget.MaterialComponents.Button.TextButton"` : ""} />`;
 
   if (platform === "compose") return `Button(
     onClick = { },
@@ -433,11 +436,11 @@ function genLabelButtonCode(platform, shape, colorStyle, size, config) {
     ),
     shape = RoundedCornerShape(${r}.dp),
     contentPadding = PaddingValues(horizontal = ${ph}.dp),${shape === "outlined" ? `\n    border = BorderStroke(1.dp, Color(0xFF${(border||"").replace("#","")})),` : ""}
-) {${hasLeftIcon ? `\n    Icon(/* leftIcon */, contentDescription = null)\n    Spacer(Modifier.width(4.dp))` : ""}
-    Text("버튼", fontSize = ${fs}.sp, fontWeight = FontWeight.Bold)${hasRightIcon ? `\n    Spacer(Modifier.width(4.dp))\n    Icon(Icons.Default.ChevronRight, contentDescription = null)` : ""}
+) {${hasLeftIcon ? `\n    Icon(${icCompose}, contentDescription = null, modifier = Modifier.size(${fs+2}.dp))\n    Spacer(Modifier.width(4.dp))` : ""}
+    Text("버튼", fontSize = ${fs}.sp, fontWeight = FontWeight.Bold)${hasRightIcon ? `\n    Spacer(Modifier.width(4.dp))\n    Icon(${icCompose}, contentDescription = null, modifier = Modifier.size(${fs+2}.dp))` : ""}
 }`;
 
-  if (platform === "swiftui") return `Button(action: {}) {${hasLeftIcon ? `\n    HStack(spacing: 4) {\n        Image(systemName: "pencil")\n        Text("버튼")\n    }` : hasRightIcon ? `\n    HStack(spacing: 4) {\n        Text("버튼")\n        Image(systemName: "chevron.right")\n    }` : `\n    Text("버튼")`}
+  if (platform === "swiftui") return `Button(action: {}) {${hasLeftIcon ? `\n    HStack(spacing: 4) {\n        ${icSwiftUI}.image.resizable().frame(width: ${fs+2}, height: ${fs+2})\n        Text("버튼")\n    }` : hasRightIcon ? `\n    HStack(spacing: 4) {\n        Text("버튼")\n        ${icSwiftUI}.image.resizable().frame(width: ${fs+2}, height: ${fs+2})\n    }` : `\n    Text("버튼")`}
 }
 .frame(height: ${h})
 .padding(.horizontal, ${ph})${shape === "filled" ? `\n.background(Color(hex: "${bg}"))\n.foregroundColor(Color(hex: "${fg}"))` : shape === "outlined" ? `\n.overlay(RoundedRectangle(cornerRadius: ${r}).stroke(Color(hex: "${border}"), lineWidth: 1))\n.foregroundColor(Color(hex: "${fg}"))` : `\n.foregroundColor(Color(hex: "${fg}"))`}
@@ -446,9 +449,9 @@ function genLabelButtonCode(platform, shape, colorStyle, size, config) {
 
   if (platform === "flutter") {
     const child = hasLeftIcon
-      ? `Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.edit, size: ${fs + 2}), SizedBox(width: 4), Text('버튼', style: TextStyle(fontSize: ${fs}, fontWeight: FontWeight.bold))])`
+      ? `Row(mainAxisSize: MainAxisSize.min, children: [SvgPicture.asset('assets/icons/${icAndroid}.svg', width: ${fs+2}, height: ${fs+2}, colorFilter: ColorFilter.mode(Color(0xFF${fg.replace("#","")}), BlendMode.srcIn)), SizedBox(width: 4), Text('버튼', style: TextStyle(fontSize: ${fs}, fontWeight: FontWeight.bold))])`
       : hasRightIcon
-      ? `Row(mainAxisSize: MainAxisSize.min, children: [Text('버튼', style: TextStyle(fontSize: ${fs}, fontWeight: FontWeight.bold)), SizedBox(width: 4), Icon(Icons.chevron_right, size: ${fs + 2})])`
+      ? `Row(mainAxisSize: MainAxisSize.min, children: [Text('버튼', style: TextStyle(fontSize: ${fs}, fontWeight: FontWeight.bold)), SizedBox(width: 4), SvgPicture.asset('assets/icons/${icAndroid}.svg', width: ${fs+2}, height: ${fs+2}, colorFilter: ColorFilter.mode(Color(0xFF${fg.replace("#","")}), BlendMode.srcIn))])`
       : `Text('버튼', style: TextStyle(fontSize: ${fs}, fontWeight: FontWeight.bold))`;
     return `${shape === "outlined" ? "OutlinedButton" : shape === "text" ? "TextButton" : "ElevatedButton"}(
   onPressed: () {},
@@ -478,8 +481,9 @@ function ButtonSection() {
   const [color,   setColor]    = useState("primary_v2");
   const [size,    setSize]     = useState("medium");
   const [config,  setConfig]   = useState("labelOnly");
-  const [iconPos, setIconPos]  = useState("left");   // "left" | "right"
-  const [selPlat, setSelPlat]  = useState("compose");
+  const [iconPos,  setIconPos]  = useState("left");
+  const [iconName, setIconName] = useState("chevron_right");
+  const [selPlat,  setSelPlat]  = useState("compose");
 
   // shapeStyle 변경 시 허용 colorStyle로 자동 리셋
   const setShape = (s) => {
@@ -510,11 +514,11 @@ function ButtonSection() {
   const previewFg     = shape === "filled"   ? fgFilled[color] : accent[color];
   const previewBorder = shape === "outlined" ? `1px solid ${accent[color]}` : "none";
 
-  const iconEl = <span style={{ fontSize: `${fs + 2}px`, lineHeight: 1 }}>✎</span>;
+  const iconEl = <YdsIcon name={iconName} size={fs + 2} color={previewFg} />;
   const configForCode = config === "labelWithIcon"
     ? (iconPos === "left" ? "labelWithLeftIcon" : "labelWithRightIcon")
     : "labelOnly";
-  const code = genLabelButtonCode(selPlat, shape, color, size, configForCode);
+  const code = genLabelButtonCode(selPlat, shape, color, size, configForCode, iconName);
 
   const ctl = (label, options, val, set, allowedSet) => (
     <div>
@@ -551,6 +555,19 @@ function ButtonSection() {
         {ctl("size",       sizes,    size,   setSize)}
         {ctl("config",     configs,  config, setConfig)}
         {config === "labelWithIcon" && ctl("iconPos", ["left","right"], iconPos, setIconPos)}
+        {config === "labelWithIcon" && (
+          <div>
+            <div style={{ fontSize:"10px", color:"#5a5a8a", marginBottom:"6px", letterSpacing:"0.1em", textTransform:"uppercase" }}>Icon</div>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(10,1fr)", gap:"4px", maxWidth:"320px" }}>
+              {ICON_NAMES.map(name => (
+                <button key={name} onClick={() => setIconName(name)} title={name}
+                  style={{ padding:"5px", borderRadius:"5px", background: iconName===name?"#1e1e3a":"transparent", border: iconName===name?"1px solid #3a3a6a":"1px solid #1a1a30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                  <YdsIcon name={name} size={14} color={iconName===name?"#c0c0f0":"#5a5a8a"} />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Preview */}
