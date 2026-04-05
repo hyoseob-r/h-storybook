@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { colors, typography, spacing, radius, elevation, states } from "./tokens";
+import { colors, typography, spacing, radius, elevation, states, metaTokens } from "./tokens";
 import { YdsIcon, YDS_ICONS, ICON_NAMES } from "./icons.jsx";
 
 // ── Code generators ──────────────────────────────────────────────────────────
@@ -146,7 +146,7 @@ function CopyButton({ text }) {
   const [copied, setCopied] = useState(false);
   return (
     <button onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
-      style={{ padding: "4px 10px", background: copied ? "#1a3a1a" : "#1a1a2a", border: `1px solid ${copied ? "#3a6a3a" : "#2a2a4a"}`, borderRadius: "6px", color: copied ? "#80d080" : "#6060a0", fontSize: "11px", cursor: "pointer", transition: "all 0.2s" }}>
+      style={{ padding: "4px 10px", background: copied ? "#e8f5e8" : "#f0f0f0", border: `1px solid ${copied ? "#5aaa5a" : "#d0d0d0"}`, borderRadius: "6px", color: copied ? "#2a7a2a" : "#888888", fontSize: "11px", cursor: "pointer", transition: "all 0.2s" }}>
       {copied ? "복사됨 ✓" : "복사"}
     </button>
   );
@@ -154,9 +154,9 @@ function CopyButton({ text }) {
 
 function CodeBlock({ code }) {
   return (
-    <div style={{ position: "relative", background: "#08081a", border: "1px solid #1a1a30", borderRadius: "8px", overflow: "hidden" }}>
+    <div style={{ position: "relative", background: "#ffffff", border: "1px solid #e5e5e5", borderRadius: "8px", overflow: "hidden" }}>
       <div style={{ position: "absolute", top: "8px", right: "8px" }}><CopyButton text={code} /></div>
-      <pre style={{ margin: 0, padding: "16px", fontSize: "11.5px", lineHeight: "1.7", color: "#a0a0d0", overflowX: "auto", fontFamily: "monospace", whiteSpace: "pre-wrap" }}>{code}</pre>
+      <pre style={{ margin: 0, padding: "16px", fontSize: "11.5px", lineHeight: "1.7", color: "#333333", overflowX: "auto", fontFamily: "monospace", whiteSpace: "pre-wrap" }}>{code}</pre>
     </div>
   );
 }
@@ -168,12 +168,132 @@ function PlatformTabs({ tabs }) {
       <div style={{ display: "flex", gap: "4px", marginBottom: "10px" }}>
         {tabs.map(t => (
           <button key={t.id} onClick={() => setActive(t.id)}
-            style={{ padding: "5px 12px", borderRadius: "6px", background: active === t.id ? "#1e1e3a" : "transparent", border: active === t.id ? "1px solid #3a3a6a" : "1px solid transparent", color: active === t.id ? "#c0c0f0" : "#5a5a8a", fontSize: "11px", cursor: "pointer", transition: "all 0.2s" }}>
+            style={{ padding: "5px 12px", borderRadius: "6px", background: active === t.id ? "#f0f0f0" : "transparent", border: active === t.id ? "1px solid #c0c0c0" : "1px solid transparent", color: active === t.id ? "#333333" : "#999999", fontSize: "11px", cursor: "pointer", transition: "all 0.2s" }}>
             {t.label}
           </button>
         ))}
       </div>
       <CodeBlock code={tabs.find(t => t.id === active)?.code || ""} />
+    </div>
+  );
+}
+
+// ── Section: Meta Tokens ─────────────────────────────────────────────────────
+
+function MetaTokensSection() {
+  const [tab, setTab] = useState("color");
+
+  const tabStyle = (t) => ({
+    padding: "6px 16px", borderRadius: "6px", border: "none", cursor: "pointer", fontSize: "12px", fontWeight: 600,
+    background: tab === t ? "#111111" : "#f0f0f0", color: tab === t ? "#fff" : "#888888", transition: "all 0.15s",
+  });
+
+  const sectionLabel = (text) => (
+    <div style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "10px", marginTop: "24px" }}>{text}</div>
+  );
+
+  const chip = (label, sub, color) => (
+    <div key={label} style={{ background: "#f8f8f8", border: "1px solid #e5e5e5", borderRadius: "8px", padding: "10px 12px", display: "flex", flexDirection: "column", gap: "4px", minWidth: "90px" }}>
+      {color && <div style={{ width: "28px", height: "28px", borderRadius: "6px", background: color, border: "1px solid #e0e0e0", marginBottom: "4px" }} />}
+      <div style={{ fontSize: "11px", fontWeight: 600, color: "#333333", fontFamily: "monospace" }}>{label}</div>
+      {sub && <div style={{ fontSize: "10px", color: "#999999", fontFamily: "monospace" }}>{sub}</div>}
+    </div>
+  );
+
+  // Color tab
+  const renderColors = () => (
+    <div>
+      <div style={{ background: "#f2f2f2", border: "1px solid #e5e5e5", borderRadius: "8px", padding: "14px 16px", marginBottom: "20px", fontSize: "11px", color: "#888888", lineHeight: "1.8" }}>
+        <span style={{ color: "#fa0050", fontWeight: 700 }}>Meta</span> → <span style={{ color: "#0c74e4", fontWeight: 700 }}>Semantic</span> → <span style={{ color: "#10a891", fontWeight: 700 }}>Component</span>
+        &nbsp;&nbsp;|&nbsp;&nbsp;Suffix <code style={{ color: "#111111" }}>_d</code> = dark-bg variant &nbsp;·&nbsp; <code style={{ color: "#111111" }}>_i</code> = inverse (dark mode)
+      </div>
+      {Object.entries(metaTokens.colors).map(([family, tokens]) => (
+        <div key={family}>
+          {sectionLabel(family)}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+            {Object.entries(tokens).filter(([, v]) => v).map(([name, hex]) => chip(name, hex, hex))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  // Typography tab
+  const renderTypography = () => (
+    <div>
+      <div style={{ background: "#f2f2f2", border: "1px solid #e5e5e5", borderRadius: "8px", padding: "14px 16px", marginBottom: "20px", fontSize: "11px", color: "#888888", lineHeight: "1.8" }}>
+        <span style={{ color: "#111111", fontWeight: 700 }}>meta_sf_</span><span style={{ color: "#555555" }}>{"{size}"}</span><span style={{ color: "#111111", fontWeight: 700 }}>_</span><span style={{ color: "#555555" }}>{"{r|b}"}</span>
+        &nbsp;&nbsp;·&nbsp;&nbsp; Typeface: SD Neo / SF Pro Display (iOS) &nbsp;·&nbsp; Noto Sans / Roboto (Android)
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "8px" }}>
+        {Object.entries(metaTokens.typography).map(([name, spec]) => (
+          <div key={name} style={{ background: "#f8f8f8", border: "1px solid #e5e5e5", borderRadius: "8px", padding: "10px 14px", display: "flex", flexDirection: "column", gap: "6px" }}>
+            <div style={{ fontSize: "10px", fontFamily: "monospace", color: "#111111", fontWeight: 700 }}>{name}</div>
+            <div style={{ fontSize: `${Math.min(spec.size, 20)}px`, fontWeight: spec.weight, lineHeight: `${spec.lineHeight}px`, color: "#111111", whiteSpace: "nowrap", overflow: "hidden" }}>
+              Ag — {spec.size}px
+            </div>
+            <div style={{ fontSize: "9px", color: "#999999", fontFamily: "monospace" }}>size:{spec.size} lh:{spec.lineHeight} w:{spec.weight}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  // Radius tab
+  const renderRadius = () => (
+    <div>
+      <div style={{ background: "#f2f2f2", border: "1px solid #e5e5e5", borderRadius: "8px", padding: "14px 16px", marginBottom: "20px", fontSize: "11px", color: "#888888" }}>
+        <span style={{ color: "#111111", fontWeight: 700 }}>meta_r0–r6</span> &nbsp;+&nbsp; <span style={{ color: "#111111", fontWeight: 700 }}>rfull</span> &nbsp;·&nbsp; Values: 0, 4, 8, 10, 12, 16, 20 &nbsp;·&nbsp; rfull = 360
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
+        {Object.entries(metaTokens.radius).map(([name, value]) => (
+          <div key={name} style={{ background: "#f8f8f8", border: "1px solid #e5e5e5", borderRadius: "8px", padding: "16px 20px", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
+            <div style={{ width: "64px", height: "64px", background: "#11111110", border: "1.5px solid #111111", borderRadius: `${Math.min(value, 32)}px` }} />
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: "11px", fontFamily: "monospace", color: "#333333", fontWeight: 700 }}>{name}</div>
+              <div style={{ fontSize: "10px", color: "#999999", marginTop: "2px" }}>{value === 360 ? "360 (full)" : `${value}dp`}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderSpacing = () => (
+    <div>
+      <div style={{ background: "#f2f2f2", border: "1px solid #e5e5e5", borderRadius: "8px", padding: "14px 16px", marginBottom: "20px", fontSize: "11px", color: "#888888" }}>
+        <span style={{ color: "#111111", fontWeight: 700 }}>meta_s1–s13</span> &nbsp;·&nbsp; ≤12dp: 2의 배수 &nbsp;·&nbsp; &gt;12dp: 4의 배수 &nbsp;·&nbsp; Range: 2→40dp
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "flex-end" }}>
+        {Object.entries(metaTokens.spacing).map(([name, value]) => (
+          <div key={name} style={{ background: "#f8f8f8", border: "1px solid #e5e5e5", borderRadius: "8px", padding: "12px 14px", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
+            <div style={{ width: `${Math.min(value * 2.5, 80)}px`, height: `${Math.min(value * 2.5, 80)}px`, background: value <= 12 ? "#11111115" : "#11111130", border: `1.5px solid ${value <= 12 ? "#cccccc" : "#111111"}`, borderRadius: "50%", minWidth: "8px", minHeight: "8px" }} />
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: "10px", fontFamily: "monospace", color: "#333333", fontWeight: 700 }}>{name}</div>
+              <div style={{ fontSize: "11px", color: "#111111", marginTop: "2px", fontWeight: 700 }}>{value}dp</div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{ marginTop: "16px", fontSize: "10px", color: "#bbbbbb" }}>
+        <span style={{ display: "inline-block", width: "10px", height: "10px", borderRadius: "50%", background: "#11111115", border: "1px solid #cccccc", marginRight: "6px", verticalAlign: "middle" }} />필요시 사용 (2, 4, 6, 8, 10, 12)
+        &nbsp;&nbsp;
+        <span style={{ display: "inline-block", width: "10px", height: "10px", borderRadius: "50%", background: "#11111130", border: "1px solid #111111", marginRight: "6px", verticalAlign: "middle" }} />우선 사용 (16→40)
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ padding: "32px", maxWidth: "1100px" }}>
+      <div style={{ display: "flex", gap: "8px", marginBottom: "28px" }}>
+        {["color", "typography", "radius", "spacing"].map(t => (
+          <button key={t} style={tabStyle(t)} onClick={() => setTab(t)}>{t.charAt(0).toUpperCase() + t.slice(1)}</button>
+        ))}
+      </div>
+      {tab === "color"      && renderColors()}
+      {tab === "typography" && renderTypography()}
+      {tab === "radius"     && renderRadius()}
+      {tab === "spacing"    && renderSpacing()}
     </div>
   );
 }
@@ -184,10 +304,10 @@ function ColorSwatch({ name, value }) {
   const isDark = parseInt(value.replace("#", "").slice(0, 2), 16) < 128;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "6px", cursor: "pointer" }} onClick={() => navigator.clipboard.writeText(value)}>
-      <div style={{ width: "100%", height: "56px", background: value, borderRadius: "8px", border: "1px solid #1a1a30", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ width: "100%", height: "56px", background: value, borderRadius: "8px", border: "1px solid #e5e5e5", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <span style={{ fontSize: "10px", color: isDark ? "#ffffff88" : "#00000088", fontFamily: "monospace" }}>{value}</span>
       </div>
-      <div style={{ fontSize: "10px", color: "#7070a0", lineHeight: "1.4" }}>{name}</div>
+      <div style={{ fontSize: "10px", color: "#888888", lineHeight: "1.4" }}>{name}</div>
     </div>
   );
 }
@@ -216,13 +336,13 @@ function ColorsSection() {
     <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
       {groups.map(g => (
         <div key={g.title}>
-          <div style={{ fontSize: "11px", color: "#5a5a8a", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "14px", fontWeight: 600 }}>{g.title}</div>
+          <div style={{ fontSize: "11px", color: "#999999", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "14px", fontWeight: 600 }}>{g.title}</div>
           {g.textRule ? (
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               {/* rule badge */}
               <div style={{ display: "flex", gap: "8px", marginBottom: "4px" }}>
-                <div style={{ fontSize: "10px", color: "#5a5a8a", background: "#0c0c1e", border: "1px solid #1a1a30", padding: "2px 8px", borderRadius: "4px" }}>규칙.1 숫자 없음 → TextColor #FFF or #333</div>
-                <div style={{ fontSize: "10px", color: "#5a5a8a", background: "#0c0c1e", border: "1px solid #1a1a30", padding: "2px 8px", borderRadius: "4px" }}>규칙.2 _100 suffix → TextColor = base 색</div>
+                <div style={{ fontSize: "10px", color: "#999999", background: "#ffffff", border: "1px solid #e5e5e5", padding: "2px 8px", borderRadius: "4px" }}>규칙.1 숫자 없음 → TextColor #FFF or #333</div>
+                <div style={{ fontSize: "10px", color: "#999999", background: "#ffffff", border: "1px solid #e5e5e5", padding: "2px 8px", borderRadius: "4px" }}>규칙.2 _100 suffix → TextColor = base 색</div>
               </div>
               {lightPairs.map(([base, light]) => {
                 const bt = colors.light[base];
@@ -236,9 +356,9 @@ function ColorsSection() {
                       <span style={{ fontFamily: "monospace", fontSize: "9px", color: lightTextColor[base], opacity: 0.6 }}>{bt.value.toUpperCase()}</span>
                     </div>
                     {/* arrow */}
-                    <div style={{ display: "flex", alignItems: "center", color: "#3a3a5a", fontSize: "12px" }}>→</div>
+                    <div style={{ display: "flex", alignItems: "center", color: "#bbbbbb", fontSize: "12px" }}>→</div>
                     {/* _100 */}
-                    <div style={{ flex: 1, background: lt.value, borderRadius: "10px", padding: "14px 16px", display: "flex", flexDirection: "column", gap: "4px", border: "1px solid #1a1a30" }}>
+                    <div style={{ flex: 1, background: lt.value, borderRadius: "10px", padding: "14px 16px", display: "flex", flexDirection: "column", gap: "4px", border: "1px solid #e5e5e5" }}>
                       <span style={{ fontFamily: "monospace", fontSize: "10px", color: lightTextColor[light], opacity: 0.7 }}>{lt.name}</span>
                       <span style={{ fontFamily: "monospace", fontSize: "11px", color: lightTextColor[light], fontWeight: 600 }}>버튼</span>
                       <span style={{ fontFamily: "monospace", fontSize: "9px", color: lightTextColor[light], opacity: 0.6 }}>{lt.value.toUpperCase()}</span>
@@ -264,21 +384,21 @@ function ColorsSection() {
       ))}
       {/* States / Overlay */}
       <div>
-        <div style={{ fontSize: "11px", color: "#5a5a8a", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "14px", fontWeight: 600 }}>States / Overlay</div>
+        <div style={{ fontSize: "11px", color: "#999999", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "14px", fontWeight: 600 }}>States / Overlay</div>
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {overlays.map(o => (
-            <div key={o.name} style={{ padding: "14px 20px", background: "#0c0c1e", border: "1px solid #1a1a30", borderRadius: "10px", display: "flex", alignItems: "center", gap: "16px" }}>
+            <div key={o.name} style={{ padding: "14px 20px", background: "#ffffff", border: "1px solid #e5e5e5", borderRadius: "10px", display: "flex", alignItems: "center", gap: "16px" }}>
               {/* Checkerboard + overlay swatch */}
               <div style={{ width: "48px", height: "32px", borderRadius: "6px", flexShrink: 0, position: "relative", overflow: "hidden" }}>
-                <div style={{ position: "absolute", inset: 0, backgroundImage: "repeating-conic-gradient(#3a3a5a 0% 25%, #1a1a30 0% 50%)", backgroundSize: "10px 10px" }} />
+                <div style={{ position: "absolute", inset: 0, backgroundImage: "repeating-conic-gradient(#bbbbbb 0% 25%, #e5e5e5 0% 50%)", backgroundSize: "10px 10px" }} />
                 <div style={{ position: "absolute", inset: 0, background: o.value }} />
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: "11px", color: "#c0c0f0", fontWeight: 600 }}>{o.label}</div>
-                <div style={{ fontSize: "10px", color: "#5a5a8a", fontFamily: "monospace", marginTop: "2px" }}>{o.name}</div>
+                <div style={{ fontSize: "11px", color: "#333333", fontWeight: 600 }}>{o.label}</div>
+                <div style={{ fontSize: "10px", color: "#999999", fontFamily: "monospace", marginTop: "2px" }}>{o.name}</div>
               </div>
-              <div style={{ fontFamily: "monospace", fontSize: "11px", color: "#7070a0" }}>{o.value.toUpperCase()}</div>
-              <div style={{ fontSize: "10px", color: "#3a3a6a", background: "#1a1a30", padding: "2px 8px", borderRadius: "4px" }}>opacity {o.opacity}</div>
+              <div style={{ fontFamily: "monospace", fontSize: "11px", color: "#888888" }}>{o.value.toUpperCase()}</div>
+              <div style={{ fontSize: "10px", color: "#c0c0c0", background: "#e5e5e5", padding: "2px 8px", borderRadius: "4px" }}>opacity {o.opacity}</div>
             </div>
           ))}
         </div>
@@ -293,12 +413,12 @@ function TypographySection() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
       {typography.map(t => (
-        <div key={t.name} style={{ padding: "16px 20px", background: "#0c0c1e", border: "1px solid #1a1a30", borderRadius: "10px", display: "flex", alignItems: "baseline", gap: "20px" }}>
+        <div key={t.name} style={{ padding: "16px 20px", background: "#ffffff", border: "1px solid #e5e5e5", borderRadius: "10px", display: "flex", alignItems: "baseline", gap: "20px" }}>
           <div style={{ width: "180px", flexShrink: 0 }}>
-            <div style={{ fontSize: "10px", color: "#5a5a8a", marginBottom: "2px", fontFamily: "monospace" }}>{t.name}</div>
-            <div style={{ fontSize: "10px", color: "#3a3a6a" }}>{t.size}px · {t.style} · lh {t.lineHeight}</div>
+            <div style={{ fontSize: "10px", color: "#999999", marginBottom: "2px", fontFamily: "monospace" }}>{t.name}</div>
+            <div style={{ fontSize: "10px", color: "#c0c0c0" }}>{t.size}px · {t.style} · lh {t.lineHeight}</div>
           </div>
-          <div style={{ fontFamily: "Roboto, sans-serif", fontSize: `${t.size}px`, fontWeight: t.weight, lineHeight: `${t.lineHeight}px`, color: "#e0e0f0" }}>
+          <div style={{ fontFamily: "Roboto, sans-serif", fontSize: `${t.size}px`, fontWeight: t.weight, lineHeight: `${t.lineHeight}px`, color: "#111111" }}>
             요기요-배달할때마다 포인트 적립 Points earned with every delivery
           </div>
         </div>
@@ -313,24 +433,24 @@ function SpacingSection() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       <div>
-        <div style={{ fontSize: "11px", color: "#5a5a8a", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "14px", fontWeight: 600 }}>Spacing</div>
+        <div style={{ fontSize: "11px", color: "#999999", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "14px", fontWeight: 600 }}>Spacing</div>
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {spacing.map(s => (
-            <div key={s.name} style={{ padding: "12px 20px", background: "#0c0c1e", border: "1px solid #1a1a30", borderRadius: "10px", display: "flex", alignItems: "center", gap: "20px" }}>
-              <div style={{ width: "60px", fontSize: "12px", color: "#7070a0", fontFamily: "monospace" }}>{s.name}</div>
-              <div style={{ width: `${s.value * 4}px`, height: "20px", background: "#fa005033", border: "1px solid #fa005066", borderRadius: "3px" }} />
-              <div style={{ fontSize: "12px", color: "#5a5a8a" }}>{s.value}px</div>
+            <div key={s.name} style={{ padding: "12px 20px", background: "#ffffff", border: "1px solid #e5e5e5", borderRadius: "10px", display: "flex", alignItems: "center", gap: "20px" }}>
+              <div style={{ width: "60px", fontSize: "12px", color: "#888888", fontFamily: "monospace" }}>{s.name}</div>
+              <div style={{ width: `${s.value * 4}px`, height: "20px", background: "#11111115", border: "1px solid #cccccc", borderRadius: "3px" }} />
+              <div style={{ fontSize: "12px", color: "#999999" }}>{s.value}px</div>
             </div>
           ))}
         </div>
       </div>
       <div>
-        <div style={{ fontSize: "11px", color: "#5a5a8a", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "14px", fontWeight: 600 }}>Border Radius</div>
+        <div style={{ fontSize: "11px", color: "#999999", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "14px", fontWeight: 600 }}>Border Radius</div>
         <div style={{ display: "flex", gap: "16px" }}>
           {radius.map(r => (
-            <div key={r.name} style={{ padding: "16px 24px", background: "#0c0c1e", border: "1px solid #1a1a30", borderRadius: `${r.value}px`, display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
-              <div style={{ fontSize: "12px", color: "#7070a0", fontFamily: "monospace" }}>{r.name}</div>
-              <div style={{ fontSize: "11px", color: "#5a5a8a" }}>{r.value}px</div>
+            <div key={r.name} style={{ padding: "16px 24px", background: "#ffffff", border: "1px solid #e5e5e5", borderRadius: `${r.value}px`, display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
+              <div style={{ fontSize: "12px", color: "#888888", fontFamily: "monospace" }}>{r.name}</div>
+              <div style={{ fontSize: "11px", color: "#999999" }}>{r.value}px</div>
             </div>
           ))}
         </div>
@@ -352,18 +472,18 @@ function ElevationSection() {
       <div style={{ display: "flex", gap: "4px" }}>
         {platforms.map(p => (
           <button key={p} onClick={() => setSelPlatform(p)}
-            style={{ padding: "5px 12px", borderRadius: "6px", background: selPlatform === p ? "#1e1e3a" : "transparent", border: selPlatform === p ? "1px solid #3a3a6a" : "1px solid #1a1a30", color: selPlatform === p ? "#c0c0f0" : "#5a5a8a", fontSize: "11px", cursor: "pointer" }}>
+            style={{ padding: "5px 12px", borderRadius: "6px", background: selPlatform === p ? "#f0f0f0" : "transparent", border: selPlatform === p ? "1px solid #c0c0c0" : "1px solid #e5e5e5", color: selPlatform === p ? "#333333" : "#999999", fontSize: "11px", cursor: "pointer" }}>
             {platLabel[p]}
           </button>
         ))}
       </div>
 
       {elevation.map(lv => (
-        <div key={lv.name} style={{ background: "#0c0c1e", border: "1px solid #1a1a30", borderRadius: "12px", padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+        <div key={lv.name} style={{ background: "#ffffff", border: "1px solid #e5e5e5", borderRadius: "12px", padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-            <div style={{ fontFamily: "monospace", fontSize: "11px", color: "#5a5a8a", background: "#08081a", border: "1px solid #1a1a30", padding: "2px 8px", borderRadius: "4px" }}>{lv.name}</div>
-            <div style={{ fontSize: "13px", color: "#c0c0f0", fontWeight: 600 }}>{lv.label}</div>
-            <div style={{ fontSize: "10px", color: "#3a3a6a", textTransform: "uppercase", letterSpacing: "0.1em" }}>↕ {lv.direction === "up" ? "Upward" : "Downward"}</div>
+            <div style={{ fontFamily: "monospace", fontSize: "11px", color: "#999999", background: "#ffffff", border: "1px solid #e5e5e5", padding: "2px 8px", borderRadius: "4px" }}>{lv.name}</div>
+            <div style={{ fontSize: "13px", color: "#333333", fontWeight: 600 }}>{lv.label}</div>
+            <div style={{ fontSize: "10px", color: "#c0c0c0", textTransform: "uppercase", letterSpacing: "0.1em" }}>↕ {lv.direction === "up" ? "Upward" : "Downward"}</div>
           </div>
 
           {/* Visual preview */}
@@ -372,15 +492,15 @@ function ElevationSection() {
               <div style={{ fontSize: "10px", color: "#999", fontFamily: "monospace" }}>{lv.label}</div>
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: "10px", color: "#5a5a8a", marginBottom: "6px", letterSpacing: "0.1em", textTransform: "uppercase" }}>CSS box-shadow</div>
-              <code style={{ fontSize: "11px", color: "#8080c0", fontFamily: "monospace", lineHeight: 1.6 }}>{lv.css}</code>
+              <div style={{ fontSize: "10px", color: "#999999", marginBottom: "6px", letterSpacing: "0.1em", textTransform: "uppercase" }}>CSS box-shadow</div>
+              <code style={{ fontSize: "11px", color: "#555555", fontFamily: "monospace", lineHeight: 1.6 }}>{lv.css}</code>
             </div>
           </div>
 
           {/* Platform code */}
           <div>
-            <div style={{ fontSize: "10px", color: "#5a5a8a", marginBottom: "6px", letterSpacing: "0.1em", textTransform: "uppercase" }}>{platLabel[selPlatform]}</div>
-            <pre style={{ background: "#060612", border: "1px solid #1a1a30", borderRadius: "8px", padding: "14px 16px", fontSize: "12px", color: "#9090d0", fontFamily: "monospace", overflowX: "auto", lineHeight: 1.6, margin: 0 }}>
+            <div style={{ fontSize: "10px", color: "#999999", marginBottom: "6px", letterSpacing: "0.1em", textTransform: "uppercase" }}>{platLabel[selPlatform]}</div>
+            <pre style={{ background: "#f5f5f5", border: "1px solid #e5e5e5", borderRadius: "8px", padding: "14px 16px", fontSize: "12px", color: "#555555", fontFamily: "monospace", overflowX: "auto", lineHeight: 1.6, margin: 0 }}>
               {selPlatform === "swiftui" ? lv.swiftui
                : selPlatform === "ios"     ? `layer.shadowColor = UIColor(red: 0.098, green: 0.188, blue: 0.251, alpha: 1).cgColor\nlayer.${lv.ios}`
                : selPlatform === "compose" ? `Modifier.shadow(${lv.compose}, shape = RoundedCornerShape(12.dp))`
@@ -522,13 +642,13 @@ function ButtonSection() {
 
   const ctl = (label, options, val, set, allowedSet) => (
     <div>
-      <div style={{ fontSize: "10px", color: "#5a5a8a", marginBottom: "6px", letterSpacing: "0.1em", textTransform: "uppercase" }}>{label}</div>
+      <div style={{ fontSize: "10px", color: "#999999", marginBottom: "6px", letterSpacing: "0.1em", textTransform: "uppercase" }}>{label}</div>
       <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
         {options.map(o => {
           const disabled = allowedSet && !allowedSet.includes(o);
           return (
             <button key={o} onClick={() => !disabled && set(o)} disabled={disabled}
-              style={{ padding: "4px 10px", borderRadius: "6px", background: val === o ? "#1e1e3a" : "transparent", border: val === o ? "1px solid #3a3a6a" : "1px solid #1a1a30", color: disabled ? "#2a2a4a" : val === o ? "#c0c0f0" : "#5a5a8a", fontSize: "11px", cursor: disabled ? "default" : "pointer", textDecoration: disabled ? "line-through" : "none" }}>
+              style={{ padding: "4px 10px", borderRadius: "6px", background: val === o ? "#f0f0f0" : "transparent", border: val === o ? "1px solid #c0c0c0" : "1px solid #e5e5e5", color: disabled ? "#d0d0d0" : val === o ? "#333333" : "#999999", fontSize: "11px", cursor: disabled ? "default" : "pointer", textDecoration: disabled ? "line-through" : "none" }}>
               {o}
             </button>
           );
@@ -542,8 +662,8 @@ function ButtonSection() {
       {/* Spec badges */}
       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
         {[["height", size === "medium" ? "48dp" : "36dp"], ["padding-h", size === "medium" ? "s7 · 16dp" : "s6 · 12dp"], ["font", size === "medium" ? "body_5 · 14px Bold" : "body_9 · 12px Bold"], ["radius", size === "medium" ? "r3 · 10dp" : "r2 · 8dp"]].map(([k, v]) => (
-          <div key={k} style={{ padding: "3px 10px", background: "#0c0c1e", border: "1px solid #1a1a30", borderRadius: "6px", fontSize: "10px", color: "#6060a0" }}>
-            <span style={{ color: "#3a3a6a" }}>{k} </span>{v}
+          <div key={k} style={{ padding: "3px 10px", background: "#ffffff", border: "1px solid #e5e5e5", borderRadius: "6px", fontSize: "10px", color: "#888888" }}>
+            <span style={{ color: "#c0c0c0" }}>{k} </span>{v}
           </div>
         ))}
       </div>
@@ -557,12 +677,12 @@ function ButtonSection() {
         {config === "labelWithIcon" && ctl("iconPos", ["left","right"], iconPos, setIconPos)}
         {config === "labelWithIcon" && (
           <div>
-            <div style={{ fontSize:"10px", color:"#5a5a8a", marginBottom:"6px", letterSpacing:"0.1em", textTransform:"uppercase" }}>Icon</div>
+            <div style={{ fontSize:"10px", color:"#999999", marginBottom:"6px", letterSpacing:"0.1em", textTransform:"uppercase" }}>Icon</div>
             <div style={{ display:"grid", gridTemplateColumns:"repeat(10,1fr)", gap:"4px", maxWidth:"320px" }}>
               {ICON_NAMES.map(name => (
                 <button key={name} onClick={() => setIconName(name)} title={name}
-                  style={{ padding:"5px", borderRadius:"5px", background: iconName===name?"#1e1e3a":"transparent", border: iconName===name?"1px solid #3a3a6a":"1px solid #1a1a30", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                  <YdsIcon name={name} size={14} color={iconName===name?"#c0c0f0":"#5a5a8a"} />
+                  style={{ padding:"5px", borderRadius:"5px", background: iconName===name?"#f0f0f0":"transparent", border: iconName===name?"1px solid #c0c0c0":"1px solid #e5e5e5", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                  <YdsIcon name={name} size={14} color={iconName===name?"#333333":"#999999"} />
                 </button>
               ))}
             </div>
@@ -571,7 +691,7 @@ function ButtonSection() {
       </div>
 
       {/* Preview */}
-      <div style={{ padding: "40px", background: "#0c0c1e", border: "1px solid #1a1a30", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", gap: "16px", flexWrap: "wrap" }}>
+      <div style={{ padding: "40px", background: "#ffffff", border: "1px solid #e5e5e5", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", gap: "16px", flexWrap: "wrap" }}>
         {/* enabled */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
           <button style={{ height: `${h}px`, padding: `0 ${ph}px`, background: previewBg, border: previewBorder, borderRadius: `${r}px`, color: previewFg, fontSize: `${fs}px`, fontWeight: 700, cursor: "pointer", fontFamily: "Roboto, sans-serif", display: "flex", alignItems: "center", gap: "5px" }}>
@@ -579,7 +699,7 @@ function ButtonSection() {
             버튼
             {config === "labelWithIcon" && iconPos === "right" && iconEl}
           </button>
-          <span style={{ fontSize: "9px", color: "#3a3a5a", letterSpacing: "0.1em" }}>ENABLED</span>
+          <span style={{ fontSize: "9px", color: "#bbbbbb", letterSpacing: "0.1em" }}>ENABLED</span>
         </div>
         {/* disabled */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
@@ -588,7 +708,7 @@ function ButtonSection() {
             버튼
             {config === "labelWithIcon" && iconPos === "right" && iconEl}
           </button>
-          <span style={{ fontSize: "9px", color: "#3a3a5a", letterSpacing: "0.1em" }}>DISABLED</span>
+          <span style={{ fontSize: "9px", color: "#bbbbbb", letterSpacing: "0.1em" }}>DISABLED</span>
         </div>
       </div>
 
@@ -596,12 +716,12 @@ function ButtonSection() {
       <div style={{ display: "flex", gap: "4px", marginBottom: "-16px" }}>
         {plats.map(p => (
           <button key={p.id} onClick={() => setSelPlat(p.id)}
-            style={{ padding: "5px 12px", borderRadius: "6px 6px 0 0", background: selPlat === p.id ? "#0c0c1e" : "transparent", border: selPlat === p.id ? "1px solid #1a1a30" : "1px solid transparent", borderBottom: selPlat === p.id ? "1px solid #0c0c1e" : "none", color: selPlat === p.id ? "#c0c0f0" : "#5a5a8a", fontSize: "11px", cursor: "pointer" }}>
+            style={{ padding: "5px 12px", borderRadius: "6px 6px 0 0", background: selPlat === p.id ? "#ffffff" : "transparent", border: selPlat === p.id ? "1px solid #e5e5e5" : "1px solid transparent", borderBottom: selPlat === p.id ? "1px solid #e5e5e5" : "none", color: selPlat === p.id ? "#333333" : "#999999", fontSize: "11px", cursor: "pointer" }}>
             {p.label}
           </button>
         ))}
       </div>
-      <pre style={{ background: "#0c0c1e", border: "1px solid #1a1a30", borderRadius: "0 8px 8px 8px", padding: "16px", fontSize: "12px", color: "#9090d0", fontFamily: "monospace", overflowX: "auto", lineHeight: 1.65, margin: 0 }}>
+      <pre style={{ background: "#ffffff", border: "1px solid #e5e5e5", borderRadius: "0 8px 8px 8px", padding: "16px", fontSize: "12px", color: "#555555", fontFamily: "monospace", overflowX: "auto", lineHeight: 1.65, margin: 0 }}>
         {code}
       </pre>
     </div>
@@ -633,22 +753,22 @@ function LabelSection() {
       {/* Controls */}
       <div style={{ display: "flex", gap: "24px", flexWrap: "wrap" }}>
         <div>
-          <div style={{ fontSize: "10px", color: "#5a5a8a", marginBottom: "8px", letterSpacing: "0.1em", textTransform: "uppercase" }}>Color</div>
+          <div style={{ fontSize: "10px", color: "#999999", marginBottom: "8px", letterSpacing: "0.1em", textTransform: "uppercase" }}>Color</div>
           <div style={{ display: "flex", gap: "4px" }}>
             {colors2.map(c => (
               <button key={c} onClick={() => setColor(c)}
-                style={{ padding: "5px 12px", borderRadius: "6px", background: color === c ? "#1e1e3a" : "transparent", border: color === c ? "1px solid #3a3a6a" : "1px solid #1a1a30", color: color === c ? "#c0c0f0" : "#5a5a8a", fontSize: "11px", cursor: "pointer", textTransform: "capitalize" }}>
+                style={{ padding: "5px 12px", borderRadius: "6px", background: color === c ? "#f0f0f0" : "transparent", border: color === c ? "1px solid #c0c0c0" : "1px solid #e5e5e5", color: color === c ? "#333333" : "#999999", fontSize: "11px", cursor: "pointer", textTransform: "capitalize" }}>
                 {c}
               </button>
             ))}
           </div>
         </div>
         <div>
-          <div style={{ fontSize: "10px", color: "#5a5a8a", marginBottom: "8px", letterSpacing: "0.1em", textTransform: "uppercase" }}>Size</div>
+          <div style={{ fontSize: "10px", color: "#999999", marginBottom: "8px", letterSpacing: "0.1em", textTransform: "uppercase" }}>Size</div>
           <div style={{ display: "flex", gap: "4px" }}>
             {sizes.map(s => (
               <button key={s} onClick={() => setSize(s)}
-                style={{ padding: "5px 12px", borderRadius: "6px", background: size === s ? "#1e1e3a" : "transparent", border: size === s ? "1px solid #3a3a6a" : "1px solid #1a1a30", color: size === s ? "#c0c0f0" : "#5a5a8a", fontSize: "11px", cursor: "pointer", textTransform: "capitalize" }}>
+                style={{ padding: "5px 12px", borderRadius: "6px", background: size === s ? "#f0f0f0" : "transparent", border: size === s ? "1px solid #c0c0c0" : "1px solid #e5e5e5", color: size === s ? "#333333" : "#999999", fontSize: "11px", cursor: "pointer", textTransform: "capitalize" }}>
                 {s}
               </button>
             ))}
@@ -657,7 +777,7 @@ function LabelSection() {
       </div>
 
       {/* Preview */}
-      <div style={{ padding: "40px", background: "#0c0c1e", border: "1px solid #1a1a30", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", flexWrap: "wrap" }}>
+      <div style={{ padding: "40px", background: "#ffffff", border: "1px solid #e5e5e5", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", flexWrap: "wrap" }}>
         {["라벨", "NEW", "인기", "이벤트"].map(text => (
           <span key={text} style={{ padding: "2px 8px", background: bgMap[color], borderRadius: "10px", color: fgMap[color], fontSize: fontMap[size], fontWeight: 700, fontFamily: "Roboto, sans-serif" }}>
             {text}
@@ -704,7 +824,7 @@ const DEVICES = {
 
 const MAX_FRAME_H = 560;
 
-function PhoneFrame({ platform, device, children, canvasMode }) {
+function PhoneFrame({ platform, device, children, canvasMode, darkMode = false }) {
   const isIOS = platform === "ios";
   const scale = MAX_FRAME_H / device.h;
   const fw = Math.round(device.w * scale);
@@ -714,11 +834,16 @@ function PhoneFrame({ platform, device, children, canvasMode }) {
   // 폰 전체를 실제 dp 크기로 렌더링 후 scale로 축소
   const totalW = device.w + border * 2;
   const totalH = device.h + border * 2;
+  const screenBg  = darkMode ? "#1d1d1d" : "#ffffff";
+  const statusBg  = darkMode ? "#1d1d1d" : "#ffffff";
+  const statusFg  = darkMode ? "#ffffff" : "#000000";
+  const homeBg    = darkMode ? "#1d1d1d" : "#ffffff";
+  const homeBar   = darkMode ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.2)";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
       {/* Device label */}
-      <div style={{ fontSize: "10px", color: "#4a4a7a", letterSpacing: "0.1em" }}>
+      <div style={{ fontSize: "10px", color: "#aaaaaa", letterSpacing: "0.1em" }}>
         {device.name} · {device.w} × {device.h}dp
       </div>
       {/* Layout placeholder — actual size after scale */}
@@ -736,31 +861,31 @@ function PhoneFrame({ platform, device, children, canvasMode }) {
             }}>
               {/* Status bar */}
               {isIOS ? (
-                <div style={{ height: "44px", background: "#fff", display: "flex", alignItems: "flex-end", justifyContent: "space-between", padding: "0 24px 8px", flexShrink: 0 }}>
-                  <span style={{ fontSize: "11px", fontWeight: 700, color: "#000", fontFamily: "system-ui" }}>9:41</span>
+                <div style={{ height: "44px", background: statusBg, display: "flex", alignItems: "flex-end", justifyContent: "space-between", padding: "0 24px 8px", flexShrink: 0 }}>
+                  <span style={{ fontSize: "11px", fontWeight: 700, color: statusFg, fontFamily: "system-ui" }}>9:41</span>
                   <div style={{ width: "100px", height: "26px", background: "#111", borderRadius: "20px", position: "absolute", left: "50%", transform: "translateX(-50%)", top: "0" }} />
-                  <span style={{ fontSize: "9px", color: "#000" }}>●●● WiFi 🔋</span>
+                  <span style={{ fontSize: "9px", color: statusFg }}>●●● WiFi 🔋</span>
                 </div>
               ) : (
-                <div style={{ height: "28px", background: "#fff", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", flexShrink: 0 }}>
-                  <span style={{ fontSize: "10px", fontWeight: 700, color: "#000", fontFamily: "Roboto, sans-serif" }}>9:41</span>
-                  <span style={{ fontSize: "8px", color: "#000" }}>▲▲▲ WiFi 🔋</span>
+                <div style={{ height: "28px", background: statusBg, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px", flexShrink: 0 }}>
+                  <span style={{ fontSize: "10px", fontWeight: 700, color: statusFg, fontFamily: "Roboto, sans-serif" }}>9:41</span>
+                  <span style={{ fontSize: "8px", color: statusFg }}>▲▲▲ WiFi 🔋</span>
                 </div>
               )}
               {/* Screen content */}
-              <div style={{ flex: 1, background: "#fff", position: "relative", overflow: canvasMode ? "hidden" : "auto" }}>
+              <div style={{ flex: 1, background: screenBg, position: "relative", overflow: canvasMode ? "hidden" : "auto" }}>
                 {children}
               </div>
               {/* Home indicator */}
               {isIOS ? (
-                <div style={{ height: "28px", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <div style={{ width: "100px", height: "4px", background: "#000", borderRadius: "2px", opacity: 0.2 }} />
+                <div style={{ height: "28px", background: homeBg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{ width: "100px", height: "4px", background: homeBar, borderRadius: "2px" }} />
                 </div>
               ) : (
-                <div style={{ height: "36px", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", gap: "20px" }}>
-                  <span style={{ fontSize: "14px", opacity: 0.4 }}>◁</span>
-                  <div style={{ width: "18px", height: "18px", borderRadius: "50%", border: "1.5px solid #0006" }} />
-                  <span style={{ fontSize: "12px", opacity: 0.4 }}>□</span>
+                <div style={{ height: "36px", background: homeBg, display: "flex", alignItems: "center", justifyContent: "center", gap: "20px" }}>
+                  <span style={{ fontSize: "14px", color: statusFg, opacity: 0.4 }}>◁</span>
+                  <div style={{ width: "18px", height: "18px", borderRadius: "50%", border: `1.5px solid ${statusFg}`, opacity: 0.4 }} />
+                  <span style={{ fontSize: "12px", color: statusFg, opacity: 0.4 }}>□</span>
                 </div>
               )}
             </div>
@@ -793,6 +918,7 @@ function SimulatorSection() {
   const [selected,  setSelected]  = useState(null);
   const [hovered,   setHovered]   = useState(null);
   const [snapGrid,  setSnapGrid]  = useState(true);
+  const [darkMode,  setDarkMode]  = useState(false);
 
   const dragRef   = useRef(null); // { id, startMX, startMY, startX, startY }
   const resizeRef = useRef(null); // { id, handle, startMX, startW, startX }
@@ -949,7 +1075,7 @@ function SimulatorSection() {
 
   // ── selection / hover overlay with resize handles ────────────────────────────
   const renderSelectionBox = (item, isHover) => {
-    const color  = item.isMaster ? "#ccaa00" : "#fa0050";
+    const color  = item.isMaster ? "#ccaa00" : "#111111";
     const bw     = sdp(isHover ? 1 : 1.5);   // border width in dp
     const hSize  = sdp(7);                    // handle square size in dp
     const hOff   = hSize / 2;                 // half, for centering
@@ -989,13 +1115,13 @@ function SimulatorSection() {
     const isLocked = allowedSet && allowedSet.length === 0;
     return (
       <div style={{ marginBottom:"10px" }}>
-        <div style={{ fontSize:"10px", color:"#4a4a7a", marginBottom:"4px" }}>{label}</div>
+        <div style={{ fontSize:"10px", color:"#aaaaaa", marginBottom:"4px" }}>{label}</div>
         <div style={{ display:"flex", gap:"3px", flexWrap:"wrap" }}>
           {opts.map(o => {
             const dis = !isLocked && allowedSet && !allowedSet.includes(o);
             return (
               <button key={o} disabled={dis || isLocked} onClick={() => !dis && !isLocked && updateItem(sel.id, { [key]: o })}
-                style={{ padding:"3px 7px", borderRadius:"4px", background: val===o?"#1e1e3a":"transparent", border: val===o?"1px solid #3a3a6a":"1px solid #1a1a30", color: isLocked?"#333350": dis?"#252540": val===o?"#c0c0f0":"#5a5a8a", fontSize:"10px", cursor:(dis||isLocked)?"default":"pointer", textDecoration:dis?"line-through":"none" }}>
+                style={{ padding:"3px 7px", borderRadius:"4px", background: val===o?"#f0f0f0":"transparent", border: val===o?"1px solid #c0c0c0":"1px solid #e5e5e5", color: isLocked?"#333350": dis?"#252540": val===o?"#333333":"#999999", fontSize:"10px", cursor:(dis||isLocked)?"default":"pointer", textDecoration:dis?"line-through":"none" }}>
                 {o}
               </button>
             );
@@ -1007,15 +1133,15 @@ function SimulatorSection() {
 
   const renderProps = () => {
     if (!sel) return (
-      <div style={{ padding:"24px 16px", textAlign:"center", color:"#2a2a4a", fontSize:"11px", lineHeight:2 }}>
+      <div style={{ padding:"24px 16px", textAlign:"center", color:"#d0d0d0", fontSize:"11px", lineHeight:2 }}>
         컴포넌트를<br/>선택하세요
-        <div style={{ marginTop:"14px", padding:"10px", background:"#080812", borderRadius:"7px", textAlign:"left" }}>
-          <div style={{ fontSize:"9px", color:"#3a3a5a", lineHeight:2.2 }}>
-            <span style={{ color:"#4a4a6a" }}>⌫</span> 삭제<br/>
-            <span style={{ color:"#4a4a6a" }}>↑↓←→</span> 1dp 이동<br/>
-            <span style={{ color:"#4a4a6a" }}>⇧ + 화살표</span> 10dp<br/>
-            <span style={{ color:"#4a4a6a" }}>⌘D</span> 복제<br/>
-            <span style={{ color:"#4a4a6a" }}>Esc</span> 선택 해제
+        <div style={{ marginTop:"14px", padding:"10px", background:"#f4f4f4", borderRadius:"7px", textAlign:"left" }}>
+          <div style={{ fontSize:"9px", color:"#aaaaaa", lineHeight:2.2 }}>
+            <span style={{ color:"#555555" }}>⌫</span> 삭제<br/>
+            <span style={{ color:"#555555" }}>↑↓←→</span> 1dp 이동<br/>
+            <span style={{ color:"#555555" }}>⇧ + 화살표</span> 10dp<br/>
+            <span style={{ color:"#555555" }}>⌘D</span> 복제<br/>
+            <span style={{ color:"#555555" }}>Esc</span> 선택 해제
           </div>
         </div>
       </div>
@@ -1025,34 +1151,34 @@ function SimulatorSection() {
       <div style={{ padding:"14px", display:"flex", flexDirection:"column" }}>
         {/* Header */}
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"10px" }}>
-          <div style={{ fontSize:"10px", color: locked?"#ccaa00":"#5a5a8a", letterSpacing:"0.12em", textTransform:"uppercase", fontWeight:600 }}>
+          <div style={{ fontSize:"10px", color: locked?"#ccaa00":"#999999", letterSpacing:"0.12em", textTransform:"uppercase", fontWeight:600 }}>
             {locked && "🔒 "}{sel.type === "labelButton" ? "LabelButton" : "Text"}
           </div>
           <button onClick={() => updateItem(sel.id, { isMaster: !locked })}
-            style={{ padding:"2px 6px", borderRadius:"4px", background: locked?"#2a2200":"transparent", border: locked?"1px solid #665500":"1px solid #2a2a4a", color: locked?"#ccaa00":"#4a4a6a", fontSize:"9px", cursor:"pointer" }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor=locked?"#998800":"#4a4a8a"; e.currentTarget.style.color=locked?"#ffdd00":"#8080c0"; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor=locked?"#665500":"#2a2a4a"; e.currentTarget.style.color=locked?"#ccaa00":"#4a4a6a"; }}>
+            style={{ padding:"2px 6px", borderRadius:"4px", background: locked?"#fffbe6":"transparent", border: locked?"1px solid #e6c800":"1px solid #d0d0d0", color: locked?"#997700":"#888888", fontSize:"9px", cursor:"pointer" }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor=locked?"#ccaa00":"#999999"; e.currentTarget.style.color=locked?"#664400":"#333333"; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor=locked?"#e6c800":"#d0d0d0"; e.currentTarget.style.color=locked?"#997700":"#888888"; }}>
             {locked ? "Master 해제" : "Master 지정"}
           </button>
         </div>
         {locked && (
-          <div style={{ marginBottom:"10px", padding:"7px 9px", background:"#1a1500", border:"1px solid #443300", borderRadius:"6px", fontSize:"10px", color:"#998800", lineHeight:1.6 }}>
+          <div style={{ marginBottom:"10px", padding:"7px 9px", background:"#fffce6", border:"1px solid #e6c800", borderRadius:"6px", fontSize:"10px", color:"#997700", lineHeight:1.6 }}>
             편집이 잠겨있습니다.<br/>복제 후 수정하세요.
           </div>
         )}
 
         {sel.type === "labelButton" && <>
           <div style={{ marginBottom:"10px" }}>
-            <div style={{ fontSize:"10px", color:"#4a4a7a", marginBottom:"4px" }}>labelText</div>
+            <div style={{ fontSize:"10px", color:"#aaaaaa", marginBottom:"4px" }}>labelText</div>
             <input value={sel.labelText} onChange={e => !locked && updateItem(sel.id, { labelText: e.target.value })} readOnly={locked}
-              style={{ width:"100%", background:"#08081a", border:"1px solid #2a2a4a", borderRadius:"5px", padding:"5px 8px", color: locked?"#555570":"#e0e0f0", fontSize:"11px", outline:"none", boxSizing:"border-box" }} />
+              style={{ width:"100%", background:"#ffffff", border:"1px solid #d0d0d0", borderRadius:"5px", padding:"5px 8px", color: locked?"#555570":"#111111", fontSize:"11px", outline:"none", boxSizing:"border-box" }} />
           </div>
           <div style={{ marginBottom:"10px" }}>
-            <div style={{ fontSize:"10px", color:"#4a4a7a", marginBottom:"4px" }}>shapeStyle</div>
+            <div style={{ fontSize:"10px", color:"#aaaaaa", marginBottom:"4px" }}>shapeStyle</div>
             <div style={{ display:"flex", gap:"3px" }}>
               {["filled","outlined","text"].map(o => (
                 <button key={o} onClick={() => !locked && changeShape(o)} disabled={locked}
-                  style={{ padding:"3px 7px", borderRadius:"4px", background: sel.shape===o?"#1e1e3a":"transparent", border: sel.shape===o?"1px solid #3a3a6a":"1px solid #1a1a30", color: locked?"#333350": sel.shape===o?"#c0c0f0":"#5a5a8a", fontSize:"10px", cursor: locked?"default":"pointer" }}>
+                  style={{ padding:"3px 7px", borderRadius:"4px", background: sel.shape===o?"#f0f0f0":"transparent", border: sel.shape===o?"1px solid #c0c0c0":"1px solid #e5e5e5", color: locked?"#333350": sel.shape===o?"#333333":"#999999", fontSize:"10px", cursor: locked?"default":"pointer" }}>
                   {o}
                 </button>
               ))}
@@ -1064,12 +1190,12 @@ function SimulatorSection() {
           {sel.config === "labelWithIcon" && pCtl("iconPos", ["left","right"], sel.iconPos, "iconPos", locked ? [] : undefined)}
           {sel.config === "labelWithIcon" && (
             <div style={{ marginBottom:"10px" }}>
-              <div style={{ fontSize:"10px", color:"#4a4a7a", marginBottom:"6px" }}>icon</div>
+              <div style={{ fontSize:"10px", color:"#aaaaaa", marginBottom:"6px" }}>icon</div>
               <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:"4px" }}>
                 {ICON_NAMES.map(name => (
                   <button key={name} disabled={locked} onClick={() => !locked && updateItem(sel.id, { iconName: name })} title={name}
-                    style={{ padding:"5px", borderRadius:"5px", background: sel.iconName===name?"#1e1e3a":"transparent", border: sel.iconName===name?"1px solid #3a3a6a":"1px solid #1a1a30", cursor: locked?"default":"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                    <YdsIcon name={name} size={14} color={locked?"#333350": sel.iconName===name?"#c0c0f0":"#6060a0"} />
+                    style={{ padding:"5px", borderRadius:"5px", background: sel.iconName===name?"#f0f0f0":"transparent", border: sel.iconName===name?"1px solid #c0c0c0":"1px solid #e5e5e5", cursor: locked?"default":"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                    <YdsIcon name={name} size={14} color={locked?"#333350": sel.iconName===name?"#333333":"#888888"} />
                   </button>
                 ))}
               </div>
@@ -1079,48 +1205,48 @@ function SimulatorSection() {
 
         {sel.type === "text" && <>
           <div style={{ marginBottom:"10px" }}>
-            <div style={{ fontSize:"10px", color:"#4a4a7a", marginBottom:"4px" }}>content</div>
+            <div style={{ fontSize:"10px", color:"#aaaaaa", marginBottom:"4px" }}>content</div>
             <textarea value={sel.content} onChange={e => !locked && updateItem(sel.id, { content: e.target.value })} readOnly={locked}
-              style={{ width:"100%", background:"#08081a", border:"1px solid #2a2a4a", borderRadius:"5px", padding:"5px 8px", color: locked?"#555570":"#e0e0f0", fontSize:"11px", outline:"none", resize:"vertical", minHeight:"52px", boxSizing:"border-box" }} />
+              style={{ width:"100%", background:"#ffffff", border:"1px solid #d0d0d0", borderRadius:"5px", padding:"5px 8px", color: locked?"#555570":"#111111", fontSize:"11px", outline:"none", resize:"vertical", minHeight:"52px", boxSizing:"border-box" }} />
           </div>
           <div style={{ marginBottom:"10px" }}>
-            <div style={{ fontSize:"10px", color:"#4a4a7a", marginBottom:"4px" }}>typography</div>
+            <div style={{ fontSize:"10px", color:"#aaaaaa", marginBottom:"4px" }}>typography</div>
             <select value={sel.style} onChange={e => !locked && updateItem(sel.id, { style: e.target.value })} disabled={locked}
-              style={{ width:"100%", background:"#08081a", border:"1px solid #2a2a4a", borderRadius:"5px", padding:"5px 8px", color: locked?"#555570":"#c0c0f0", fontSize:"10px", outline:"none" }}>
+              style={{ width:"100%", background:"#ffffff", border:"1px solid #d0d0d0", borderRadius:"5px", padding:"5px 8px", color: locked?"#555570":"#333333", fontSize:"10px", outline:"none" }}>
               {typography.map(t => <option key={t.name} value={t.name}>{t.name}</option>)}
             </select>
           </div>
           <div style={{ marginBottom:"10px" }}>
-            <div style={{ fontSize:"10px", color:"#4a4a7a", marginBottom:"4px" }}>color</div>
+            <div style={{ fontSize:"10px", color:"#aaaaaa", marginBottom:"4px" }}>color</div>
             <div style={{ display:"flex", gap:"6px", alignItems:"center" }}>
               <input type="color" value={sel.color} onChange={e => !locked && updateItem(sel.id, { color: e.target.value })} disabled={locked}
                 style={{ width:"28px", height:"28px", border:"none", background:"none", cursor: locked?"default":"pointer", padding:0, opacity: locked?0.3:1 }} />
               <input value={sel.color} onChange={e => !locked && updateItem(sel.id, { color: e.target.value })} readOnly={locked}
-                style={{ flex:1, background:"#08081a", border:"1px solid #2a2a4a", borderRadius:"5px", padding:"5px 8px", color: locked?"#555570":"#e0e0f0", fontSize:"11px", outline:"none" }} />
+                style={{ flex:1, background:"#ffffff", border:"1px solid #d0d0d0", borderRadius:"5px", padding:"5px 8px", color: locked?"#555570":"#111111", fontSize:"11px", outline:"none" }} />
             </div>
           </div>
         </>}
 
         {/* Position & Size */}
-        <div style={{ paddingTop:"10px", borderTop:"1px solid #1a1a30", marginBottom:"10px" }}>
-          <div style={{ fontSize:"10px", color:"#4a4a7a", marginBottom:"6px" }}>Position &amp; Size</div>
+        <div style={{ paddingTop:"10px", borderTop:"1px solid #e5e5e5", marginBottom:"10px" }}>
+          <div style={{ fontSize:"10px", color:"#aaaaaa", marginBottom:"6px" }}>Position &amp; Size</div>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"6px" }}>
             {["x","y"].map(axis => (
               <div key={axis}>
-                <div style={{ fontSize:"9px", color:"#3a3a5a", marginBottom:"3px" }}>{axis.toUpperCase()} (dp)</div>
+                <div style={{ fontSize:"9px", color:"#bbbbbb", marginBottom:"3px" }}>{axis.toUpperCase()} (dp)</div>
                 <input type="number" value={sel[axis]} onChange={e => !locked && updateItem(sel.id, { [axis]: Number(e.target.value) })} readOnly={locked}
-                  style={{ width:"100%", background:"#08081a", border:"1px solid #2a2a4a", borderRadius:"5px", padding:"4px 6px", color: locked?"#555570":"#e0e0f0", fontSize:"11px", outline:"none", boxSizing:"border-box" }} />
+                  style={{ width:"100%", background:"#ffffff", border:"1px solid #d0d0d0", borderRadius:"5px", padding:"4px 6px", color: locked?"#555570":"#111111", fontSize:"11px", outline:"none", boxSizing:"border-box" }} />
               </div>
             ))}
             <div>
-              <div style={{ fontSize:"9px", color:"#3a3a5a", marginBottom:"3px" }}>W (dp)</div>
+              <div style={{ fontSize:"9px", color:"#bbbbbb", marginBottom:"3px" }}>W (dp)</div>
               <input type="number" value={sel.w || ""} placeholder="auto" onChange={e => !locked && updateItem(sel.id, { w: e.target.value ? Number(e.target.value) : undefined })} readOnly={locked}
-                style={{ width:"100%", background:"#08081a", border:"1px solid #2a2a4a", borderRadius:"5px", padding:"4px 6px", color: locked?"#555570":"#e0e0f0", fontSize:"11px", outline:"none", boxSizing:"border-box" }} />
+                style={{ width:"100%", background:"#ffffff", border:"1px solid #d0d0d0", borderRadius:"5px", padding:"4px 6px", color: locked?"#555570":"#111111", fontSize:"11px", outline:"none", boxSizing:"border-box" }} />
             </div>
             <div>
-              <div style={{ fontSize:"9px", color:"#3a3a5a", marginBottom:"3px" }}>Snap</div>
+              <div style={{ fontSize:"9px", color:"#bbbbbb", marginBottom:"3px" }}>Snap</div>
               <button onClick={() => setSnapGrid(v => !v)}
-                style={{ width:"100%", padding:"4px 0", borderRadius:"5px", background: snapGrid?"#1e1e3a":"transparent", border: snapGrid?"1px solid #3a3a6a":"1px solid #1a1a30", color: snapGrid?"#c0c0f0":"#5a5a8a", fontSize:"10px", cursor:"pointer" }}>
+                style={{ width:"100%", padding:"4px 0", borderRadius:"5px", background: snapGrid?"#f0f0f0":"transparent", border: snapGrid?"1px solid #c0c0c0":"1px solid #e5e5e5", color: snapGrid?"#333333":"#999999", fontSize:"10px", cursor:"pointer" }}>
                 {snapGrid ? "8dp ✓" : "free"}
               </button>
             </div>
@@ -1130,15 +1256,15 @@ function SimulatorSection() {
         {/* Duplicate + Delete */}
         <div style={{ display:"flex", gap:"6px" }}>
           <button onClick={() => duplicateItem(sel)}
-            style={{ flex:1, padding:"6px", borderRadius:"5px", background:"transparent", border:"1px solid #1a3a2a", color:"#2a6a4a", fontSize:"10px", cursor:"pointer" }}
-            onMouseEnter={e => { e.currentTarget.style.background="#081a10"; e.currentTarget.style.color="#60cc90"; }}
-            onMouseLeave={e => { e.currentTarget.style.background="transparent"; e.currentTarget.style.color="#2a6a4a"; }}>
+            style={{ flex:1, padding:"6px", borderRadius:"5px", background:"transparent", border:"1px solid #b0d0b8", color:"#2a7a4a", fontSize:"10px", cursor:"pointer" }}
+            onMouseEnter={e => { e.currentTarget.style.background="#e8f5ec"; e.currentTarget.style.color="#1a5a30"; }}
+            onMouseLeave={e => { e.currentTarget.style.background="transparent"; e.currentTarget.style.color="#2a7a4a"; }}>
             복제
           </button>
           <button onClick={() => !locked && removeItem(sel.id)} disabled={locked}
-            style={{ flex:1, padding:"6px", borderRadius:"5px", background:"transparent", border: locked?"1px solid #1a1a2a":"1px solid #3a1a1a", color: locked?"#2a2a3a":"#6a2a2a", fontSize:"10px", cursor: locked?"default":"pointer" }}
-            onMouseEnter={e => { if (!locked) { e.currentTarget.style.background="#1a0808"; e.currentTarget.style.color="#ff6060"; }}}
-            onMouseLeave={e => { if (!locked) { e.currentTarget.style.background="transparent"; e.currentTarget.style.color="#6a2a2a"; }}}>
+            style={{ flex:1, padding:"6px", borderRadius:"5px", background:"transparent", border: locked?"1px solid #dddddd":"1px solid #f0b0b0", color: locked?"#cccccc":"#aa3333", fontSize:"10px", cursor: locked?"default":"pointer" }}
+            onMouseEnter={e => { if (!locked) { e.currentTarget.style.background="#ffeaea"; e.currentTarget.style.color="#cc0000"; }}}
+            onMouseLeave={e => { if (!locked) { e.currentTarget.style.background="transparent"; e.currentTarget.style.color="#aa3333"; }}}>
             삭제
           </button>
         </div>
@@ -1153,31 +1279,35 @@ function SimulatorSection() {
       {/* Left: Device + Palette + Layers */}
       <div style={{ width:"196px", flexShrink:0, display:"flex", flexDirection:"column", gap:"10px" }}>
 
-        <div style={{ background:"#0c0c1e", border:"1px solid #1a1a30", borderRadius:"10px", padding:"12px" }}>
-          <div style={{ fontSize:"10px", color:"#5a5a8a", letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:"8px", fontWeight:600 }}>Platform</div>
+        <div style={{ background:"#ffffff", border:"1px solid #e5e5e5", borderRadius:"10px", padding:"12px" }}>
+          <div style={{ fontSize:"10px", color:"#999999", letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:"8px", fontWeight:600 }}>Platform</div>
           <div style={{ display:"flex", gap:"5px", marginBottom:"10px" }}>
             {["ios","android"].map(p => (
               <button key={p} onClick={() => { setPlatform(p); setDeviceIdx(0); }}
-                style={{ flex:1, padding:"6px", borderRadius:"6px", background: platform===p?"#1e1e3a":"transparent", border: platform===p?"1px solid #3a3a6a":"1px solid #1a1a30", color: platform===p?"#c0c0f0":"#5a5a8a", fontSize:"11px", cursor:"pointer", fontWeight: platform===p?700:400, textTransform:"uppercase" }}>
+                style={{ flex:1, padding:"6px", borderRadius:"6px", background: platform===p?"#f0f0f0":"transparent", border: platform===p?"1px solid #c0c0c0":"1px solid #e5e5e5", color: platform===p?"#333333":"#999999", fontSize:"11px", cursor:"pointer", fontWeight: platform===p?700:400, textTransform:"uppercase" }}>
                 {p === "ios" ? "iOS" : "Android"}
               </button>
             ))}
           </div>
           <select value={deviceIdx} onChange={e => setDeviceIdx(Number(e.target.value))}
-            style={{ width:"100%", background:"#08081a", border:"1px solid #2a2a4a", borderRadius:"6px", padding:"5px 8px", color:"#c0c0f0", fontSize:"10px", outline:"none" }}>
+            style={{ width:"100%", background:"#ffffff", border:"1px solid #d0d0d0", borderRadius:"6px", padding:"5px 8px", color:"#333333", fontSize:"10px", outline:"none" }}>
             {DEVICES[platform].map((d, i) => <option key={i} value={i}>{d.name} ({d.w}×{d.h})</option>)}
           </select>
+          <button onClick={() => setDarkMode(d => !d)}
+            style={{ marginTop:"8px", width:"100%", padding:"7px", borderRadius:"6px", border:`1px solid ${darkMode?"#5a5a9a":"#e5e5e5"}`, background: darkMode?"#1a1a3a":"transparent", color: darkMode?"#333333":"#999999", fontSize:"11px", cursor:"pointer", fontWeight:600, transition:"all 0.15s" }}>
+            {darkMode ? "☾  Dark" : "☀  Light"}
+          </button>
         </div>
 
         {/* Palette */}
-        <div style={{ background:"#0c0c1e", border:"1px solid #1a1a30", borderRadius:"10px", padding:"12px" }}>
-          <div style={{ fontSize:"10px", color:"#5a5a8a", letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:"8px", fontWeight:600 }}>Add</div>
+        <div style={{ background:"#ffffff", border:"1px solid #e5e5e5", borderRadius:"10px", padding:"12px" }}>
+          <div style={{ fontSize:"10px", color:"#999999", letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:"8px", fontWeight:600 }}>Add</div>
           <div style={{ display:"flex", flexDirection:"column", gap:"5px" }}>
             {[{ type:"labelButton", label:"⬚  LabelButton" }, { type:"text", label:"T   Text" }].map(c => (
               <button key={c.type} onClick={() => addItem(c.type)}
-                style={{ padding:"8px 10px", borderRadius:"7px", background:"transparent", border:"1px solid #1a1a30", color:"#7070a0", fontSize:"11px", cursor:"pointer", textAlign:"left", transition:"all 0.15s" }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor="#3a3a6a"; e.currentTarget.style.color="#c0c0f0"; e.currentTarget.style.background="#0e0e22"; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor="#1a1a30"; e.currentTarget.style.color="#7070a0"; e.currentTarget.style.background="transparent"; }}>
+                style={{ padding:"8px 10px", borderRadius:"7px", background:"transparent", border:"1px solid #e5e5e5", color:"#888888", fontSize:"11px", cursor:"pointer", textAlign:"left", transition:"all 0.15s" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor="#c0c0c0"; e.currentTarget.style.color="#333333"; e.currentTarget.style.background="#f4f4f4"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor="#e5e5e5"; e.currentTarget.style.color="#888888"; e.currentTarget.style.background="transparent"; }}>
                 + {c.label}
               </button>
             ))}
@@ -1185,19 +1315,19 @@ function SimulatorSection() {
         </div>
 
         {/* Layers */}
-        <div style={{ background:"#0c0c1e", border:"1px solid #1a1a30", borderRadius:"10px", padding:"12px", flex:1 }}>
-          <div style={{ fontSize:"10px", color:"#5a5a8a", letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:"8px", fontWeight:600 }}>Layers</div>
+        <div style={{ background:"#ffffff", border:"1px solid #e5e5e5", borderRadius:"10px", padding:"12px", flex:1 }}>
+          <div style={{ fontSize:"10px", color:"#999999", letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:"8px", fontWeight:600 }}>Layers</div>
           {items.length === 0
-            ? <div style={{ fontSize:"10px", color:"#2a2a4a", textAlign:"center", padding:"12px 0" }}>비어있음</div>
+            ? <div style={{ fontSize:"10px", color:"#d0d0d0", textAlign:"center", padding:"12px 0" }}>비어있음</div>
             : <div style={{ display:"flex", flexDirection:"column", gap:"3px" }}>
                 {[...items].reverse().map(item => (
                   <div key={item.id} onClick={() => setSelected(item.id)}
-                    style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"5px 8px", borderRadius:"5px", background: selected===item.id?"#1a1a30":"transparent", border: selected===item.id ? (item.isMaster?"1px solid #665500":"1px solid #3a3a6a") : "1px solid transparent", cursor:"pointer" }}>
-                    <span style={{ fontSize:"10px", color: item.isMaster?"#ccaa00": selected===item.id?"#c0c0f0":"#6060a0", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", flex:1 }}>
+                    style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"5px 8px", borderRadius:"5px", background: selected===item.id?"#e5e5e5":"transparent", border: selected===item.id ? (item.isMaster?"1px solid #665500":"1px solid #c0c0c0") : "1px solid transparent", cursor:"pointer" }}>
+                    <span style={{ fontSize:"10px", color: item.isMaster?"#ccaa00": selected===item.id?"#333333":"#888888", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", flex:1 }}>
                       {item.isMaster ? "🔒 " : ""}{item.type==="labelButton"?"⬚":"T"} {item.type==="labelButton"?item.labelText:item.content}
                     </span>
                     <button onClick={e => { e.stopPropagation(); if (!item.isMaster) removeItem(item.id); }}
-                      style={{ background:"none", border:"none", color: item.isMaster?"#333330":"#3a3a5a", cursor: item.isMaster?"default":"pointer", fontSize:"12px", padding:"0 2px", flexShrink:0 }}>
+                      style={{ background:"none", border:"none", color: item.isMaster?"#333330":"#bbbbbb", cursor: item.isMaster?"default":"pointer", fontSize:"12px", padding:"0 2px", flexShrink:0 }}>
                       {item.isMaster ? "🔒" : "×"}
                     </button>
                   </div>
@@ -1209,7 +1339,7 @@ function SimulatorSection() {
 
       {/* Center: Phone canvas */}
       <div style={{ flex:1, display:"flex", justifyContent:"center" }}>
-        <PhoneFrame platform={platform} device={device} canvasMode>
+        <PhoneFrame platform={platform} device={device} canvasMode darkMode={darkMode}>
           <div style={{ position:"absolute", inset:0 }} onClick={() => setSelected(null)}>
             {items.map(item => (
               <div key={item.id}
@@ -1235,7 +1365,7 @@ function SimulatorSection() {
       </div>
 
       {/* Right: Properties */}
-      <div style={{ width:"196px", flexShrink:0, background:"#0c0c1e", border:"1px solid #1a1a30", borderRadius:"10px", overflow:"hidden" }}>
+      <div style={{ width:"196px", flexShrink:0, background:"#ffffff", border:"1px solid #e5e5e5", borderRadius:"10px", overflow:"hidden" }}>
         {renderProps()}
       </div>
 
@@ -1672,60 +1802,60 @@ function GlassNavSection() {
       <div style={{ width: "210px", flexShrink: 0, display: "flex", flexDirection: "column", gap: "12px", overflowY: "auto" }}>
 
         {/* Platform */}
-        <div style={{ background: "#0c0c1e", border: "1px solid #1a1a30", borderRadius: "10px", padding: "14px" }}>
-          <div style={{ fontSize: "10px", color: "#5a5a8a", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "10px", fontWeight: 600 }}>Platform</div>
+        <div style={{ background: "#ffffff", border: "1px solid #e5e5e5", borderRadius: "10px", padding: "14px" }}>
+          <div style={{ fontSize: "10px", color: "#999999", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "10px", fontWeight: 600 }}>Platform</div>
           <div style={{ display: "flex", gap: "6px", marginBottom: "12px" }}>
             {["ios","android"].map(p => (
               <button key={p} onClick={() => { setPlatform(p); setOsIdx(p === "ios" ? 5 : 3); setFramework(p === "ios" ? "swiftui" : "compose"); setDeviceIdx(0); }}
-                style={{ flex: 1, padding: "7px", borderRadius: "7px", background: platform === p ? "#1e1e3a" : "transparent", border: platform === p ? "1px solid #3a3a6a" : "1px solid #1a1a30", color: platform === p ? "#c0c0f0" : "#5a5a8a", fontSize: "11px", cursor: "pointer", fontWeight: platform === p ? 700 : 400 }}>
+                style={{ flex: 1, padding: "7px", borderRadius: "7px", background: platform === p ? "#f0f0f0" : "transparent", border: platform === p ? "1px solid #c0c0c0" : "1px solid #e5e5e5", color: platform === p ? "#333333" : "#999999", fontSize: "11px", cursor: "pointer", fontWeight: platform === p ? 700 : 400 }}>
                 {p === "ios" ? "iOS" : "Android"}
               </button>
             ))}
           </div>
-          <div style={{ fontSize: "10px", color: "#5a5a8a", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "6px", fontWeight: 600 }}>OS Version</div>
+          <div style={{ fontSize: "10px", color: "#999999", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "6px", fontWeight: 600 }}>OS Version</div>
           <select value={osIdx} onChange={e => setOsIdx(Number(e.target.value))}
-            style={{ width: "100%", background: "#08081a", border: "1px solid #2a2a4a", borderRadius: "6px", padding: "6px 8px", color: "#c0c0f0", fontSize: "11px", outline: "none", cursor: "pointer" }}>
+            style={{ width: "100%", background: "#ffffff", border: "1px solid #d0d0d0", borderRadius: "6px", padding: "6px 8px", color: "#333333", fontSize: "11px", outline: "none", cursor: "pointer" }}>
             {osList.map((o, i) => <option key={i} value={i}>{o.label}</option>)}
           </select>
         </div>
 
         {/* Device */}
-        <div style={{ background: "#0c0c1e", border: "1px solid #1a1a30", borderRadius: "10px", padding: "14px" }}>
-          <div style={{ fontSize: "10px", color: "#5a5a8a", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "8px", fontWeight: 600 }}>Device</div>
+        <div style={{ background: "#ffffff", border: "1px solid #e5e5e5", borderRadius: "10px", padding: "14px" }}>
+          <div style={{ fontSize: "10px", color: "#999999", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "8px", fontWeight: 600 }}>Device</div>
           <select value={deviceIdx} onChange={e => setDeviceIdx(Number(e.target.value))}
-            style={{ width: "100%", background: "#08081a", border: "1px solid #2a2a4a", borderRadius: "6px", padding: "6px 8px", color: "#c0c0f0", fontSize: "11px", outline: "none", cursor: "pointer" }}>
+            style={{ width: "100%", background: "#ffffff", border: "1px solid #d0d0d0", borderRadius: "6px", padding: "6px 8px", color: "#333333", fontSize: "11px", outline: "none", cursor: "pointer" }}>
             {DEVICES[platform].map((d, i) => <option key={i} value={i}>{d.name}</option>)}
           </select>
         </div>
 
         {/* Scroll simulator */}
-        <div style={{ background: "#0c0c1e", border: "1px solid #1a1a30", borderRadius: "10px", padding: "14px" }}>
+        <div style={{ background: "#ffffff", border: "1px solid #e5e5e5", borderRadius: "10px", padding: "14px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-            <div style={{ fontSize: "10px", color: "#5a5a8a", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 600 }}>Scroll</div>
-            <div style={{ fontSize: "10px", color: "#4a4a7a", fontFamily: "monospace" }}>{Math.round(scrollRatio * 100)}%</div>
+            <div style={{ fontSize: "10px", color: "#999999", letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 600 }}>Scroll</div>
+            <div style={{ fontSize: "10px", color: "#aaaaaa", fontFamily: "monospace" }}>{Math.round(scrollRatio * 100)}%</div>
           </div>
           <input type="range" min="0" max="100" value={Math.round(scrollRatio * 100)}
             onChange={e => setScrollRatio(Number(e.target.value) / 100)}
             style={{ width: "100%", accentColor: "#fa0050", cursor: "pointer" }} />
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "9px", color: "#3a3a5a", marginTop: "4px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "9px", color: "#bbbbbb", marginTop: "4px" }}>
             <span>Top</span><span>Bottom</span>
           </div>
         </div>
 
         {/* Compatibility badge */}
-        <div style={{ background: "#0c0c1e", border: `1px solid ${compat.color}33`, borderRadius: "10px", padding: "14px" }}>
-          <div style={{ fontSize: "10px", color: "#5a5a8a", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "10px", fontWeight: 600 }}>Compatibility</div>
+        <div style={{ background: "#ffffff", border: `1px solid ${compat.color}33`, borderRadius: "10px", padding: "14px" }}>
+          <div style={{ fontSize: "10px", color: "#999999", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "10px", fontWeight: 600 }}>Compatibility</div>
           <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "4px 10px", borderRadius: "20px", background: `${compat.color}18`, border: `1px solid ${compat.color}44` }}>
             <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: compat.color }} />
             <span style={{ fontSize: "10px", color: compat.color, fontWeight: 600 }}>{compat.label}</span>
           </div>
           {platform === "android" && api < 31 && (
-            <div style={{ marginTop: "10px", fontSize: "10px", color: "#6060a0", lineHeight: "1.6" }}>
+            <div style={{ marginTop: "10px", fontSize: "10px", color: "#888888", lineHeight: "1.6" }}>
               {api >= 29 ? "blur 미지원 → 스크림으로 대체" : "blur/scrim 모두 미지원 → solid color"}
             </div>
           )}
           {platform === "ios" && os.liquidGlass && (
-            <div style={{ marginTop: "10px", fontSize: "10px", color: "#6060a0", lineHeight: "1.6" }}>
+            <div style={{ marginTop: "10px", fontSize: "10px", color: "#888888", lineHeight: "1.6" }}>
               iridescent gradient + saturate 필터 적용
             </div>
           )}
@@ -1781,7 +1911,7 @@ function GlassNavSection() {
         <div style={{ display: "flex", gap: "4px" }}>
           {fwOptions.map(f => (
             <button key={f.id} onClick={() => setFramework(f.id)}
-              style={{ padding: "6px 14px", borderRadius: "7px", background: framework === f.id ? "#1e1e3a" : "transparent", border: framework === f.id ? "1px solid #3a3a6a" : "1px solid #1a1a30", color: framework === f.id ? "#c0c0f0" : "#5a5a8a", fontSize: "11px", cursor: "pointer", fontWeight: framework === f.id ? 700 : 400 }}>
+              style={{ padding: "6px 14px", borderRadius: "7px", background: framework === f.id ? "#f0f0f0" : "transparent", border: framework === f.id ? "1px solid #c0c0c0" : "1px solid #e5e5e5", color: framework === f.id ? "#333333" : "#999999", fontSize: "11px", cursor: "pointer", fontWeight: framework === f.id ? 700 : 400 }}>
               {f.label}
             </button>
           ))}
@@ -1805,17 +1935,17 @@ function IconsSection() {
   };
   return (
     <div>
-      <div style={{ fontSize:"11px", color:"#5a5a8a", marginBottom:"16px" }}>
+      <div style={{ fontSize:"11px", color:"#999999", marginBottom:"16px" }}>
         YDS 2.0 System Icon — {ICON_NAMES.length}개 · 클릭하면 이름 복사
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(100px, 1fr))", gap:"8px" }}>
         {ICON_NAMES.map(name => (
           <button key={name} onClick={() => copy(name)}
-            style={{ background: copied===name?"#1a2a1a":"#0c0c1e", border: copied===name?"1px solid #3a6a3a":"1px solid #1a1a30", borderRadius:"10px", padding:"16px 8px 12px", display:"flex", flexDirection:"column", alignItems:"center", gap:"10px", cursor:"pointer", transition:"all 0.15s" }}
-            onMouseEnter={e => { if (copied!==name) { e.currentTarget.style.background="#10102a"; e.currentTarget.style.borderColor="#3a3a6a"; }}}
-            onMouseLeave={e => { if (copied!==name) { e.currentTarget.style.background="#0c0c1e"; e.currentTarget.style.borderColor="#1a1a30"; }}}>
-            <YdsIcon name={name} size={24} color={copied===name?"#60cc90":"#c0c0f0"} />
-            <div style={{ fontSize:"9px", color: copied===name?"#60cc90":"#5a5a8a", textAlign:"center", wordBreak:"break-all", lineHeight:1.4 }}>
+            style={{ background: copied===name?"#e8f5e8":"#ffffff", border: copied===name?"1px solid #5aaa5a":"1px solid #e5e5e5", borderRadius:"10px", padding:"16px 8px 12px", display:"flex", flexDirection:"column", alignItems:"center", gap:"10px", cursor:"pointer", transition:"all 0.15s" }}
+            onMouseEnter={e => { if (copied!==name) { e.currentTarget.style.background="#eeeeee"; e.currentTarget.style.borderColor="#c0c0c0"; }}}
+            onMouseLeave={e => { if (copied!==name) { e.currentTarget.style.background="#ffffff"; e.currentTarget.style.borderColor="#e5e5e5"; }}}>
+            <YdsIcon name={name} size={24} color={copied===name?"#60cc90":"#333333"} />
+            <div style={{ fontSize:"9px", color: copied===name?"#60cc90":"#999999", textAlign:"center", wordBreak:"break-all", lineHeight:1.4 }}>
               {copied===name ? "복사됨" : name}
             </div>
           </button>
@@ -1826,6 +1956,7 @@ function IconsSection() {
 }
 
 const NAV = [
+  { id: "meta",        label: "Meta Tokens",   icon: "◉" },
   { id: "colors",      label: "Colors",        icon: "◈" },
   { id: "typography",  label: "Typography",    icon: "T" },
   { id: "spacing",     label: "Spacing",       icon: "↔" },
@@ -1841,6 +1972,7 @@ export default function App() {
   const [active, setActive] = useState("colors");
 
   const renderContent = () => {
+    if (active === "meta")       return <MetaTokensSection />;
     if (active === "colors")     return <ColorsSection />;
     if (active === "typography") return <TypographySection />;
     if (active === "spacing")    return <SpacingSection />;
@@ -1852,47 +1984,47 @@ export default function App() {
     if (active === "glassnav")   return <GlassNavSection />;
   };
 
-  const titles    = { colors: "Color Tokens", typography: "Typography", spacing: "Spacing & Radius", elevation: "Elevation / Shadow", button: "Button", label: "Label", icons: "Icons", simulator: "Simulator", glassnav: "Liquid Glass Nav" };
-  const subtitles = { colors: "YDS 2.0 Customer Token", typography: "Roboto 기반 타입 스케일", spacing: "스페이싱 및 보더 라디우스", elevation: "YDS 2.0 Elevation — Level 1 · 2 (normal & inverse)", button: "버튼 컴포넌트 — 멀티 플랫폼 코드", label: "라벨 컴포넌트 — 멀티 플랫폼 코드", icons: "YDS 2.0 System Icon — Figma 원본 기반", simulator: "iOS / Android 실시간 화면 시뮬레이션", glassnav: "OS 버전별 Glass Nav Bar — 호환성 + 코드 생성" };
+  const titles    = { meta: "Meta Tokens", colors: "Color Tokens", typography: "Typography", spacing: "Spacing & Radius", elevation: "Elevation / Shadow", button: "Button", label: "Label", icons: "Icons", simulator: "Simulator", glassnav: "Liquid Glass Nav" };
+  const subtitles = { meta: "YDS 2.0 Primitive Layer — Meta → Semantic → Component", colors: "YDS 2.0 Customer Token", typography: "Roboto 기반 타입 스케일", spacing: "스페이싱 및 보더 라디우스", elevation: "YDS 2.0 Elevation — Level 1 · 2 (normal & inverse)", button: "버튼 컴포넌트 — 멀티 플랫폼 코드", label: "라벨 컴포넌트 — 멀티 플랫폼 코드", icons: "YDS 2.0 System Icon — Figma 원본 기반", simulator: "iOS / Android 실시간 화면 시뮬레이션", glassnav: "OS 버전별 Glass Nav Bar — 호환성 + 코드 생성" };
 
   return (
-    <div style={{ display: "flex", height: "100vh", background: "#060612", color: "#e0e0f0", fontFamily: "'Pretendard', -apple-system, sans-serif" }}>
+    <div style={{ display: "flex", height: "100vh", background: "#f5f5f5", color: "#111111", fontFamily: "'Pretendard', -apple-system, sans-serif" }}>
       {/* Sidebar */}
-      <div style={{ width: "200px", flexShrink: 0, background: "#08081a", borderRight: "1px solid #1a1a30", display: "flex", flexDirection: "column", padding: "20px 0" }}>
-        <div style={{ padding: "0 16px 20px", borderBottom: "1px solid #1a1a30", marginBottom: "12px" }}>
-          <div style={{ fontSize: "14px", fontWeight: 700, color: "#e0e0f0", letterSpacing: "-0.01em" }}>h's Storybook</div>
-          <div style={{ fontSize: "10px", color: "#4a4a7a", marginTop: "3px" }}>YDS 2.0 Design System</div>
+      <div style={{ width: "200px", flexShrink: 0, background: "#ffffff", borderRight: "1px solid #e5e5e5", display: "flex", flexDirection: "column", padding: "20px 0" }}>
+        <div style={{ padding: "0 16px 20px", borderBottom: "1px solid #e5e5e5", marginBottom: "12px" }}>
+          <div style={{ fontSize: "14px", fontWeight: 700, color: "#111111", letterSpacing: "-0.01em" }}>h's Storybook</div>
+          <div style={{ fontSize: "10px", color: "#aaaaaa", marginTop: "3px" }}>YDS 2.0 Design System</div>
         </div>
-        <div style={{ fontSize: "9px", color: "#3a3a5a", letterSpacing: "0.15em", textTransform: "uppercase", padding: "0 16px", marginBottom: "6px", fontWeight: 600 }}>Tokens</div>
-        {NAV.slice(0, 4).map(n => (
+        <div style={{ fontSize: "9px", color: "#bbbbbb", letterSpacing: "0.15em", textTransform: "uppercase", padding: "0 16px", marginBottom: "6px", fontWeight: 600 }}>Tokens</div>
+        {NAV.slice(0, 5).map(n => (
           <button key={n.id} onClick={() => setActive(n.id)}
-            style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#1a1a30" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #fa0050" : "2px solid transparent", color: active === n.id ? "#e0e0f0" : "#6060a0", fontSize: "12px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
+            style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#e5e5e5" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #111111" : "2px solid transparent", color: active === n.id ? "#111111" : "#888888", fontSize: "12px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
             <span style={{ fontSize: "13px", opacity: 0.7 }}>{n.icon}</span>{n.label}
           </button>
         ))}
-        <div style={{ fontSize: "9px", color: "#3a3a5a", letterSpacing: "0.15em", textTransform: "uppercase", padding: "16px 16px 6px", fontWeight: 600 }}>Components</div>
-        {NAV.slice(4, 7).map(n => (
+        <div style={{ fontSize: "9px", color: "#bbbbbb", letterSpacing: "0.15em", textTransform: "uppercase", padding: "16px 16px 6px", fontWeight: 600 }}>Components</div>
+        {NAV.slice(5, 8).map(n => (
           <button key={n.id} onClick={() => setActive(n.id)}
-            style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#1a1a30" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #fa0050" : "2px solid transparent", color: active === n.id ? "#e0e0f0" : "#6060a0", fontSize: "12px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
+            style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#e5e5e5" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #111111" : "2px solid transparent", color: active === n.id ? "#111111" : "#888888", fontSize: "12px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
             <span style={{ fontSize: "13px", opacity: 0.7 }}>{n.icon}</span>{n.label}
           </button>
         ))}
-        <div style={{ fontSize: "9px", color: "#3a3a5a", letterSpacing: "0.15em", textTransform: "uppercase", padding: "16px 16px 6px", fontWeight: 600 }}>Simulate</div>
-        {NAV.slice(7, 9).map(n => (
+        <div style={{ fontSize: "9px", color: "#bbbbbb", letterSpacing: "0.15em", textTransform: "uppercase", padding: "16px 16px 6px", fontWeight: 600 }}>Simulate</div>
+        {NAV.slice(8, 9).map(n => (
           <button key={n.id} onClick={() => setActive(n.id)}
-            style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#1a1a30" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #fa0050" : "2px solid transparent", color: active === n.id ? "#e0e0f0" : "#6060a0", fontSize: "12px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
+            style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#e5e5e5" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #111111" : "2px solid transparent", color: active === n.id ? "#111111" : "#888888", fontSize: "12px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
             <span style={{ fontSize: "13px", opacity: 0.7 }}>{n.icon}</span>{n.label}
           </button>
         ))}
-        <div style={{ fontSize: "9px", color: "#3a3a5a", letterSpacing: "0.15em", textTransform: "uppercase", padding: "16px 16px 6px", fontWeight: 600 }}>Labs</div>
-        {NAV.slice(8).map(n => (
+        <div style={{ fontSize: "9px", color: "#bbbbbb", letterSpacing: "0.15em", textTransform: "uppercase", padding: "16px 16px 6px", fontWeight: 600 }}>Labs</div>
+        {NAV.slice(9).map(n => (
           <button key={n.id} onClick={() => setActive(n.id)}
-            style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#1a1a30" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #fa0050" : "2px solid transparent", color: active === n.id ? "#e0e0f0" : "#6060a0", fontSize: "12px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
+            style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#e5e5e5" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #111111" : "2px solid transparent", color: active === n.id ? "#111111" : "#888888", fontSize: "12px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
             <span style={{ fontSize: "13px", opacity: 0.7 }}>{n.icon}</span>{n.label}
           </button>
         ))}
         <div style={{ flex: 1 }} />
-        <div style={{ padding: "12px 16px", borderTop: "1px solid #1a1a30", fontSize: "9px", color: "#2a2a4a" }}>
+        <div style={{ padding: "12px 16px", borderTop: "1px solid #e5e5e5", fontSize: "9px", color: "#d0d0d0" }}>
           Figma → YDS 2.0 ✓
         </div>
       </div>
@@ -1900,12 +2032,12 @@ export default function App() {
       {/* Main */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {/* Header */}
-        <div style={{ padding: "16px 28px", borderBottom: "1px solid #1a1a30", background: "#08081a", flexShrink: 0 }}>
-          <div style={{ fontSize: "18px", fontWeight: 700, color: "#e0e0f0" }}>{titles[active]}</div>
-          <div style={{ fontSize: "11px", color: "#4a4a7a", marginTop: "3px" }}>{subtitles[active]}</div>
+        <div style={{ padding: "16px 28px", borderBottom: "1px solid #e5e5e5", background: "#ffffff", flexShrink: 0 }}>
+          <div style={{ fontSize: "18px", fontWeight: 700, color: "#111111" }}>{titles[active]}</div>
+          <div style={{ fontSize: "11px", color: "#aaaaaa", marginTop: "3px" }}>{subtitles[active]}</div>
         </div>
         {/* Content */}
-        <div style={{ flex: 1, overflowY: "auto", padding: "28px", scrollbarWidth: "thin", scrollbarColor: "#1a1a30 transparent" }}>
+        <div style={{ flex: 1, overflowY: "auto", padding: "28px", scrollbarWidth: "thin", scrollbarColor: "#e5e5e5 transparent" }}>
           {renderContent()}
         </div>
       </div>
@@ -1916,7 +2048,7 @@ export default function App() {
         * { box-sizing: border-box; margin: 0; padding: 0; }
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #1a1a30; border-radius: 2px; }
+        ::-webkit-scrollbar-thumb { background: #e5e5e5; border-radius: 2px; }
       `}</style>
     </div>
   );
