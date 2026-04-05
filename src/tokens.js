@@ -102,11 +102,11 @@ export const metaTokens = {
     },
     // Green scale  (semantic alias: foundation.green) — V.2.0 teal range
     green: {
-      green25:   "#F0F7F6", green25_i:  null,
-      green50:   "#E6F4F2", green50_i:  null,
-      green100:  null,       green100_i: null,
+      green25:   "#F0F7F6", green25_i:  "#252827",
+      green50:   "#E6F4F2", green50_i:  "#282E2D",
+      green100:  null,       green100_i: "#2F3C3B",
       green500:  "#05947F", green500_i: "#10A891",
-      green800:  "#023B33", green800_i: null,
+      green800:  "#023B33", green800_i: "#BFF3EC",
     },
     // Yellow scale  (semantic alias: foundation.yellow)
     // yellow500 = primary yellow (#FFCB2E) | yellow600 = darker (#CCA329)
