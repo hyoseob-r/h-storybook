@@ -993,14 +993,156 @@ function PhoneFrame({ platform, device, children, canvasMode, darkMode = false }
   );
 }
 
+// ── Figma JSON → React renderer ──────────────────────────────────────────────
+
+function figmaRGBA(c, opacity = 1) {
+  if (!c) return "transparent";
+  return `rgba(${Math.round(c.r*255)},${Math.round(c.g*255)},${Math.round(c.b*255)},${((c.a??1)*(opacity??1)).toFixed(3)})`;
+}
+
+function figmaFill(fills) {
+  if (!fills?.length) return undefined;
+  const f = fills.find(f => f.visible !== false);
+  if (!f) return undefined;
+  if (f.type === "SOLID") return figmaRGBA(f.color, f.opacity);
+  if (f.type === "GRADIENT_LINEAR") {
+    const stops = f.gradientStops.map(s => `${figmaRGBA(s.color)} ${Math.round(s.position*100)}%`).join(", ");
+    return `linear-gradient(${stops})`;
+  }
+  return undefined;
+}
+
+function figmaNodeToStyle(node, ox, oy) {
+  const b = node.absoluteBoundingBox;
+  const s = {
+    position: "absolute",
+    left:   b ? b.x - ox : 0,
+    top:    b ? b.y - oy : 0,
+    width:  b ? b.width  : "auto",
+    height: b ? b.height : "auto",
+    boxSizing: "border-box",
+    overflow: "hidden",
+  };
+  if (node.opacity !== undefined && node.opacity < 1) s.opacity = node.opacity;
+  if (node.cornerRadius) s.borderRadius = node.cornerRadius;
+  if (Array.isArray(node.rectangleCornerRadii)) {
+    const [tl, tr, br, bl] = node.rectangleCornerRadii;
+    s.borderRadius = `${tl}px ${tr}px ${br}px ${bl}px`;
+  }
+  const bg = figmaFill(node.fills);
+  if (bg) s.background = bg;
+  if (node.strokes?.length && node.strokeWeight) {
+    const sc = node.strokes.find(s => s.visible !== false);
+    if (sc?.color) s.border = `${node.strokeWeight}px solid ${figmaRGBA(sc.color)}`;
+  }
+  const shadows = (node.effects || [])
+    .filter(e => e.visible !== false && (e.type === "DROP_SHADOW" || e.type === "INNER_SHADOW"))
+    .map(e => `${e.type==="INNER_SHADOW"?"inset ":""}${e.offset?.x??0}px ${e.offset?.y??0}px ${e.radius??0}px ${e.spread??0}px ${figmaRGBA(e.color)}`);
+  if (shadows.length) s.boxShadow = shadows.join(", ");
+  return s;
+}
+
+function RenderFigmaNode({ node, ox, oy }) {
+  if (node.visible === false) return null;
+  const style = figmaNodeToStyle(node, ox, oy);
+
+  if (node.type === "TEXT") {
+    const ts = node.style || {};
+    const textColor = figmaFill(node.fills);
+    return (
+      <div style={{
+        ...style,
+        background: "none",
+        overflow: "visible",
+        fontSize: ts.fontSize || 14,
+        fontWeight: ts.fontWeight || 400,
+        lineHeight: ts.lineHeightPx ? `${ts.lineHeightPx}px` : "normal",
+        letterSpacing: ts.letterSpacing ? `${ts.letterSpacing}px` : undefined,
+        textAlign: (ts.textAlignHorizontal || "LEFT").toLowerCase(),
+        color: textColor || "#000",
+        whiteSpace: "pre-wrap",
+        fontFamily: "system-ui, sans-serif",
+      }}>
+        {node.characters}
+      </div>
+    );
+  }
+
+  if (node.type === "ELLIPSE") {
+    return <div style={{ ...style, borderRadius: "50%" }} />;
+  }
+
+  return (
+    <div style={style}>
+      {(node.children || []).map((child, i) => (
+        <RenderFigmaNode key={`${child.id||i}`} node={child} ox={ox} oy={oy} />
+      ))}
+    </div>
+  );
+}
+
+function FigmaImportPanel({ onAdd, onClose }) {
+  const [json, setJson] = useState("");
+  const [error, setError] = useState("");
+  const [preview, setPreview] = useState(null);
+
+  const parse = (str) => {
+    try {
+      const node = JSON.parse(str);
+      if (!node.type || !node.absoluteBoundingBox) {
+        setError("Figma 노드 JSON이 아닙니다. Figma 개발자 모드에서 복사해주세요.");
+        setPreview(null); return;
+      }
+      setPreview(node); setError("");
+    } catch (e) {
+      setError("JSON 파싱 오류: " + e.message); setPreview(null);
+    }
+  };
+
+  const b = preview?.absoluteBoundingBox;
+  const scale = b ? Math.min(160 / b.width, 120 / b.height, 1) : 1;
+
+  return (
+    <div style={{ background:"#ffffff", border:"1px solid #e5e5e5", borderRadius:"10px", padding:"12px", display:"flex", flexDirection:"column", gap:"8px" }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+        <div style={{ fontSize:"10px", fontWeight:700, color:"#333333", letterSpacing:"0.1em", textTransform:"uppercase" }}>Figma Import</div>
+        <button onClick={onClose} style={{ background:"none", border:"none", color:"#aaaaaa", cursor:"pointer", fontSize:"14px", lineHeight:1 }}>×</button>
+      </div>
+      <div style={{ fontSize:"10px", color:"#aaaaaa", lineHeight:1.6 }}>
+        Figma → 레이어 우클릭<br/>→ Copy/Paste as → Copy as JSON
+      </div>
+      <textarea
+        value={json}
+        onChange={e => { setJson(e.target.value); if (e.target.value.trim().startsWith("{")) parse(e.target.value); }}
+        placeholder='{"type":"FRAME","absoluteBoundingBox":...}'
+        style={{ width:"100%", height:"80px", background:"#f8f8f8", border:"1px solid #d0d0d0", borderRadius:"6px", padding:"6px 8px", fontSize:"10px", fontFamily:"monospace", color:"#333333", resize:"none", outline:"none", boxSizing:"border-box" }}
+      />
+      {error && <div style={{ fontSize:"10px", color:"#cc3333", lineHeight:1.5 }}>{error}</div>}
+      {preview && (
+        <div style={{ background:"#f5f5f5", border:"1px solid #e5e5e5", borderRadius:"6px", padding:"8px", display:"flex", flexDirection:"column", gap:"6px" }}>
+          <div style={{ fontSize:"9px", color:"#999999" }}>{preview.name} · {Math.round(b.width)}×{Math.round(b.height)}dp</div>
+          <div style={{ position:"relative", width: b.width*scale, height: b.height*scale, transform:`scale(${scale})`, transformOrigin:"top left", flexShrink:0 }}>
+            <RenderFigmaNode node={preview} ox={b.x} oy={b.y} />
+          </div>
+        </div>
+      )}
+      <button onClick={() => preview && onAdd(preview)} disabled={!preview}
+        style={{ padding:"7px", borderRadius:"6px", background: preview?"#111111":"#cccccc", border:"none", color:"#ffffff", fontSize:"11px", fontWeight:700, cursor: preview?"pointer":"default" }}>
+        캔버스에 추가
+      </button>
+    </div>
+  );
+}
+
 function SimulatorSection() {
   const [platform,  setPlatform]  = useState("ios");
   const [deviceIdx, setDeviceIdx] = useState(2);
   const [items,     setItems]     = useState([]);
   const [selected,  setSelected]  = useState(null);
   const [hovered,   setHovered]   = useState(null);
-  const [snapGrid,  setSnapGrid]  = useState(true);
-  const [darkMode,  setDarkMode]  = useState(false);
+  const [snapGrid,      setSnapGrid]      = useState(true);
+  const [darkMode,      setDarkMode]      = useState(false);
+  const [showFigmaPanel, setShowFigmaPanel] = useState(false);
 
   const dragRef   = useRef(null); // { id, startMX, startMY, startX, startY }
   const resizeRef = useRef(null); // { id, handle, startMX, startW, startX }
@@ -1150,6 +1292,14 @@ function SimulatorSection() {
       return (
         <div style={{ fontSize:`${t.size}px`, fontWeight:t.weight, lineHeight:`${t.lineHeight}px`, color:item.color, fontFamily: platform==="ios"?"system-ui":"Roboto,sans-serif", userSelect:"none", whiteSpace:"pre-wrap" }}>
           {item.content}
+        </div>
+      );
+    }
+    if (item.type === "figma") {
+      const b = item.figmaData?.absoluteBoundingBox;
+      return (
+        <div style={{ position:"relative", width: item.w || b?.width || 100, height: b?.height || 100, pointerEvents:"none" }}>
+          <RenderFigmaNode node={item.figmaData} ox={b?.x || 0} oy={b?.y || 0} />
         </div>
       );
     }
@@ -1393,8 +1543,28 @@ function SimulatorSection() {
                 + {c.label}
               </button>
             ))}
+            <button onClick={() => setShowFigmaPanel(v => !v)}
+              style={{ padding:"8px 10px", borderRadius:"7px", background: showFigmaPanel?"#111111":"transparent", border: showFigmaPanel?"1px solid #333333":"1px solid #e5e5e5", color: showFigmaPanel?"#ffffff":"#888888", fontSize:"11px", cursor:"pointer", textAlign:"left", transition:"all 0.15s" }}
+              onMouseEnter={e => { if (!showFigmaPanel) { e.currentTarget.style.borderColor="#c0c0c0"; e.currentTarget.style.color="#333333"; e.currentTarget.style.background="#f4f4f4"; }}}
+              onMouseLeave={e => { if (!showFigmaPanel) { e.currentTarget.style.borderColor="#e5e5e5"; e.currentTarget.style.color="#888888"; e.currentTarget.style.background="transparent"; }}}>
+              ◈  Figma JSON
+            </button>
           </div>
         </div>
+
+        {/* Figma Import Panel */}
+        {showFigmaPanel && (
+          <FigmaImportPanel
+            onClose={() => setShowFigmaPanel(false)}
+            onAdd={(figmaData) => {
+              const b = figmaData.absoluteBoundingBox;
+              const id = Date.now();
+              setItems(prev => [...prev, { id, type:"figma", figmaData, x:16, y:Math.min(16+prev.length*40,400), w:b?.width||100, isMaster:false }]);
+              setSelected(id);
+              setShowFigmaPanel(false);
+            }}
+          />
+        )}
 
         {/* Layers */}
         <div style={{ background:"#ffffff", border:"1px solid #e5e5e5", borderRadius:"10px", padding:"12px", flex:1 }}>
