@@ -1100,62 +1100,79 @@ function renameDraftInStorage(id, name) {
   localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
 }
 
-// ── Figma Import Panel ───────────────────────────────────────────────────────
-function FigmaImportPanel({ onAdd, onClose }) {
-  const [json,    setJson]    = useState("");
-  const [error,   setError]   = useState("");
-  const [preview, setPreview] = useState(null);
-  const [name,    setName]    = useState("");
-  const [saved,   setSaved]   = useState(false);
+// ── SVG dimension extractor ──────────────────────────────────────────────────
+function extractSvgSize(svgStr) {
+  const wMatch = svgStr.match(/\bwidth="([^"]+)"/);
+  const hMatch = svgStr.match(/\bheight="([^"]+)"/);
+  const vbMatch = svgStr.match(/viewBox="([^"]+)"/);
+  let w = wMatch ? parseFloat(wMatch[1]) : 0;
+  let h = hMatch ? parseFloat(hMatch[1]) : 0;
+  if ((!w || !h) && vbMatch) {
+    const parts = vbMatch[1].split(/[\s,]+/);
+    if (!w) w = parseFloat(parts[2]) || 100;
+    if (!h) h = parseFloat(parts[3]) || 100;
+  }
+  return { w: w || 100, h: h || 100 };
+}
 
-  const parse = (str) => {
-    try {
-      const node = JSON.parse(str);
-      if (!node.type || !node.absoluteBoundingBox) {
-        setError("Figma 노드 JSON이 아닙니다. Figma 개발자 모드에서 복사해주세요.");
-        setPreview(null); return;
-      }
-      setPreview(node); setName(node.name || "Untitled"); setError(""); setSaved(false);
-    } catch (e) {
-      setError("JSON 파싱 오류: " + e.message); setPreview(null);
+// ── Figma Import Panel (SVG paste) ──────────────────────────────────────────
+function FigmaImportPanel({ onAdd, onClose }) {
+  const [svg,   setSvg]   = useState("");
+  const [error, setError] = useState("");
+  const [name,  setName]  = useState("Untitled");
+  const [ready, setReady] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const handlePaste = (val) => {
+    setSvg(val);
+    setSaved(false);
+    const trimmed = val.trim();
+    if (!trimmed) { setReady(false); setError(""); return; }
+    if (!trimmed.startsWith("<svg")) {
+      setError("SVG가 아닙니다. Figma에서 Copy as SVG로 복사해주세요.");
+      setReady(false); return;
     }
+    setError("");
+    setReady(true);
   };
 
+  const { w, h } = ready ? extractSvgSize(svg) : { w: 0, h: 0 };
+  const thumbScale = ready ? Math.min(160 / w, 100 / h, 1) : 1;
+
   const handleSave = () => {
-    if (!preview) return;
-    const draft = { id: Date.now(), name, figmaData: preview, createdAt: new Date().toISOString() };
+    if (!ready) return;
+    const draft = { id: Date.now(), name, svgData: svg, w, h, createdAt: new Date().toISOString() };
     saveDraftToStorage(draft);
     setSaved(true);
   };
 
-  const b = preview?.absoluteBoundingBox;
-  const thumbScale = b ? Math.min(152 / b.width, 100 / b.height, 1) : 1;
-
   return (
     <div style={{ background:"#ffffff", border:"1px solid #e5e5e5", borderRadius:"10px", padding:"12px", display:"flex", flexDirection:"column", gap:"8px" }}>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-        <div style={{ fontSize:"10px", fontWeight:700, color:"#333333", letterSpacing:"0.1em", textTransform:"uppercase" }}>Figma Import</div>
+        <div style={{ fontSize:"10px", fontWeight:700, color:"#333333", letterSpacing:"0.1em", textTransform:"uppercase" }}>Figma → SVG 붙여넣기</div>
         <button onClick={onClose} style={{ background:"none", border:"none", color:"#aaaaaa", cursor:"pointer", fontSize:"14px", lineHeight:1 }}>×</button>
       </div>
-      <div style={{ fontSize:"10px", color:"#aaaaaa", lineHeight:1.6 }}>
-        Figma → 레이어 우클릭<br/>→ Copy/Paste as → Copy as JSON
+      <div style={{ background:"#f0f4ff", border:"1px solid #c5d3f5", borderRadius:"6px", padding:"8px 10px", fontSize:"10px", color:"#3355aa", lineHeight:1.7 }}>
+        Figma에서 레이어 선택<br/>
+        → 우클릭 → <b>Copy/Paste as → Copy as SVG</b><br/>
+        → 아래에 붙여넣기 (Ctrl+V / ⌘V)
       </div>
       <textarea
-        value={json}
-        onChange={e => { setJson(e.target.value); if (e.target.value.trim().startsWith("{")) parse(e.target.value); }}
-        placeholder='{"type":"FRAME","absoluteBoundingBox":...}'
-        style={{ width:"100%", height:"72px", background:"#f8f8f8", border:"1px solid #d0d0d0", borderRadius:"6px", padding:"6px 8px", fontSize:"10px", fontFamily:"monospace", color:"#333333", resize:"none", outline:"none", boxSizing:"border-box" }}
+        value={svg}
+        onChange={e => handlePaste(e.target.value)}
+        onPaste={e => { setTimeout(() => handlePaste(e.target.value), 0); }}
+        placeholder="<svg xmlns=... 여기에 붙여넣기"
+        style={{ width:"100%", height:"64px", background:"#f8f8f8", border:`1px solid ${error?"#cc3333":ready?"#5028c8":"#d0d0d0"}`, borderRadius:"6px", padding:"6px 8px", fontSize:"10px", fontFamily:"monospace", color:"#333333", resize:"none", outline:"none", boxSizing:"border-box" }}
       />
       {error && <div style={{ fontSize:"10px", color:"#cc3333", lineHeight:1.5 }}>{error}</div>}
 
-      {preview && !saved && (
+      {ready && !saved && (
         <>
-          {/* Thumbnail */}
-          <div style={{ background:"#f5f5f5", border:"1px solid #e5e5e5", borderRadius:"6px", padding:"8px", overflow:"hidden" }}>
-            <div style={{ fontSize:"9px", color:"#999999", marginBottom:"6px" }}>{Math.round(b.width)}×{Math.round(b.height)}dp</div>
-            <div style={{ position:"relative", width: b.width*thumbScale, height: b.height*thumbScale, transform:`scale(${thumbScale})`, transformOrigin:"top left", flexShrink:0 }}>
-              <RenderFigmaNode node={preview} ox={b.x} oy={b.y} />
-            </div>
+          {/* Preview */}
+          <div style={{ background:"#f5f5f5", border:"1px solid #e5e5e5", borderRadius:"6px", padding:"8px", overflow:"hidden", display:"flex", flexDirection:"column", gap:"6px" }}>
+            <div style={{ fontSize:"9px", color:"#999999" }}>{Math.round(w)}×{Math.round(h)}px</div>
+            <div style={{ transform:`scale(${thumbScale})`, transformOrigin:"top left", width: w*thumbScale, height: h*thumbScale, flexShrink:0 }}
+              dangerouslySetInnerHTML={{ __html: svg }} />
           </div>
           {/* Save prompt */}
           <div style={{ background:"#fffbe6", border:"1px solid #f0d800", borderRadius:"6px", padding:"10px", display:"flex", flexDirection:"column", gap:"8px" }}>
@@ -1167,7 +1184,7 @@ function FigmaImportPanel({ onAdd, onClose }) {
                 style={{ flex:1, padding:"6px", borderRadius:"5px", background:"#111111", border:"none", color:"#ffffff", fontSize:"11px", fontWeight:700, cursor:"pointer" }}>
                 Draft로 저장
               </button>
-              <button onClick={() => onAdd(preview)}
+              <button onClick={() => onAdd({ svgData: svg, w, h })}
                 style={{ flex:1, padding:"6px", borderRadius:"5px", background:"transparent", border:"1px solid #d0d0d0", color:"#888888", fontSize:"11px", cursor:"pointer" }}>
                 저장 없이 추가
               </button>
@@ -1176,12 +1193,12 @@ function FigmaImportPanel({ onAdd, onClose }) {
         </>
       )}
 
-      {preview && saved && (
+      {ready && saved && (
         <div style={{ background:"#e8f5e8", border:"1px solid #5aaa5a", borderRadius:"6px", padding:"10px", display:"flex", flexDirection:"column", gap:"8px" }}>
           <div style={{ fontSize:"11px", color:"#2a7a2a", fontWeight:700 }}>✓ Draft에 저장됐습니다</div>
           <div style={{ fontSize:"10px", color:"#4a9a4a" }}>Drafts 페이지에서 관리하거나 시뮬레이터에 추가할 수 있습니다.</div>
           <div style={{ display:"flex", gap:"6px" }}>
-            <button onClick={() => onAdd(preview)}
+            <button onClick={() => onAdd({ svgData: svg, w, h })}
               style={{ flex:1, padding:"6px", borderRadius:"5px", background:"#111111", border:"none", color:"#ffffff", fontSize:"11px", fontWeight:700, cursor:"pointer" }}>
               캔버스에 추가
             </button>
@@ -1209,9 +1226,13 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
 
   useEffect(() => {
     if (!pendingDraft) return;
-    const b = pendingDraft.figmaData?.absoluteBoundingBox;
     const id = Date.now();
-    setItems(prev => [...prev, { id, type:"figma", figmaData: pendingDraft.figmaData, x:16, y: Math.min(16+prev.length*40,400), w:b?.width||100, isMaster:false }]);
+    if (pendingDraft.svgData) {
+      setItems(prev => [...prev, { id, type:"svg", svgData: pendingDraft.svgData, w: pendingDraft.w||100, h: pendingDraft.h||100, x:16, y:Math.min(16+prev.length*40,400), isMaster:false }]);
+    } else if (pendingDraft.figmaData) {
+      const b = pendingDraft.figmaData?.absoluteBoundingBox;
+      setItems(prev => [...prev, { id, type:"figma", figmaData: pendingDraft.figmaData, x:16, y:Math.min(16+prev.length*40,400), w:b?.width||100, isMaster:false }]);
+    }
     setSelected(id);
     onDraftConsumed?.();
   }, [pendingDraft]);
@@ -1373,6 +1394,12 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
         <div style={{ position:"relative", width: item.w || b?.width || 100, height: b?.height || 100, pointerEvents:"none" }}>
           <RenderFigmaNode node={item.figmaData} ox={b?.x || 0} oy={b?.y || 0} />
         </div>
+      );
+    }
+    if (item.type === "svg") {
+      return (
+        <div style={{ width: item.w || 100, height: item.h || 100, pointerEvents:"none", lineHeight:0 }}
+          dangerouslySetInnerHTML={{ __html: item.svgData }} />
       );
     }
   };
@@ -1619,7 +1646,7 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
               style={{ padding:"8px 10px", borderRadius:"7px", background: showFigmaPanel?"#111111":"transparent", border: showFigmaPanel?"1px solid #333333":"1px solid #e5e5e5", color: showFigmaPanel?"#ffffff":"#888888", fontSize:"11px", cursor:"pointer", textAlign:"left", transition:"all 0.15s" }}
               onMouseEnter={e => { if (!showFigmaPanel) { e.currentTarget.style.borderColor="#c0c0c0"; e.currentTarget.style.color="#333333"; e.currentTarget.style.background="#f4f4f4"; }}}
               onMouseLeave={e => { if (!showFigmaPanel) { e.currentTarget.style.borderColor="#e5e5e5"; e.currentTarget.style.color="#888888"; e.currentTarget.style.background="transparent"; }}}>
-              ◈  Figma JSON
+              ◈  Figma SVG
             </button>
             {(() => { const dc = loadDrafts(); return dc.length > 0 && (
               <button onClick={() => { setShowDraftPicker(v => !v); setShowFigmaPanel(false); }}
@@ -1637,10 +1664,9 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
         {showFigmaPanel && (
           <FigmaImportPanel
             onClose={() => setShowFigmaPanel(false)}
-            onAdd={(figmaData) => {
-              const b = figmaData.absoluteBoundingBox;
+            onAdd={({ svgData, w, h }) => {
               const id = Date.now();
-              setItems(prev => [...prev, { id, type:"figma", figmaData, x:16, y:Math.min(16+prev.length*40,400), w:b?.width||100, isMaster:false }]);
+              setItems(prev => [...prev, { id, type:"svg", svgData, w, h, x:16, y:Math.min(16+prev.length*40,400), isMaster:false }]);
               setSelected(id);
               setShowFigmaPanel(false);
             }}
@@ -1657,13 +1683,20 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
                 <button onClick={() => setShowDraftPicker(false)} style={{ background:"none", border:"none", color:"#aaaaaa", cursor:"pointer", fontSize:"14px" }}>×</button>
               </div>
               {drafts.map(draft => {
-                const b = draft.figmaData?.absoluteBoundingBox;
-                const scale = b ? Math.min(60 / b.width, 40 / b.height, 1) : 1;
+                const isSvg = !!draft.svgData;
+                const dw = draft.w || draft.figmaData?.absoluteBoundingBox?.width || 100;
+                const dh = draft.h || draft.figmaData?.absoluteBoundingBox?.height || 100;
+                const scale = Math.min(60 / dw, 40 / dh, 1);
                 return (
                   <button key={draft.id}
                     onClick={() => {
                       const id = Date.now();
-                      setItems(prev => [...prev, { id, type:"figma", figmaData: draft.figmaData, x:16, y:Math.min(16+prev.length*40,400), w:b?.width||100, isMaster:false }]);
+                      if (isSvg) {
+                        setItems(prev => [...prev, { id, type:"svg", svgData: draft.svgData, w: dw, h: dh, x:16, y:Math.min(16+prev.length*40,400), isMaster:false }]);
+                      } else {
+                        const b = draft.figmaData?.absoluteBoundingBox;
+                        setItems(prev => [...prev, { id, type:"figma", figmaData: draft.figmaData, x:16, y:Math.min(16+prev.length*40,400), w:b?.width||100, isMaster:false }]);
+                      }
                       setSelected(id);
                       setShowDraftPicker(false);
                     }}
@@ -1671,14 +1704,19 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
                     onMouseEnter={e => { e.currentTarget.style.background="#f4f0ff"; e.currentTarget.style.borderColor="#5028c8"; }}
                     onMouseLeave={e => { e.currentTarget.style.background="transparent"; e.currentTarget.style.borderColor="#e5e5e5"; }}>
                     {/* Thumbnail */}
-                    <div style={{ width:60, height:40, background:"#f5f5f5", borderRadius:"5px", flexShrink:0, overflow:"hidden", position:"relative" }}>
-                      {b && <div style={{ position:"absolute", transform:`scale(${scale})`, transformOrigin:"top left", top:0, left:0, width:b.width, height:b.height }}>
-                        <RenderFigmaNode node={draft.figmaData} ox={b.x} oy={b.y} />
-                      </div>}
+                    <div style={{ width:60, height:40, background:"#f5f5f5", borderRadius:"5px", flexShrink:0, overflow:"hidden", display:"flex", alignItems:"center", justifyContent:"center", position:"relative" }}>
+                      {isSvg ? (
+                        <div style={{ transform:`scale(${scale})`, transformOrigin:"center center", lineHeight:0 }}
+                          dangerouslySetInnerHTML={{ __html: draft.svgData }} />
+                      ) : draft.figmaData?.absoluteBoundingBox && (
+                        <div style={{ position:"absolute", transform:`scale(${scale})`, transformOrigin:"top left", top:0, left:0, width:dw, height:dh }}>
+                          <RenderFigmaNode node={draft.figmaData} ox={draft.figmaData.absoluteBoundingBox.x} oy={draft.figmaData.absoluteBoundingBox.y} />
+                        </div>
+                      )}
                     </div>
                     <div style={{ flex:1, minWidth:0 }}>
                       <div style={{ fontSize:"11px", fontWeight:600, color:"#333333", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{draft.name}</div>
-                      <div style={{ fontSize:"9px", color:"#aaaaaa", marginTop:"2px" }}>{b ? `${Math.round(b.width)}×${Math.round(b.height)}dp` : ""}</div>
+                      <div style={{ fontSize:"9px", color:"#aaaaaa", marginTop:"2px" }}>{Math.round(dw)}×{Math.round(dh)}px</div>
                     </div>
                   </button>
                 );
@@ -2451,7 +2489,7 @@ function DraftsSection({ onUseInSimulator }) {
       <div style={{ fontSize:"32px", opacity:0.4 }}>◈</div>
       <div style={{ fontSize:"13px" }}>저장된 Draft가 없습니다</div>
       <div style={{ fontSize:"11px", color:"#d0d0d0", textAlign:"center", lineHeight:1.7 }}>
-        시뮬레이터 → Add → Figma JSON<br/>에서 컴포넌트를 가져와 저장하세요.
+        시뮬레이터 → Add → Figma SVG<br/>에서 컴포넌트를 붙여넣어 저장하세요.
       </div>
     </div>
   );
@@ -2461,17 +2499,22 @@ function DraftsSection({ onUseInSimulator }) {
       <div style={{ fontSize:"11px", color:"#aaaaaa" }}>{drafts.length}개의 Draft 컴포넌트</div>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(220px, 1fr))", gap:"16px" }}>
         {drafts.map(draft => {
-          const b = draft.figmaData?.absoluteBoundingBox;
-          const scale = b ? Math.min(180 / b.width, 120 / b.height, 1) : 1;
+          const isSvg = !!draft.svgData;
+          const dw = draft.w || draft.figmaData?.absoluteBoundingBox?.width || 100;
+          const dh = draft.h || draft.figmaData?.absoluteBoundingBox?.height || 100;
+          const scale = Math.min(180 / dw, 120 / dh, 1);
           const date = new Date(draft.createdAt).toLocaleDateString("ko-KR", { month:"short", day:"numeric", hour:"2-digit", minute:"2-digit" });
           return (
             <div key={draft.id} style={{ background:"#ffffff", border:"1px solid #e5e5e5", borderRadius:"12px", overflow:"hidden", display:"flex", flexDirection:"column" }}>
               {/* Thumbnail */}
               <div style={{ background:"#f5f5f5", height:"130px", display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden", position:"relative", flexShrink:0 }}>
-                {b ? (
+                {isSvg ? (
+                  <div style={{ transform:`scale(${scale})`, transformOrigin:"center center", lineHeight:0 }}
+                    dangerouslySetInnerHTML={{ __html: draft.svgData }} />
+                ) : draft.figmaData?.absoluteBoundingBox ? (
                   <div style={{ transform:`scale(${scale})`, transformOrigin:"center center", position:"absolute" }}>
-                    <div style={{ position:"relative", width: b.width, height: b.height }}>
-                      <RenderFigmaNode node={draft.figmaData} ox={b.x} oy={b.y} />
+                    <div style={{ position:"relative", width: dw, height: dh }}>
+                      <RenderFigmaNode node={draft.figmaData} ox={draft.figmaData.absoluteBoundingBox.x} oy={draft.figmaData.absoluteBoundingBox.y} />
                     </div>
                   </div>
                 ) : (
@@ -2498,7 +2541,7 @@ function DraftsSection({ onUseInSimulator }) {
                   </div>
                 )}
                 <div style={{ fontSize:"10px", color:"#aaaaaa" }}>
-                  {b ? `${Math.round(b.width)}×${Math.round(b.height)}dp` : ""} · {date}
+                  {Math.round(dw)}×{Math.round(dh)}px · {date}
                 </div>
 
                 {/* Actions */}
