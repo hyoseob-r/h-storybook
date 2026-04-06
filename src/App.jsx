@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { colors, typography, spacing, radius, elevation, states, metaTokens } from "./tokens";
 import { YdsIcon, YDS_ICONS, ICON_NAMES } from "./icons.jsx";
 import { fetchComponents, saveComponent, deleteComponent, renameComponent } from "./supabase.js";
