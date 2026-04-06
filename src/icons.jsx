@@ -145,8 +145,8 @@ export function YdsIcon({ name, size = 24, color = "#333333", style }) {
           key={i}
           d={p.d}
           fill={color}
-          fillRule={p.r || undefined}
-          clipRule={p.r || undefined}
+          fillRule={p.r || "evenodd"}
+          clipRule={p.r || "evenodd"}
         />
       ))}
     </svg>

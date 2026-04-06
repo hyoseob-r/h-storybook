@@ -178,10 +178,26 @@ function PlatformTabs({ tabs }) {
   );
 }
 
+// ── Shared: Size Control ─────────────────────────────────────────────────────
+function SizeControl({ size, onChange }) {
+  return (
+    <div style={{ display: "flex", gap: "3px", alignItems: "center" }}>
+      <span style={{ fontSize: "10px", color: "#bbbbbb", marginRight: "4px", letterSpacing: "0.08em" }}>크기</span>
+      {["S", "M", "L"].map(s => (
+        <button key={s} onClick={() => onChange(s)}
+          style={{ width: "24px", height: "24px", borderRadius: "6px", background: size === s ? "#111111" : "#f0f0f0", border: size === s ? "1px solid #333333" : "1px solid #e5e5e5", color: size === s ? "#ffffff" : "#888888", fontSize: "10px", fontWeight: 700, cursor: "pointer", transition: "all 0.15s", lineHeight: 1 }}>
+          {s}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 // ── Section: Meta Tokens ─────────────────────────────────────────────────────
 
 function MetaTokensSection() {
   const [tab, setTab] = useState("color");
+  const [chipSize, setChipSize] = useState("M");
 
   const tabStyle = (t) => ({
     padding: "6px 16px", borderRadius: "6px", border: "none", cursor: "pointer", fontSize: "12px", fontWeight: 600,
@@ -192,9 +208,11 @@ function MetaTokensSection() {
     <div style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "10px", marginTop: "24px" }}>{text}</div>
   );
 
+  const chipPx = chipSize === "S" ? 32 : chipSize === "L" ? 72 : 48;
+
   const chip = (label, sub, color) => (
-    <div key={label} style={{ display: "flex", flexDirection: "column", gap: "5px", width: "60px" }}>
-      <div style={{ width: "48px", height: "48px", borderRadius: "8px", background: color || "#eeeeee", border: "1px solid rgba(0,0,0,0.08)", flexShrink: 0 }} />
+    <div key={label} style={{ display: "flex", flexDirection: "column", gap: "5px", width: `${chipPx + 12}px` }}>
+      <div style={{ width: `${chipPx}px`, height: `${chipPx}px`, borderRadius: "8px", background: color || "#eeeeee", border: "1px solid rgba(0,0,0,0.08)", flexShrink: 0 }} />
       <div style={{ fontSize: "9px", fontWeight: 600, color: "#333333", fontFamily: "monospace", lineHeight: "1.3", wordBreak: "break-all" }}>{label}</div>
       {sub && sub !== label && <div style={{ fontSize: "9px", color: "#aaaaaa", fontFamily: "monospace", lineHeight: "1.2" }}>{sub}</div>}
     </div>
@@ -285,10 +303,13 @@ function MetaTokensSection() {
 
   return (
     <div style={{ padding: "32px", maxWidth: "1100px" }}>
-      <div style={{ display: "flex", gap: "8px", marginBottom: "28px" }}>
+      <div style={{ display: "flex", gap: "8px", marginBottom: "28px", alignItems: "center" }}>
         {["color", "typography", "radius", "spacing"].map(t => (
           <button key={t} style={tabStyle(t)} onClick={() => setTab(t)}>{t.charAt(0).toUpperCase() + t.slice(1)}</button>
         ))}
+        <div style={{ marginLeft: "auto" }}>
+          {tab === "color" && <SizeControl size={chipSize} onChange={setChipSize} />}
+        </div>
       </div>
       {tab === "color"      && renderColors()}
       {tab === "typography" && renderTypography()}
@@ -300,11 +321,11 @@ function MetaTokensSection() {
 
 // ── Section: Colors ───────────────────────────────────────────────────────────
 
-function ColorSwatch({ name, value }) {
+function ColorSwatch({ name, value, height = 56 }) {
   const isDark = parseInt(value.replace("#", "").slice(0, 2), 16) < 128;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "6px", cursor: "pointer" }} onClick={() => navigator.clipboard.writeText(value)}>
-      <div style={{ width: "100%", height: "56px", background: value, borderRadius: "8px", border: "1px solid #e5e5e5", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ width: "100%", height: `${height}px`, background: value, borderRadius: "8px", border: "1px solid #e5e5e5", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <span style={{ fontSize: "10px", color: isDark ? "#ffffff88" : "#00000088", fontFamily: "monospace" }}>{value}</span>
       </div>
       <div style={{ fontSize: "10px", color: "#888888", lineHeight: "1.4" }}>{name}</div>
@@ -313,6 +334,8 @@ function ColorSwatch({ name, value }) {
 }
 
 function ColorsSection() {
+  const [swatchSize, setSwatchSize] = useState("M");
+  const swH = swatchSize === "S" ? 36 : swatchSize === "L" ? 80 : 56;
   const groups = [
     { title: "Foundation", tokens: Object.values(colors.foundation) },
     { title: "Light / Extended Palette", tokens: Object.values(colors.light), textRule: true },
@@ -334,6 +357,9 @@ function ColorsSection() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        <SizeControl size={swatchSize} onChange={setSwatchSize} />
+      </div>
       {groups.map(g => (
         <div key={g.title}>
           <div style={{ fontSize: "11px", color: "#999999", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "14px", fontWeight: 600 }}>{g.title}</div>
@@ -377,7 +403,7 @@ function ColorsSection() {
             </div>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: "12px" }}>
-              {g.tokens.map(t => <ColorSwatch key={t.name} name={t.name} value={t.value} />)}
+              {g.tokens.map(t => <ColorSwatch key={t.name} name={t.name} value={t.value} height={swH} />)}
             </div>
           )}
         </div>
@@ -410,15 +436,20 @@ function ColorsSection() {
 // ── Section: Typography ───────────────────────────────────────────────────────
 
 function TypographySection() {
+  const [typoSize, setTypoSize] = useState("M");
+  const scale = typoSize === "S" ? 0.7 : typoSize === "L" ? 1.5 : 1;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "8px" }}>
+        <SizeControl size={typoSize} onChange={setTypoSize} />
+      </div>
       {typography.map(t => (
-        <div key={t.name} style={{ padding: "16px 20px", background: "#ffffff", border: "1px solid #e5e5e5", borderRadius: "10px", display: "flex", alignItems: "baseline", gap: "20px" }}>
+        <div key={t.name} style={{ padding: "16px 20px", background: "#ffffff", border: "1px solid #e5e5e5", borderRadius: "10px", display: "flex", alignItems: "center", gap: "20px" }}>
           <div style={{ width: "180px", flexShrink: 0 }}>
             <div style={{ fontSize: "10px", color: "#999999", marginBottom: "2px", fontFamily: "monospace" }}>{t.name}</div>
             <div style={{ fontSize: "10px", color: "#c0c0c0" }}>{t.size}px · {t.style} · lh {t.lineHeight}</div>
           </div>
-          <div style={{ fontFamily: "Roboto, sans-serif", fontSize: `${t.size}px`, fontWeight: t.weight, lineHeight: `${t.lineHeight}px`, color: "#111111" }}>
+          <div style={{ fontFamily: "Roboto, sans-serif", fontSize: `${Math.round(t.size * scale)}px`, fontWeight: t.weight, lineHeight: `${Math.round(t.lineHeight * scale)}px`, color: "#111111", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
             요기요-배달할때마다 포인트 적립 Points earned with every delivery
           </div>
         </div>
@@ -430,27 +461,40 @@ function TypographySection() {
 // ── Section: Spacing & Radius ─────────────────────────────────────────────────
 
 function SpacingSection() {
+  const [spacingSize, setSpacingSize] = useState("M");
+  const mult = spacingSize === "S" ? 2 : spacingSize === "L" ? 7 : 4;
+  const [radiusSize, setRadiusSize] = useState("M");
+  const radiusPx = radiusSize === "S" ? 48 : radiusSize === "L" ? 96 : 64;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       <div>
-        <div style={{ fontSize: "11px", color: "#999999", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "14px", fontWeight: 600 }}>Spacing</div>
+        <div style={{ display: "flex", alignItems: "center", marginBottom: "14px" }}>
+          <div style={{ fontSize: "11px", color: "#999999", letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: 600 }}>Spacing</div>
+          <div style={{ marginLeft: "auto" }}><SizeControl size={spacingSize} onChange={setSpacingSize} /></div>
+        </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {spacing.map(s => (
             <div key={s.name} style={{ padding: "12px 20px", background: "#ffffff", border: "1px solid #e5e5e5", borderRadius: "10px", display: "flex", alignItems: "center", gap: "20px" }}>
               <div style={{ width: "60px", fontSize: "12px", color: "#888888", fontFamily: "monospace" }}>{s.name}</div>
-              <div style={{ width: `${s.value * 4}px`, height: "20px", background: "#11111115", border: "1px solid #cccccc", borderRadius: "3px" }} />
+              <div style={{ width: `${Math.min(s.value * mult, 400)}px`, height: "20px", background: "#11111115", border: "1px solid #cccccc", borderRadius: "3px", transition: "width 0.2s" }} />
               <div style={{ fontSize: "12px", color: "#999999" }}>{s.value}px</div>
             </div>
           ))}
         </div>
       </div>
       <div>
-        <div style={{ fontSize: "11px", color: "#999999", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "14px", fontWeight: 600 }}>Border Radius</div>
-        <div style={{ display: "flex", gap: "16px" }}>
+        <div style={{ display: "flex", alignItems: "center", marginBottom: "14px" }}>
+          <div style={{ fontSize: "11px", color: "#999999", letterSpacing: "0.15em", textTransform: "uppercase", fontWeight: 600 }}>Border Radius</div>
+          <div style={{ marginLeft: "auto" }}><SizeControl size={radiusSize} onChange={setRadiusSize} /></div>
+        </div>
+        <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
           {radius.map(r => (
-            <div key={r.name} style={{ padding: "16px 24px", background: "#ffffff", border: "1px solid #e5e5e5", borderRadius: `${r.value}px`, display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
-              <div style={{ fontSize: "12px", color: "#888888", fontFamily: "monospace" }}>{r.name}</div>
-              <div style={{ fontSize: "11px", color: "#999999" }}>{r.value}px</div>
+            <div key={r.name} style={{ padding: "16px 20px", background: "#ffffff", border: "1px solid #e5e5e5", borderRadius: "10px", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
+              <div style={{ width: `${radiusPx}px`, height: `${radiusPx}px`, background: "#11111110", border: "1.5px solid #111111", borderRadius: `${Math.min(r.value / 20 * radiusPx / 2, radiusPx / 2)}px`, transition: "all 0.2s" }} />
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: "11px", fontFamily: "monospace", color: "#333333", fontWeight: 700 }}>{r.name}</div>
+                <div style={{ fontSize: "10px", color: "#999999", marginTop: "2px" }}>{r.value}px</div>
+              </div>
             </div>
           ))}
         </div>
@@ -463,19 +507,23 @@ function SpacingSection() {
 
 function ElevationSection() {
   const [selPlatform, setSelPlatform] = useState("swiftui");
+  const [elevSize, setElevSize] = useState("M");
   const platforms = ["swiftui", "ios", "compose", "android"];
   const platLabel = { swiftui: "SwiftUI", ios: "UIKit", compose: "Jetpack Compose", android: "Android XML" };
+  const previewW = elevSize === "S" ? 80 : elevSize === "L" ? 180 : 120;
+  const previewH = elevSize === "S" ? 48 : elevSize === "L" ? 100 : 72;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
-      {/* Platform picker */}
-      <div style={{ display: "flex", gap: "4px" }}>
+      {/* Platform picker + size control */}
+      <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
         {platforms.map(p => (
           <button key={p} onClick={() => setSelPlatform(p)}
             style={{ padding: "5px 12px", borderRadius: "6px", background: selPlatform === p ? "#f0f0f0" : "transparent", border: selPlatform === p ? "1px solid #c0c0c0" : "1px solid #e5e5e5", color: selPlatform === p ? "#333333" : "#999999", fontSize: "11px", cursor: "pointer" }}>
             {platLabel[p]}
           </button>
         ))}
+        <div style={{ marginLeft: "auto" }}><SizeControl size={elevSize} onChange={setElevSize} /></div>
       </div>
 
       {elevation.map(lv => (
@@ -488,7 +536,7 @@ function ElevationSection() {
 
           {/* Visual preview */}
           <div style={{ display: "flex", gap: "24px", alignItems: "center" }}>
-            <div style={{ width: "120px", height: "72px", background: "#ffffff", borderRadius: "12px", boxShadow: lv.css, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: `${previewW}px`, height: `${previewH}px`, background: "#ffffff", borderRadius: "12px", boxShadow: lv.css, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s", flexShrink: 0 }}>
               <div style={{ fontSize: "10px", color: "#999", fontFamily: "monospace" }}>{lv.label}</div>
             </div>
             <div style={{ flex: 1 }}>
@@ -1927,6 +1975,9 @@ function GlassNavSection() {
 
 function IconsSection() {
   const [copied, setCopied] = useState(null);
+  const [iconSize, setIconSize] = useState("M");
+  const sz = iconSize === "S" ? 16 : iconSize === "L" ? 32 : 24;
+  const gridMin = iconSize === "S" ? 72 : iconSize === "L" ? 120 : 96;
   const copy = (name) => {
     navigator.clipboard.writeText(name).then(() => {
       setCopied(name);
@@ -1935,17 +1986,20 @@ function IconsSection() {
   };
   return (
     <div>
-      <div style={{ fontSize:"11px", color:"#999999", marginBottom:"16px" }}>
-        YDS 2.0 System Icon — {ICON_NAMES.length}개 · 클릭하면 이름 복사
+      <div style={{ display: "flex", alignItems: "center", marginBottom: "16px" }}>
+        <div style={{ fontSize: "11px", color: "#999999" }}>
+          YDS 2.0 System Icon — {ICON_NAMES.length}개 · 클릭하면 이름 복사
+        </div>
+        <div style={{ marginLeft: "auto" }}><SizeControl size={iconSize} onChange={setIconSize} /></div>
       </div>
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(100px, 1fr))", gap:"8px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(${gridMin}px, 1fr))`, gap: "8px" }}>
         {ICON_NAMES.map(name => (
           <button key={name} onClick={() => copy(name)}
-            style={{ background: copied===name?"#e8f5e8":"#ffffff", border: copied===name?"1px solid #5aaa5a":"1px solid #e5e5e5", borderRadius:"10px", padding:"16px 8px 12px", display:"flex", flexDirection:"column", alignItems:"center", gap:"10px", cursor:"pointer", transition:"all 0.15s" }}
+            style={{ background: copied===name?"#e8f5e8":"#ffffff", border: copied===name?"1px solid #5aaa5a":"1px solid #e5e5e5", borderRadius: "10px", padding: `${sz < 20 ? 10 : 16}px 8px ${sz < 20 ? 8 : 12}px`, display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", cursor: "pointer", transition: "all 0.15s" }}
             onMouseEnter={e => { if (copied!==name) { e.currentTarget.style.background="#eeeeee"; e.currentTarget.style.borderColor="#c0c0c0"; }}}
             onMouseLeave={e => { if (copied!==name) { e.currentTarget.style.background="#ffffff"; e.currentTarget.style.borderColor="#e5e5e5"; }}}>
-            <YdsIcon name={name} size={24} color={copied===name?"#60cc90":"#333333"} />
-            <div style={{ fontSize:"9px", color: copied===name?"#60cc90":"#999999", textAlign:"center", wordBreak:"break-all", lineHeight:1.4 }}>
+            <YdsIcon name={name} size={sz} color={copied===name?"#60cc90":"#333333"} />
+            <div style={{ fontSize: "9px", color: copied===name?"#60cc90":"#999999", textAlign: "center", wordBreak: "break-all", lineHeight: 1.4 }}>
               {copied===name ? "복사됨" : name}
             </div>
           </button>
