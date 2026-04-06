@@ -1081,10 +1081,32 @@ function RenderFigmaNode({ node, ox, oy }) {
   );
 }
 
+// ── Draft localStorage utils ─────────────────────────────────────────────────
+const DRAFTS_KEY = "yds_draft_components";
+function loadDrafts() {
+  try { return JSON.parse(localStorage.getItem(DRAFTS_KEY) || "[]"); }
+  catch { return []; }
+}
+function saveDraftToStorage(draft) {
+  const drafts = loadDrafts();
+  localStorage.setItem(DRAFTS_KEY, JSON.stringify([draft, ...drafts]));
+}
+function deleteDraftFromStorage(id) {
+  const drafts = loadDrafts().filter(d => d.id !== id);
+  localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
+}
+function renameDraftInStorage(id, name) {
+  const drafts = loadDrafts().map(d => d.id === id ? { ...d, name } : d);
+  localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
+}
+
+// ── Figma Import Panel ───────────────────────────────────────────────────────
 function FigmaImportPanel({ onAdd, onClose }) {
-  const [json, setJson] = useState("");
-  const [error, setError] = useState("");
+  const [json,    setJson]    = useState("");
+  const [error,   setError]   = useState("");
   const [preview, setPreview] = useState(null);
+  const [name,    setName]    = useState("");
+  const [saved,   setSaved]   = useState(false);
 
   const parse = (str) => {
     try {
@@ -1093,14 +1115,21 @@ function FigmaImportPanel({ onAdd, onClose }) {
         setError("Figma 노드 JSON이 아닙니다. Figma 개발자 모드에서 복사해주세요.");
         setPreview(null); return;
       }
-      setPreview(node); setError("");
+      setPreview(node); setName(node.name || "Untitled"); setError(""); setSaved(false);
     } catch (e) {
       setError("JSON 파싱 오류: " + e.message); setPreview(null);
     }
   };
 
+  const handleSave = () => {
+    if (!preview) return;
+    const draft = { id: Date.now(), name, figmaData: preview, createdAt: new Date().toISOString() };
+    saveDraftToStorage(draft);
+    setSaved(true);
+  };
+
   const b = preview?.absoluteBoundingBox;
-  const scale = b ? Math.min(160 / b.width, 120 / b.height, 1) : 1;
+  const thumbScale = b ? Math.min(152 / b.width, 100 / b.height, 1) : 1;
 
   return (
     <div style={{ background:"#ffffff", border:"1px solid #e5e5e5", borderRadius:"10px", padding:"12px", display:"flex", flexDirection:"column", gap:"8px" }}>
@@ -1115,26 +1144,59 @@ function FigmaImportPanel({ onAdd, onClose }) {
         value={json}
         onChange={e => { setJson(e.target.value); if (e.target.value.trim().startsWith("{")) parse(e.target.value); }}
         placeholder='{"type":"FRAME","absoluteBoundingBox":...}'
-        style={{ width:"100%", height:"80px", background:"#f8f8f8", border:"1px solid #d0d0d0", borderRadius:"6px", padding:"6px 8px", fontSize:"10px", fontFamily:"monospace", color:"#333333", resize:"none", outline:"none", boxSizing:"border-box" }}
+        style={{ width:"100%", height:"72px", background:"#f8f8f8", border:"1px solid #d0d0d0", borderRadius:"6px", padding:"6px 8px", fontSize:"10px", fontFamily:"monospace", color:"#333333", resize:"none", outline:"none", boxSizing:"border-box" }}
       />
       {error && <div style={{ fontSize:"10px", color:"#cc3333", lineHeight:1.5 }}>{error}</div>}
-      {preview && (
-        <div style={{ background:"#f5f5f5", border:"1px solid #e5e5e5", borderRadius:"6px", padding:"8px", display:"flex", flexDirection:"column", gap:"6px" }}>
-          <div style={{ fontSize:"9px", color:"#999999" }}>{preview.name} · {Math.round(b.width)}×{Math.round(b.height)}dp</div>
-          <div style={{ position:"relative", width: b.width*scale, height: b.height*scale, transform:`scale(${scale})`, transformOrigin:"top left", flexShrink:0 }}>
-            <RenderFigmaNode node={preview} ox={b.x} oy={b.y} />
+
+      {preview && !saved && (
+        <>
+          {/* Thumbnail */}
+          <div style={{ background:"#f5f5f5", border:"1px solid #e5e5e5", borderRadius:"6px", padding:"8px", overflow:"hidden" }}>
+            <div style={{ fontSize:"9px", color:"#999999", marginBottom:"6px" }}>{Math.round(b.width)}×{Math.round(b.height)}dp</div>
+            <div style={{ position:"relative", width: b.width*thumbScale, height: b.height*thumbScale, transform:`scale(${thumbScale})`, transformOrigin:"top left", flexShrink:0 }}>
+              <RenderFigmaNode node={preview} ox={b.x} oy={b.y} />
+            </div>
+          </div>
+          {/* Save prompt */}
+          <div style={{ background:"#fffbe6", border:"1px solid #f0d800", borderRadius:"6px", padding:"10px", display:"flex", flexDirection:"column", gap:"8px" }}>
+            <div style={{ fontSize:"10px", fontWeight:700, color:"#665500" }}>Draft에 저장하시겠습니까?</div>
+            <input value={name} onChange={e => setName(e.target.value)}
+              style={{ width:"100%", padding:"5px 8px", borderRadius:"5px", border:"1px solid #e0c800", background:"#ffffff", fontSize:"11px", color:"#111111", outline:"none", boxSizing:"border-box" }} />
+            <div style={{ display:"flex", gap:"6px" }}>
+              <button onClick={handleSave}
+                style={{ flex:1, padding:"6px", borderRadius:"5px", background:"#111111", border:"none", color:"#ffffff", fontSize:"11px", fontWeight:700, cursor:"pointer" }}>
+                Draft로 저장
+              </button>
+              <button onClick={() => onAdd(preview)}
+                style={{ flex:1, padding:"6px", borderRadius:"5px", background:"transparent", border:"1px solid #d0d0d0", color:"#888888", fontSize:"11px", cursor:"pointer" }}>
+                저장 없이 추가
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {preview && saved && (
+        <div style={{ background:"#e8f5e8", border:"1px solid #5aaa5a", borderRadius:"6px", padding:"10px", display:"flex", flexDirection:"column", gap:"8px" }}>
+          <div style={{ fontSize:"11px", color:"#2a7a2a", fontWeight:700 }}>✓ Draft에 저장됐습니다</div>
+          <div style={{ fontSize:"10px", color:"#4a9a4a" }}>Drafts 페이지에서 관리하거나 시뮬레이터에 추가할 수 있습니다.</div>
+          <div style={{ display:"flex", gap:"6px" }}>
+            <button onClick={() => onAdd(preview)}
+              style={{ flex:1, padding:"6px", borderRadius:"5px", background:"#111111", border:"none", color:"#ffffff", fontSize:"11px", fontWeight:700, cursor:"pointer" }}>
+              캔버스에 추가
+            </button>
+            <button onClick={onClose}
+              style={{ flex:1, padding:"6px", borderRadius:"5px", background:"transparent", border:"1px solid #d0d0d0", color:"#888888", fontSize:"11px", cursor:"pointer" }}>
+              닫기
+            </button>
           </div>
         </div>
       )}
-      <button onClick={() => preview && onAdd(preview)} disabled={!preview}
-        style={{ padding:"7px", borderRadius:"6px", background: preview?"#111111":"#cccccc", border:"none", color:"#ffffff", fontSize:"11px", fontWeight:700, cursor: preview?"pointer":"default" }}>
-        캔버스에 추가
-      </button>
     </div>
   );
 }
 
-function SimulatorSection() {
+function SimulatorSection({ pendingDraft, onDraftConsumed }) {
   const [platform,  setPlatform]  = useState("ios");
   const [deviceIdx, setDeviceIdx] = useState(2);
   const [items,     setItems]     = useState([]);
@@ -1143,6 +1205,15 @@ function SimulatorSection() {
   const [snapGrid,      setSnapGrid]      = useState(true);
   const [darkMode,      setDarkMode]      = useState(false);
   const [showFigmaPanel, setShowFigmaPanel] = useState(false);
+
+  useEffect(() => {
+    if (!pendingDraft) return;
+    const b = pendingDraft.figmaData?.absoluteBoundingBox;
+    const id = Date.now();
+    setItems(prev => [...prev, { id, type:"figma", figmaData: pendingDraft.figmaData, x:16, y: Math.min(16+prev.length*40,400), w:b?.width||100, isMaster:false }]);
+    setSelected(id);
+    onDraftConsumed?.();
+  }, [pendingDraft]);
 
   const dragRef   = useRef(null); // { id, startMX, startMY, startX, startY }
   const resizeRef = useRef(null); // { id, handle, startMX, startW, startX }
@@ -2301,6 +2372,107 @@ function IconsSection() {
   );
 }
 
+// ── Section: Drafts ──────────────────────────────────────────────────────────
+function DraftsSection({ onUseInSimulator }) {
+  const [drafts, setDrafts] = useState(() => loadDrafts());
+  const [renamingId, setRenamingId] = useState(null);
+  const [renameVal, setRenameVal] = useState("");
+
+  const refresh = () => setDrafts(loadDrafts());
+
+  const handleDelete = (id) => {
+    deleteDraftFromStorage(id);
+    refresh();
+  };
+
+  const startRename = (draft) => {
+    setRenamingId(draft.id);
+    setRenameVal(draft.name);
+  };
+
+  const confirmRename = (id) => {
+    renameDraftInStorage(id, renameVal);
+    setRenamingId(null);
+    refresh();
+  };
+
+  if (drafts.length === 0) return (
+    <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", height:"300px", gap:"12px", color:"#bbbbbb" }}>
+      <div style={{ fontSize:"32px", opacity:0.4 }}>◈</div>
+      <div style={{ fontSize:"13px" }}>저장된 Draft가 없습니다</div>
+      <div style={{ fontSize:"11px", color:"#d0d0d0", textAlign:"center", lineHeight:1.7 }}>
+        시뮬레이터 → Add → Figma JSON<br/>에서 컴포넌트를 가져와 저장하세요.
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ display:"flex", flexDirection:"column", gap:"16px" }}>
+      <div style={{ fontSize:"11px", color:"#aaaaaa" }}>{drafts.length}개의 Draft 컴포넌트</div>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(220px, 1fr))", gap:"16px" }}>
+        {drafts.map(draft => {
+          const b = draft.figmaData?.absoluteBoundingBox;
+          const scale = b ? Math.min(180 / b.width, 120 / b.height, 1) : 1;
+          const date = new Date(draft.createdAt).toLocaleDateString("ko-KR", { month:"short", day:"numeric", hour:"2-digit", minute:"2-digit" });
+          return (
+            <div key={draft.id} style={{ background:"#ffffff", border:"1px solid #e5e5e5", borderRadius:"12px", overflow:"hidden", display:"flex", flexDirection:"column" }}>
+              {/* Thumbnail */}
+              <div style={{ background:"#f5f5f5", height:"130px", display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden", position:"relative", flexShrink:0 }}>
+                {b ? (
+                  <div style={{ transform:`scale(${scale})`, transformOrigin:"center center", position:"absolute" }}>
+                    <div style={{ position:"relative", width: b.width, height: b.height }}>
+                      <RenderFigmaNode node={draft.figmaData} ox={b.x} oy={b.y} />
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ fontSize:"11px", color:"#cccccc" }}>미리보기 없음</div>
+                )}
+              </div>
+
+              {/* Info */}
+              <div style={{ padding:"12px", display:"flex", flexDirection:"column", gap:"8px", flex:1 }}>
+                {renamingId === draft.id ? (
+                  <div style={{ display:"flex", gap:"4px" }}>
+                    <input value={renameVal} onChange={e => setRenameVal(e.target.value)}
+                      onKeyDown={e => { if (e.key === "Enter") confirmRename(draft.id); if (e.key === "Escape") setRenamingId(null); }}
+                      autoFocus
+                      style={{ flex:1, padding:"4px 7px", borderRadius:"5px", border:"1px solid #5028c8", fontSize:"12px", color:"#111111", outline:"none" }} />
+                    <button onClick={() => confirmRename(draft.id)}
+                      style={{ padding:"4px 8px", borderRadius:"5px", background:"#5028c8", border:"none", color:"#ffffff", fontSize:"10px", cursor:"pointer" }}>확인</button>
+                  </div>
+                ) : (
+                  <div style={{ display:"flex", alignItems:"center", gap:"6px" }}>
+                    <div style={{ fontSize:"13px", fontWeight:700, color:"#111111", flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{draft.name}</div>
+                    <button onClick={() => startRename(draft)}
+                      style={{ background:"none", border:"none", color:"#bbbbbb", cursor:"pointer", fontSize:"11px", flexShrink:0, padding:"2px 4px" }}>✎</button>
+                  </div>
+                )}
+                <div style={{ fontSize:"10px", color:"#aaaaaa" }}>
+                  {b ? `${Math.round(b.width)}×${Math.round(b.height)}dp` : ""} · {date}
+                </div>
+
+                {/* Actions */}
+                <div style={{ display:"flex", gap:"6px", marginTop:"auto" }}>
+                  <button onClick={() => onUseInSimulator(draft)}
+                    style={{ flex:1, padding:"6px", borderRadius:"6px", background:"#111111", border:"none", color:"#ffffff", fontSize:"10px", fontWeight:700, cursor:"pointer" }}>
+                    시뮬레이터에 추가
+                  </button>
+                  <button onClick={() => handleDelete(draft.id)}
+                    style={{ padding:"6px 10px", borderRadius:"6px", background:"transparent", border:"1px solid #f0b0b0", color:"#aa3333", fontSize:"10px", cursor:"pointer" }}
+                    onMouseEnter={e => { e.currentTarget.style.background="#ffeaea"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background="transparent"; }}>
+                    삭제
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 const NAV = [
   { id: "meta",        label: "Meta Tokens",   icon: "◉" },
   { id: "colors",      label: "Colors",        icon: "◈" },
@@ -2312,6 +2484,7 @@ const NAV = [
   { id: "icons",       label: "Icons",         icon: "◎" },
   { id: "simulator",   label: "Simulator",     icon: "📱" },
   { id: "glassnav",    label: "Liquid Glass",  icon: "✦" },
+  { id: "drafts",      label: "Drafts",        icon: "◈" },
 ];
 
 const H_WORLD_APPS = [
@@ -2368,6 +2541,7 @@ function AppMenu({ current }) {
 
 export default function App() {
   const [active, setActive] = useState("colors");
+  const [pendingDraft, setPendingDraft] = useState(null);
 
   const renderContent = () => {
     if (active === "meta")       return <MetaTokensSection />;
@@ -2378,12 +2552,13 @@ export default function App() {
     if (active === "button")     return <ButtonSection />;
     if (active === "label")      return <LabelSection />;
     if (active === "icons")      return <IconsSection />;
-    if (active === "simulator")  return <SimulatorSection />;
+    if (active === "simulator")  return <SimulatorSection pendingDraft={pendingDraft} onDraftConsumed={() => setPendingDraft(null)} />;
     if (active === "glassnav")   return <GlassNavSection />;
+    if (active === "drafts")     return <DraftsSection onUseInSimulator={draft => { setPendingDraft(draft); setActive("simulator"); }} />;
   };
 
-  const titles    = { meta: "Meta Tokens", colors: "Color Tokens", typography: "Typography", spacing: "Spacing & Radius", elevation: "Elevation / Shadow", button: "Button", label: "Label", icons: "Icons", simulator: "Simulator", glassnav: "Liquid Glass Nav" };
-  const subtitles = { meta: "YDS 2.0 Primitive Layer — Meta → Semantic → Component", colors: "YDS 2.0 Customer Token", typography: "Roboto 기반 타입 스케일", spacing: "스페이싱 및 보더 라디우스", elevation: "YDS 2.0 Elevation — Level 1 · 2 (normal & inverse)", button: "버튼 컴포넌트 — 멀티 플랫폼 코드", label: "라벨 컴포넌트 — 멀티 플랫폼 코드", icons: "YDS 2.0 System Icon — Figma 원본 기반", simulator: "iOS / Android 실시간 화면 시뮬레이션", glassnav: "OS 버전별 Glass Nav Bar — 호환성 + 코드 생성" };
+  const titles    = { meta: "Meta Tokens", colors: "Color Tokens", typography: "Typography", spacing: "Spacing & Radius", elevation: "Elevation / Shadow", button: "Button", label: "Label", icons: "Icons", simulator: "Simulator", glassnav: "Liquid Glass Nav", drafts: "Drafts" };
+  const subtitles = { meta: "YDS 2.0 Primitive Layer — Meta → Semantic → Component", colors: "YDS 2.0 Customer Token", typography: "Roboto 기반 타입 스케일", spacing: "스페이싱 및 보더 라디우스", elevation: "YDS 2.0 Elevation — Level 1 · 2 (normal & inverse)", button: "버튼 컴포넌트 — 멀티 플랫폼 코드", label: "라벨 컴포넌트 — 멀티 플랫폼 코드", icons: "YDS 2.0 System Icon — Figma 원본 기반", simulator: "iOS / Android 실시간 화면 시뮬레이션", glassnav: "OS 버전별 Glass Nav Bar — 호환성 + 코드 생성", drafts: "Figma에서 가져온 컴포넌트 — 관리 및 시뮬레이터 연동" };
 
   return (
     <div style={{ display: "flex", height: "100vh", background: "#f5f5f5", color: "#111111", fontFamily: "'Pretendard', -apple-system, sans-serif" }}>
@@ -2418,10 +2593,20 @@ export default function App() {
           </button>
         ))}
         <div style={{ fontSize: "9px", color: "#bbbbbb", letterSpacing: "0.15em", textTransform: "uppercase", padding: "16px 16px 6px", fontWeight: 600 }}>Labs</div>
-        {NAV.slice(9).map(n => (
+        {NAV.slice(9, 10).map(n => (
           <button key={n.id} onClick={() => setActive(n.id)}
             style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#e5e5e5" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #111111" : "2px solid transparent", color: active === n.id ? "#111111" : "#888888", fontSize: "12px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
             <span style={{ fontSize: "13px", opacity: 0.7 }}>{n.icon}</span>{n.label}
+          </button>
+        ))}
+        <div style={{ fontSize: "9px", color: "#bbbbbb", letterSpacing: "0.15em", textTransform: "uppercase", padding: "16px 16px 6px", fontWeight: 600 }}>Library</div>
+        {NAV.slice(10).map(n => (
+          <button key={n.id} onClick={() => setActive(n.id)}
+            style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#e5e5e5" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #5028c8" : "2px solid transparent", color: active === n.id ? "#5028c8" : "#888888", fontSize: "12px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
+            <span style={{ fontSize: "13px", opacity: 0.7 }}>{n.icon}</span>{n.label}
+            {n.id === "drafts" && loadDrafts().length > 0 && (
+              <span style={{ marginLeft:"auto", fontSize:"9px", background:"#5028c8", color:"#fff", borderRadius:"10px", padding:"1px 6px" }}>{loadDrafts().length}</span>
+            )}
           </button>
         ))}
         <div style={{ flex: 1 }} />
