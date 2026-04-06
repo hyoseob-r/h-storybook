@@ -1873,14 +1873,14 @@ extension HomeViewController: UIScrollViewDelegate {
 // ── Section: Liquid Glass ─────────────────────────────────────────────────────
 
 const STORES = [
-  { name: "맥도날드",       tag: "버거",    time: "20분", rating: "4.8", color: "#FFC72C" },
-  { name: "BBQ치킨",        tag: "치킨",    time: "25분", rating: "4.7", color: "#E63329" },
-  { name: "본죽",            tag: "한식",    time: "30분", rating: "4.6", color: "#4CAF50" },
-  { name: "스타벅스",       tag: "카페",    time: "15분", rating: "4.9", color: "#00704A" },
-  { name: "피자헛",         tag: "피자",    time: "35분", rating: "4.5", color: "#E31837" },
-  { name: "롯데리아",       tag: "버거",    time: "18분", rating: "4.4", color: "#E31837" },
-  { name: "교촌치킨",       tag: "치킨",    time: "28분", rating: "4.7", color: "#C8A96E" },
-  { name: "CU 편의점",      tag: "편의점",  time: "10분", rating: "4.3", color: "#00AADC" },
+  { name: "맥도날드",   tag: "버거",   time: "20분", rating: "4.8", food: "https://picsum.photos/seed/burger1/96/96",   bg: "#FFC72C", initial: "M", color: "#DA291C" },
+  { name: "BBQ치킨",   tag: "치킨",   time: "25분", rating: "4.7", food: "https://picsum.photos/seed/chicken2/96/96",  bg: "#E63329", initial: "B", color: "#ffffff" },
+  { name: "본죽",       tag: "한식",   time: "30분", rating: "4.6", food: "https://picsum.photos/seed/korean3/96/96",   bg: "#4CAF50", initial: "본", color: "#ffffff" },
+  { name: "스타벅스",  tag: "카페",   time: "15분", rating: "4.9", food: "https://picsum.photos/seed/coffee4/96/96",   bg: "#00704A", initial: "S", color: "#ffffff" },
+  { name: "피자헛",    tag: "피자",   time: "35분", rating: "4.5", food: "https://picsum.photos/seed/pizza5/96/96",    bg: "#E31837", initial: "P", color: "#ffffff" },
+  { name: "롯데리아",  tag: "버거",   time: "18분", rating: "4.4", food: "https://picsum.photos/seed/burger6/96/96",   bg: "#E31837", initial: "L", color: "#ffffff" },
+  { name: "교촌치킨",  tag: "치킨",   time: "28분", rating: "4.7", food: "https://picsum.photos/seed/chicken7/96/96",  bg: "#C8A96E", initial: "교", color: "#ffffff" },
+  { name: "CU 편의점", tag: "편의점", time: "10분", rating: "4.3", food: "https://picsum.photos/seed/store8/96/96",    bg: "#00AADC", initial: "CU", color: "#ffffff" },
 ];
 
 function GlassNavSection() {
@@ -2051,15 +2051,23 @@ function GlassNavSection() {
 
             {/* Store list */}
             {STORES.map((s, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", borderBottom: "1px solid #f5f5f5" }}>
-                <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: s.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <span style={{ fontSize: "20px" }}>🍽</span>
+              <div key={i} style={{ borderBottom: "1px solid #f5f5f5" }}>
+                {/* Food photo */}
+                <div style={{ position: "relative", height: "100px", overflow: "hidden" }}>
+                  <img src={s.food} alt={s.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  {/* Logo badge */}
+                  <div style={{ position: "absolute", bottom: 8, left: 12, width: 36, height: 36, borderRadius: 10, background: s.bg, border: "2px solid #fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.18)" }}>
+                    <span style={{ fontSize: s.initial.length > 1 ? "9px" : "13px", fontWeight: 900, color: s.color, letterSpacing: "-0.5px" }}>{s.initial}</span>
+                  </div>
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: "13px", fontWeight: 700, color: "#111", fontFamily: platform === "ios" ? "system-ui" : "Roboto, sans-serif" }}>{s.name}</div>
-                  <div style={{ fontSize: "11px", color: "#888", marginTop: "2px" }}>⭐ {s.rating} · {s.time}</div>
+                {/* Info */}
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px" }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: "13px", fontWeight: 700, color: "#111", fontFamily: platform === "ios" ? "system-ui" : "Roboto, sans-serif" }}>{s.name}</div>
+                    <div style={{ fontSize: "11px", color: "#888", marginTop: "2px" }}>⭐ {s.rating} · {s.time}</div>
+                  </div>
+                  <span style={{ padding: "2px 8px", background: "#fff5f8", borderRadius: "10px", color: "#fa0050", fontSize: "10px", fontWeight: 700, flexShrink: 0 }}>{s.tag}</span>
                 </div>
-                <span style={{ padding: "2px 8px", background: "#fff5f8", borderRadius: "10px", color: "#fa0050", fontSize: "10px", fontWeight: 700, flexShrink: 0 }}>{s.tag}</span>
               </div>
             ))}
             <div style={{ height: "40px" }} />
