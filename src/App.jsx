@@ -1118,16 +1118,20 @@ function extractSvgSize(svgStr) {
 // ── Figma Import Panel (SVG paste) ──────────────────────────────────────────
 function FigmaImportPanel({ onAdd, onClose }) {
   const toast = useToast();
-  const [svg,    setSvg]    = useState("");
-  const [error,  setError]  = useState("");
-  const [name,   setName]   = useState("Untitled");
-  const [ready,  setReady]  = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [saved,  setSaved]  = useState(false);
+  const [svg,      setSvg]      = useState("");
+  const [error,    setError]    = useState("");
+  const [name,     setName]     = useState("Untitled");
+  const [ready,    setReady]    = useState(false);
+  // step: "idle" | "confirming" | "saving" | "done"
+  const [step,     setStep]     = useState("idle");
+  const [progress, setProgress] = useState(0);
+  const cancelRef  = useRef(false);
+  const timerRef   = useRef(null);
 
   const handlePaste = (val) => {
     setSvg(val);
-    setSaved(false);
+    setStep("idle");
+    cancelRef.current = false;
     const trimmed = val.trim();
     if (!trimmed) { setReady(false); setError(""); return; }
     if (!trimmed.startsWith("<svg")) {
@@ -1141,21 +1145,71 @@ function FigmaImportPanel({ onAdd, onClose }) {
   const { w, h } = ready ? extractSvgSize(svg) : { w: 0, h: 0 };
   const thumbScale = ready ? Math.min(160 / w, 100 / h, 1) : 1;
 
-  const handleSave = () => {
-    if (!ready || saving) return;
-    setSaving(true);
+  // SVG 크기 → 예상 시간 계산
+  const svgBytes = ready ? new Blob([svg]).size : 0;
+  const sizeLabel = svgBytes < 1024
+    ? `${svgBytes} B`
+    : svgBytes < 1024 * 1024
+    ? `${(svgBytes / 1024).toFixed(1)} KB`
+    : `${(svgBytes / 1024 / 1024).toFixed(1)} MB`;
+  // localStorage write는 빠르지만 큰 SVG는 직렬화 시간이 있음
+  const saveDurationMs = svgBytes < 20 * 1024 ? 400
+    : svgBytes < 100 * 1024 ? 800
+    : svgBytes < 500 * 1024 ? 1400
+    : 2200;
+  const timeLabel = saveDurationMs < 600 ? "약 0.5초 미만"
+    : saveDurationMs < 1000 ? "약 1초"
+    : saveDurationMs < 1600 ? "약 1~2초"
+    : "약 2초 이상";
+  const storageLabel = "브라우저 로컬 저장소 (localStorage)";
+
+  // 저장 버튼 클릭 → 확인 단계로
+  const handleSaveClick = () => {
+    if (!ready || step !== "idle") return;
+    setStep("confirming");
+  };
+
+  // 확인 후 실제 저장
+  const handleConfirm = () => {
+    setStep("saving");
+    setProgress(0);
+    cancelRef.current = false;
+
+    // 프로그레스 애니메이션
+    const start = Date.now();
+    const tick = () => {
+      const elapsed = Date.now() - start;
+      const pct = Math.min(elapsed / saveDurationMs, 0.95); // 실제 저장 전 95%까지
+      setProgress(pct);
+      if (elapsed < saveDurationMs && !cancelRef.current) {
+        timerRef.current = requestAnimationFrame(tick);
+      }
+    };
+    timerRef.current = requestAnimationFrame(tick);
+
     setTimeout(() => {
+      if (cancelRef.current) return;
+      cancelAnimationFrame(timerRef.current);
       try {
         const draft = { id: Date.now(), name, svgData: svg, w, h, createdAt: new Date().toISOString() };
         saveDraftToStorage(draft);
-        setSaving(false);
-        setSaved(true);
+        setProgress(1);
+        setStep("done");
         toast(`"${name}" Draft에 저장됐습니다`, "success");
       } catch (e) {
-        setSaving(false);
+        setStep("idle");
         toast("저장에 실패했습니다: " + e.message, "error");
       }
-    }, 0);
+    }, saveDurationMs);
+  };
+
+  // 중지
+  const handleCancel = () => {
+    cancelRef.current = true;
+    cancelAnimationFrame(timerRef.current);
+    setStep("idle");
+    setProgress(0);
+    toast("저장이 중지됐습니다", "warning");
   };
 
   const handleAddWithoutSave = () => {
@@ -1164,7 +1218,11 @@ function FigmaImportPanel({ onAdd, onClose }) {
   };
 
   const handleClose = () => {
-    if (ready && !saved) toast("저장하지 않고 닫았습니다", "warning");
+    if (ready && step !== "done") {
+      cancelRef.current = true;
+      cancelAnimationFrame(timerRef.current);
+      toast("저장하지 않고 닫았습니다", "warning");
+    }
     onClose();
   };
 
@@ -1188,11 +1246,11 @@ function FigmaImportPanel({ onAdd, onClose }) {
       />
       {error && <div style={{ fontSize:"10px", color:"#cc3333", lineHeight:1.5 }}>{error}</div>}
 
-      {ready && !saved && (
+      {ready && step === "idle" && (
         <>
           {/* Preview */}
           <div style={{ background:"#f5f5f5", border:"1px solid #e5e5e5", borderRadius:"6px", padding:"8px", overflow:"hidden", display:"flex", flexDirection:"column", gap:"6px" }}>
-            <div style={{ fontSize:"9px", color:"#999999" }}>{Math.round(w)}×{Math.round(h)}px</div>
+            <div style={{ fontSize:"9px", color:"#999999" }}>{Math.round(w)}×{Math.round(h)}px · {sizeLabel}</div>
             <div style={{ transform:`scale(${thumbScale})`, transformOrigin:"top left", width: w*thumbScale, height: h*thumbScale, flexShrink:0 }}
               dangerouslySetInnerHTML={{ __html: svg }} />
           </div>
@@ -1202,17 +1260,12 @@ function FigmaImportPanel({ onAdd, onClose }) {
             <input value={name} onChange={e => setName(e.target.value)}
               style={{ width:"100%", padding:"5px 8px", borderRadius:"5px", border:"1px solid #e0c800", background:"#ffffff", fontSize:"11px", color:"#111111", outline:"none", boxSizing:"border-box" }} />
             <div style={{ display:"flex", gap:"6px" }}>
-              <button onClick={handleSave} disabled={saving}
-                style={{ flex:1, padding:"6px", borderRadius:"5px", background: saving ? "#555555" : "#111111", border:"none", color:"#ffffff", fontSize:"11px", fontWeight:700, cursor: saving ? "default" : "pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:"6px", transition:"background 0.15s" }}>
-                {saving ? (
-                  <>
-                    <span style={{ display:"inline-block", width:"10px", height:"10px", border:"2px solid rgba(255,255,255,0.3)", borderTopColor:"#ffffff", borderRadius:"50%", animation:"spin 0.6s linear infinite" }} />
-                    저장 중...
-                  </>
-                ) : "Draft로 저장"}
+              <button onClick={handleSaveClick}
+                style={{ flex:1, padding:"6px", borderRadius:"5px", background:"#111111", border:"none", color:"#ffffff", fontSize:"11px", fontWeight:700, cursor:"pointer" }}>
+                Draft로 저장
               </button>
-              <button onClick={handleAddWithoutSave} disabled={saving}
-                style={{ flex:1, padding:"6px", borderRadius:"5px", background:"transparent", border:"1px solid #d0d0d0", color: saving ? "#cccccc" : "#888888", fontSize:"11px", cursor: saving ? "default" : "pointer" }}>
+              <button onClick={handleAddWithoutSave}
+                style={{ flex:1, padding:"6px", borderRadius:"5px", background:"transparent", border:"1px solid #d0d0d0", color:"#888888", fontSize:"11px", cursor:"pointer" }}>
                 저장 없이 추가
               </button>
             </div>
@@ -1220,10 +1273,56 @@ function FigmaImportPanel({ onAdd, onClose }) {
         </>
       )}
 
-      {ready && saved && (
+      {/* ── 저장 전 확인 단계 ── */}
+      {step === "confirming" && (
+        <div style={{ background:"#f5f0ff", border:"1px solid #b090ee", borderRadius:"8px", padding:"12px", display:"flex", flexDirection:"column", gap:"10px" }}>
+          <div style={{ fontSize:"11px", fontWeight:700, color:"#3a0a8a" }}>저장하기 전에 확인해주세요</div>
+          <div style={{ display:"grid", gridTemplateColumns:"auto 1fr", gap:"4px 10px", fontSize:"10px" }}>
+            <span style={{ color:"#999" }}>파일 크기</span>  <span style={{ color:"#333", fontWeight:600 }}>{sizeLabel}</span>
+            <span style={{ color:"#999" }}>예상 시간</span>  <span style={{ color:"#333", fontWeight:600 }}>{timeLabel}</span>
+            <span style={{ color:"#999" }}>저장 위치</span>  <span style={{ color:"#333" }}>{storageLabel}</span>
+            <span style={{ color:"#999" }}>이름</span>       <span style={{ color:"#333", fontWeight:600 }}>"{name}"</span>
+          </div>
+          <div style={{ fontSize:"10px", color:"#7755aa", background:"#ede5ff", borderRadius:"5px", padding:"7px 9px", lineHeight:1.6 }}>
+            브라우저 로컬에만 저장됩니다. 서버 전송 없음.<br/>
+            탭 닫아도 유지되지만, 브라우저 데이터 삭제 시 사라집니다.
+          </div>
+          <div style={{ display:"flex", gap:"6px" }}>
+            <button onClick={handleConfirm}
+              style={{ flex:1, padding:"7px", borderRadius:"5px", background:"#5028c8", border:"none", color:"#ffffff", fontSize:"11px", fontWeight:700, cursor:"pointer" }}>
+              진짜 저장할게
+            </button>
+            <button onClick={() => { setStep("idle"); toast("저장이 취소됐습니다", "warning"); }}
+              style={{ flex:1, padding:"7px", borderRadius:"5px", background:"transparent", border:"1px solid #d0c0f0", color:"#7755aa", fontSize:"11px", cursor:"pointer" }}>
+              취소
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── 저장 진행 중 ── */}
+      {step === "saving" && (
+        <div style={{ background:"#f8f8f8", border:"1px solid #e0e0e0", borderRadius:"8px", padding:"12px", display:"flex", flexDirection:"column", gap:"10px" }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+            <div style={{ fontSize:"11px", fontWeight:600, color:"#333" }}>저장 중...</div>
+            <div style={{ fontSize:"10px", color:"#999" }}>{Math.round(progress * 100)}%</div>
+          </div>
+          {/* Progress bar */}
+          <div style={{ height:"6px", background:"#e5e5e5", borderRadius:"3px", overflow:"hidden" }}>
+            <div style={{ height:"100%", width:`${progress * 100}%`, background:"linear-gradient(90deg,#5028c8,#8855ff)", borderRadius:"3px", transition:"width 0.05s linear" }} />
+          </div>
+          <button onClick={handleCancel}
+            style={{ padding:"6px", borderRadius:"5px", background:"transparent", border:"1px solid #ffbbbb", color:"#cc3333", fontSize:"11px", fontWeight:600, cursor:"pointer" }}>
+            중지
+          </button>
+        </div>
+      )}
+
+      {/* ── 저장 완료 ── */}
+      {step === "done" && (
         <div style={{ background:"#e8f5e8", border:"1px solid #5aaa5a", borderRadius:"6px", padding:"10px", display:"flex", flexDirection:"column", gap:"8px" }}>
           <div style={{ fontSize:"11px", color:"#2a7a2a", fontWeight:700 }}>✓ Draft에 저장됐습니다</div>
-          <div style={{ fontSize:"10px", color:"#4a9a4a" }}>Drafts 페이지에서 관리하거나 시뮬레이터에 추가할 수 있습니다.</div>
+          <div style={{ height:"4px", background:"#5aaa5a", borderRadius:"2px" }} />
           <div style={{ display:"flex", gap:"6px" }}>
             <button onClick={() => { onAdd({ svgData: svg, w, h }); toast("캔버스에 추가됐습니다", "success"); }}
               style={{ flex:1, padding:"6px", borderRadius:"5px", background:"#111111", border:"none", color:"#ffffff", fontSize:"11px", fontWeight:700, cursor:"pointer" }}>
