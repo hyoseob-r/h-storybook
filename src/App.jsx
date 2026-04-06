@@ -2853,8 +2853,16 @@ const CATEGORY_FLUTTER_CODE = `class CategoryRow extends StatelessWidget {
 function FigmaSection() {
   const [platform, setPlatform] = useState("react");
   const [activeItem, setActiveItem] = useState(null);
+  const [scrollRatio, setScrollRatio] = useState(0);
+  const scrollRef = useRef(null);
   const row1 = CATEGORY_ITEMS.slice(0, 8);
   const row2 = [...CATEGORY_ITEMS.slice(8), LOTTERIA];
+
+  const handleScroll = (e) => {
+    const el = e.target;
+    const ratio = el.scrollLeft / (el.scrollWidth - el.clientWidth) || 0;
+    setScrollRatio(ratio);
+  };
 
   const codeMap = { react: CATEGORY_REACT_CODE, swiftui: CATEGORY_SWIFTUI_CODE, compose: CATEGORY_COMPOSE_CODE, flutter: CATEGORY_FLUTTER_CODE };
   const platforms = [
@@ -2890,18 +2898,22 @@ function FigmaSection() {
       <div>
         <div style={{ fontSize: "11px", color: "#aaa", marginBottom: "10px", fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase" }}>Preview</div>
         <div style={{ background: "#1a1a1a", borderRadius: "16px", width: "390px", overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}>
-          {/* Row 1 */}
-          <div style={{ display: "flex", gap: "4px", padding: "16px 20px 8px", overflowX: "auto", scrollbarWidth: "none" }}>
-            {row1.map((item, i) => renderCategoryItem(item, i))}
-          </div>
-          {/* Row 2 */}
-          <div style={{ display: "flex", gap: "4px", padding: "0 20px 8px", overflowX: "auto", scrollbarWidth: "none" }}>
-            {row2.map((item, i) => renderCategoryItem(item, i + 8))}
+          {/* Scrollable 2-row grid */}
+          <div ref={scrollRef} onScroll={handleScroll}
+            style={{ overflowX: "auto", scrollbarWidth: "none", msOverflowStyle: "none", padding: "16px 20px 12px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", width: "max-content" }}>
+              <div style={{ display: "flex", gap: "4px" }}>
+                {row1.map((item, i) => renderCategoryItem(item, i))}
+              </div>
+              <div style={{ display: "flex", gap: "4px" }}>
+                {row2.map((item, i) => renderCategoryItem(item, i + 8))}
+              </div>
+            </div>
           </div>
           {/* Scroll indicator */}
-          <div style={{ display: "flex", justifyContent: "center", paddingBottom: "8px" }}>
+          <div style={{ display: "flex", justifyContent: "center", paddingBottom: "10px" }}>
             <div style={{ width: "56px", height: "4px", background: "#333", borderRadius: "2px", position: "relative" }}>
-              <div style={{ width: "24px", height: "4px", background: "#ffffff", borderRadius: "2px" }} />
+              <div style={{ width: "24px", height: "4px", background: "#ffffff", borderRadius: "2px", position: "absolute", left: `${scrollRatio * 32}px`, transition: "left 0.1s ease" }} />
             </div>
           </div>
         </div>
