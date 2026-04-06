@@ -137,6 +137,29 @@ function genLabelCode(platform, color, size) {
     ),
   ),
 )`;
+
+  if (platform === "css") return `.label {
+  padding: 2px 8px;
+  background-color: ${bgHex};
+  color: ${hex};
+  border-radius: 10px;
+  font-size: ${textSize}px;
+  font-weight: bold;
+  display: inline-block;
+}`;
+
+  if (platform === "react") return `<span
+  style={{
+    padding: '2px 8px',
+    backgroundColor: '${bgHex}',
+    color: '${hex}',
+    borderRadius: 10,
+    fontSize: ${textSize},
+    fontWeight: 'bold',
+  }}
+>
+  라벨
+</span>`;
   return "";
 }
 
@@ -469,8 +492,8 @@ function ElevationSection() {
   const [selPlatform, setSelPlatform] = useState("swiftui");
   const [elevSize, setElevSize] = useState("M");
   const [selLevel, setSelLevel] = useState(0);
-  const platforms = ["swiftui", "ios", "compose", "android"];
-  const platLabel = { swiftui: "SwiftUI", ios: "UIKit", compose: "Jetpack Compose", android: "Android XML" };
+  const platforms = ["swiftui", "ios", "compose", "android", "css", "react"];
+  const platLabel = { swiftui: "SwiftUI", ios: "UIKit", compose: "Jetpack Compose", android: "Android XML", css: "CSS", react: "React" };
   const previewW = elevSize === "S" ? 72 : elevSize === "L" ? 160 : 110;
   const previewH = elevSize === "S" ? 44 : elevSize === "L" ? 96 : 64;
   const lv = elevation[selLevel];
@@ -478,7 +501,9 @@ function ElevationSection() {
   const codeStr = selPlatform === "swiftui" ? lv.swiftui
     : selPlatform === "ios"     ? `layer.shadowColor = UIColor(red: 0.098, green: 0.188, blue: 0.251, alpha: 1).cgColor\nlayer.${lv.ios}`
     : selPlatform === "compose" ? `Modifier.shadow(${lv.compose}, shape = RoundedCornerShape(12.dp))`
-    : `android:elevation="${lv.android.replace("elevation: ", "").replace("dp","")}" />`;
+    : selPlatform === "android" ? `android:elevation="${lv.android.replace("elevation: ", "").replace("dp","")}" />`
+    : selPlatform === "css"     ? `.element {\n  box-shadow: ${lv.css};\n}`
+    : `<div style={{ boxShadow: '${lv.css}' }} />`;
 
   return (
     <div style={{ display: "flex", gap: "24px", alignItems: "flex-start" }}>
@@ -599,6 +624,44 @@ function genLabelButtonCode(platform, shape, colorStyle, size, config, iconName 
   child: ${child},
 )`;
   }
+
+  if (platform === "css") return `.button {
+  height: ${h}px;
+  padding: 0 ${ph}px;
+  background-color: ${bg};
+  color: ${fg};
+  border: ${border ? `1px solid ${border}` : "none"};
+  border-radius: ${r}px;
+  font-size: ${fs}px;
+  font-weight: bold;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}`;
+
+  if (platform === "react") return `<button
+  style={{
+    height: ${h},
+    padding: '0 ${ph}px',
+    backgroundColor: '${bg}',
+    color: '${fg}',
+    border: ${border ? `'1px solid ${border}'` : "'none'"},
+    borderRadius: ${r},
+    fontSize: ${fs},
+    fontWeight: 'bold',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 4,
+  }}
+>
+  ${hasLeftIcon ? `<YdsIcon name="${iconName}" size={${fs + 2}} />\n  ` : ""}버튼${hasRightIcon ? `\n  <YdsIcon name="${iconName}" size={${fs + 2}} />` : ""}
+</button>`;
   return "";
 }
 
@@ -635,6 +698,8 @@ function ButtonSection() {
     { id: "xml",     label: "Android XML" },
     { id: "swiftui", label: "SwiftUI" },
     { id: "flutter", label: "Flutter" },
+    { id: "css",     label: "CSS" },
+    { id: "react",   label: "React" },
   ];
 
   // preview
@@ -761,6 +826,8 @@ function LabelSection() {
     { id: "compose", label: "Jetpack Compose", code: genLabelCode("compose", color, size) },
     { id: "swiftui", label: "SwiftUI",         code: genLabelCode("swiftui", color, size) },
     { id: "flutter", label: "Flutter",         code: genLabelCode("flutter", color, size) },
+    { id: "css",     label: "CSS",             code: genLabelCode("css", color, size) },
+    { id: "react",   label: "React",           code: genLabelCode("react", color, size) },
   ];
 
   return (
@@ -1414,6 +1481,82 @@ const ANDROID_OS = [
 function genGlassCode(platform, os, framework) {
   const api = platform === "android" ? parseInt(os.id) : 0;
 
+  if (framework === "css") return `/* Glass Nav Bar — CSS */
+.nav-wrapper {
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.nav-bar {
+  position: sticky;
+  top: 0;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  backdrop-filter: blur(0px) saturate(1);
+  -webkit-backdrop-filter: blur(0px) saturate(1);
+  background-color: rgba(255, 255, 255, 0);
+  border-bottom: none;
+  transition: all 0.25s;
+  z-index: 100;
+}
+
+/* Scrolled state — toggle via JS */
+.nav-bar.scrolled {
+  backdrop-filter: blur(40px) saturate(2.2);
+  -webkit-backdrop-filter: blur(40px) saturate(2.2);
+  background-color: rgba(255, 255, 255, 0.7);
+  border-bottom: 0.5px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 2px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* JS: scroll-reactive ratio */
+// document.querySelector('.nav-wrapper').addEventListener('scroll', (e) => {
+//   const ratio = Math.min(e.target.scrollTop / 300, 1);
+//   navBar.style.backdropFilter = \`blur(\${ratio*40}px) saturate(\${1+ratio*1.2})\`;
+//   navBar.style.background = \`rgba(255,255,255,\${ratio*0.7})\`;
+// });`;
+
+  if (framework === "react") return `// React — Glass Nav Bar
+import { useState } from 'react';
+
+function GlassNavBar() {
+  const [ratio, setRatio] = useState(0);
+
+  return (
+    <div
+      onScroll={(e) => setRatio(Math.min(e.target.scrollTop / 300, 1))}
+      style={{ height: '100vh', overflowY: 'auto' }}
+    >
+      {/* Sticky Glass Nav */}
+      <div
+        style={{
+          position: 'sticky',
+          top: 0,
+          height: 56,
+          display: 'flex',
+          alignItems: 'center',
+          padding: '0 16px',
+          backdropFilter: \`blur(\${ratio * 40}px) saturate(\${1 + ratio * 1.2})\`,
+          WebkitBackdropFilter: \`blur(\${ratio * 40}px) saturate(\${1 + ratio * 1.2})\`,
+          background: \`rgba(255, 255, 255, \${ratio * 0.7})\`,
+          borderBottom: ratio > 0.05 ? \`0.5px solid rgba(255,255,255,\${ratio * 0.4})\` : 'none',
+          boxShadow: ratio > 0 ? \`0 2px 24px rgba(0,0,0,\${ratio * 0.08})\` : 'none',
+          transition: 'all 0.25s',
+          zIndex: 100,
+        }}
+      >
+        <span style={{ flex: 1, textAlign: 'center', fontSize: 15, fontWeight: 700 }}>
+          홈
+        </span>
+      </div>
+
+      {/* Page content */}
+    </div>
+  );
+}`;
+
   if (platform === "android" && framework === "compose") {
     if (api >= 31) return `// Jetpack Compose — RenderEffect Blur (API 31+)
 @Composable
@@ -1806,9 +1949,13 @@ function GlassNavSection() {
     el.scrollTop = scrollRatio * (el.scrollHeight - el.clientHeight);
   }, [scrollRatio]);
 
-  const fwOptions = platform === "ios"
-    ? [{ id: "swiftui", label: "SwiftUI" }, { id: "uikit", label: "UIKit" }]
-    : [{ id: "compose", label: "Jetpack Compose" }, { id: "xml", label: "View (XML)" }];
+  const fwOptions = [
+    ...(platform === "ios"
+      ? [{ id: "swiftui", label: "SwiftUI" }, { id: "uikit", label: "UIKit" }]
+      : [{ id: "compose", label: "Jetpack Compose" }, { id: "xml", label: "View (XML)" }]),
+    { id: "css",   label: "CSS" },
+    { id: "react", label: "React" },
+  ];
 
   return (
     <div style={{ display: "flex", gap: "20px", height: "100%", minHeight: 0 }}>
