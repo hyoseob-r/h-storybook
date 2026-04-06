@@ -468,55 +468,62 @@ function SpacingSection() {
 function ElevationSection() {
   const [selPlatform, setSelPlatform] = useState("swiftui");
   const [elevSize, setElevSize] = useState("M");
+  const [selLevel, setSelLevel] = useState(0);
   const platforms = ["swiftui", "ios", "compose", "android"];
   const platLabel = { swiftui: "SwiftUI", ios: "UIKit", compose: "Jetpack Compose", android: "Android XML" };
-  const previewW = elevSize === "S" ? 80 : elevSize === "L" ? 180 : 120;
-  const previewH = elevSize === "S" ? 48 : elevSize === "L" ? 100 : 72;
+  const previewW = elevSize === "S" ? 72 : elevSize === "L" ? 160 : 110;
+  const previewH = elevSize === "S" ? 44 : elevSize === "L" ? 96 : 64;
+  const lv = elevation[selLevel];
+
+  const codeStr = selPlatform === "swiftui" ? lv.swiftui
+    : selPlatform === "ios"     ? `layer.shadowColor = UIColor(red: 0.098, green: 0.188, blue: 0.251, alpha: 1).cgColor\nlayer.${lv.ios}`
+    : selPlatform === "compose" ? `Modifier.shadow(${lv.compose}, shape = RoundedCornerShape(12.dp))`
+    : `android:elevation="${lv.android.replace("elevation: ", "").replace("dp","")}" />`;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
-      {/* Platform picker + size control */}
-      <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
-        {platforms.map(p => (
-          <button key={p} onClick={() => setSelPlatform(p)}
-            style={{ padding: "5px 12px", borderRadius: "6px", background: selPlatform === p ? "#f0f0f0" : "transparent", border: selPlatform === p ? "1px solid #c0c0c0" : "1px solid #e5e5e5", color: selPlatform === p ? "#333333" : "#999999", fontSize: "11px", cursor: "pointer" }}>
-            {platLabel[p]}
-          </button>
+    <div style={{ display: "flex", gap: "24px", alignItems: "flex-start" }}>
+
+      {/* ── Left: level list + previews ── */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "10px", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
+          <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "#aaaaaa" }}>Levels</span>
+          <SizeControl size={elevSize} onChange={setElevSize} />
+        </div>
+        {elevation.map((lv, i) => (
+          <div key={lv.name} onClick={() => setSelLevel(i)}
+            style={{ padding: "14px 16px", background: selLevel === i ? "#f0f0f0" : "#ffffff", border: selLevel === i ? "1px solid #cccccc" : "1px solid #e5e5e5", borderRadius: "12px", cursor: "pointer", display: "flex", flexDirection: "column", gap: "12px", transition: "all 0.15s" }}
+            onMouseEnter={e => { if (selLevel !== i) e.currentTarget.style.background = "#f8f8f8"; }}
+            onMouseLeave={e => { if (selLevel !== i) e.currentTarget.style.background = "#ffffff"; }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <code style={{ fontSize: "10px", color: "#888888", background: "#f0f0f0", padding: "1px 6px", borderRadius: "4px" }}>{lv.name}</code>
+              <span style={{ fontSize: "11px", color: "#333333", fontWeight: 600 }}>{lv.label}</span>
+              <span style={{ fontSize: "9px", color: "#cccccc", letterSpacing: "0.08em" }}>{lv.direction === "up" ? "↑ up" : "↓ down"}</span>
+            </div>
+            <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
+              <div style={{ width: `${previewW}px`, height: `${previewH}px`, background: "#ffffff", borderRadius: "10px", boxShadow: lv.css, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s", flexShrink: 0 }}>
+                <span style={{ fontSize: "9px", color: "#bbbbbb", fontFamily: "monospace" }}>{lv.label}</span>
+              </div>
+              <code style={{ fontSize: "10px", color: "#777777", fontFamily: "monospace", lineHeight: 1.6, wordBreak: "break-all" }}>{lv.css}</code>
+            </div>
+          </div>
         ))}
-        <div style={{ marginLeft: "auto" }}><SizeControl size={elevSize} onChange={setElevSize} /></div>
       </div>
 
-      {elevation.map(lv => (
-        <div key={lv.name} style={{ background: "#ffffff", border: "1px solid #e5e5e5", borderRadius: "12px", padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-            <div style={{ fontFamily: "monospace", fontSize: "11px", color: "#999999", background: "#ffffff", border: "1px solid #e5e5e5", padding: "2px 8px", borderRadius: "4px" }}>{lv.name}</div>
-            <div style={{ fontSize: "13px", color: "#333333", fontWeight: 600 }}>{lv.label}</div>
-            <div style={{ fontSize: "10px", color: "#c0c0c0", textTransform: "uppercase", letterSpacing: "0.1em" }}>↕ {lv.direction === "up" ? "Upward" : "Downward"}</div>
-          </div>
-
-          {/* Visual preview */}
-          <div style={{ display: "flex", gap: "24px", alignItems: "center" }}>
-            <div style={{ width: `${previewW}px`, height: `${previewH}px`, background: "#ffffff", borderRadius: "12px", boxShadow: lv.css, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s", flexShrink: 0 }}>
-              <div style={{ fontSize: "10px", color: "#999", fontFamily: "monospace" }}>{lv.label}</div>
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: "10px", color: "#999999", marginBottom: "6px", letterSpacing: "0.1em", textTransform: "uppercase" }}>CSS box-shadow</div>
-              <code style={{ fontSize: "11px", color: "#555555", fontFamily: "monospace", lineHeight: 1.6 }}>{lv.css}</code>
-            </div>
-          </div>
-
-          {/* Platform code */}
-          <div>
-            <div style={{ fontSize: "10px", color: "#999999", marginBottom: "6px", letterSpacing: "0.1em", textTransform: "uppercase" }}>{platLabel[selPlatform]}</div>
-            <pre style={{ background: "#f5f5f5", border: "1px solid #e5e5e5", borderRadius: "8px", padding: "14px 16px", fontSize: "12px", color: "#555555", fontFamily: "monospace", overflowX: "auto", lineHeight: 1.6, margin: 0 }}>
-              {selPlatform === "swiftui" ? lv.swiftui
-               : selPlatform === "ios"     ? `layer.shadowColor = UIColor(red: 0.098, green: 0.188, blue: 0.251, alpha: 1).cgColor\nlayer.${lv.ios}`
-               : selPlatform === "compose" ? `Modifier.shadow(${lv.compose}, shape = RoundedCornerShape(12.dp))`
-               : `android:elevation="${lv.android.replace("elevation: ", "").replace("dp","")}" />`}
-            </pre>
-          </div>
+      {/* ── Right: platform selector + code ── */}
+      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "10px" }}>
+        <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+          {platforms.map(p => (
+            <button key={p} onClick={() => setSelPlatform(p)}
+              style={{ padding: "5px 12px", borderRadius: "6px", background: selPlatform === p ? "#111111" : "#f0f0f0", border: selPlatform === p ? "1px solid #333333" : "1px solid #e5e5e5", color: selPlatform === p ? "#ffffff" : "#888888", fontSize: "11px", cursor: "pointer", fontWeight: selPlatform === p ? 600 : 400, transition: "all 0.15s" }}>
+              {platLabel[p]}
+            </button>
+          ))}
         </div>
-      ))}
+        <pre style={{ background: "#f8f8f8", border: "1px solid #e5e5e5", borderRadius: "10px", padding: "16px 18px", fontSize: "12px", color: "#444444", fontFamily: "monospace", overflowX: "auto", lineHeight: 1.7, margin: 0, flex: 1 }}>
+          {codeStr}
+        </pre>
+      </div>
+
     </div>
   );
 }
