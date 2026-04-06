@@ -1117,11 +1117,12 @@ function extractSvgSize(svgStr) {
 
 // ── Figma Import Panel (SVG paste) ──────────────────────────────────────────
 function FigmaImportPanel({ onAdd, onClose }) {
-  const [svg,   setSvg]   = useState("");
-  const [error, setError] = useState("");
-  const [name,  setName]  = useState("Untitled");
-  const [ready, setReady] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [svg,    setSvg]    = useState("");
+  const [error,  setError]  = useState("");
+  const [name,   setName]   = useState("Untitled");
+  const [ready,  setReady]  = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved,  setSaved]  = useState(false);
 
   const handlePaste = (val) => {
     setSvg(val);
@@ -1140,10 +1141,15 @@ function FigmaImportPanel({ onAdd, onClose }) {
   const thumbScale = ready ? Math.min(160 / w, 100 / h, 1) : 1;
 
   const handleSave = () => {
-    if (!ready) return;
-    const draft = { id: Date.now(), name, svgData: svg, w, h, createdAt: new Date().toISOString() };
-    saveDraftToStorage(draft);
-    setSaved(true);
+    if (!ready || saving) return;
+    setSaving(true);
+    // localStorage는 동기식이지만 큰 SVG는 잠깐 블로킹될 수 있으므로 다음 틱으로 넘김
+    setTimeout(() => {
+      const draft = { id: Date.now(), name, svgData: svg, w, h, createdAt: new Date().toISOString() };
+      saveDraftToStorage(draft);
+      setSaving(false);
+      setSaved(true);
+    }, 0);
   };
 
   return (
@@ -1180,12 +1186,17 @@ function FigmaImportPanel({ onAdd, onClose }) {
             <input value={name} onChange={e => setName(e.target.value)}
               style={{ width:"100%", padding:"5px 8px", borderRadius:"5px", border:"1px solid #e0c800", background:"#ffffff", fontSize:"11px", color:"#111111", outline:"none", boxSizing:"border-box" }} />
             <div style={{ display:"flex", gap:"6px" }}>
-              <button onClick={handleSave}
-                style={{ flex:1, padding:"6px", borderRadius:"5px", background:"#111111", border:"none", color:"#ffffff", fontSize:"11px", fontWeight:700, cursor:"pointer" }}>
-                Draft로 저장
+              <button onClick={handleSave} disabled={saving}
+                style={{ flex:1, padding:"6px", borderRadius:"5px", background: saving ? "#555555" : "#111111", border:"none", color:"#ffffff", fontSize:"11px", fontWeight:700, cursor: saving ? "default" : "pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:"6px", transition:"background 0.15s" }}>
+                {saving ? (
+                  <>
+                    <span style={{ display:"inline-block", width:"10px", height:"10px", border:"2px solid rgba(255,255,255,0.3)", borderTopColor:"#ffffff", borderRadius:"50%", animation:"spin 0.6s linear infinite" }} />
+                    저장 중...
+                  </>
+                ) : "Draft로 저장"}
               </button>
-              <button onClick={() => onAdd({ svgData: svg, w, h })}
-                style={{ flex:1, padding:"6px", borderRadius:"5px", background:"transparent", border:"1px solid #d0d0d0", color:"#888888", fontSize:"11px", cursor:"pointer" }}>
+              <button onClick={() => onAdd({ svgData: svg, w, h })} disabled={saving}
+                style={{ flex:1, padding:"6px", borderRadius:"5px", background:"transparent", border:"1px solid #d0d0d0", color: saving ? "#cccccc" : "#888888", fontSize:"11px", cursor: saving ? "default" : "pointer" }}>
                 저장 없이 추가
               </button>
             </div>
@@ -2655,6 +2666,7 @@ export default function App() {
 
   return (
     <div style={{ display: "flex", height: "100vh", background: "#f5f5f5", color: "#111111", fontFamily: "'Pretendard', -apple-system, sans-serif" }}>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       {/* Sidebar */}
       <div style={{ width: "200px", flexShrink: 0, background: "#ffffff", borderRight: "1px solid #e5e5e5", display: "flex", flexDirection: "column", padding: "20px 0" }}>
         <div style={{ padding: "0 16px 20px", borderBottom: "1px solid #e5e5e5", marginBottom: "12px" }}>
