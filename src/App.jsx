@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { colors, typography, spacing, radius, elevation, states, metaTokens } from "./tokens";
 import { YdsIcon, YDS_ICONS, ICON_NAMES } from "./icons.jsx";
+import { fetchComponents, saveComponent, deleteComponent, renameComponent } from "./supabase.js";
 
 // ── Code generators ──────────────────────────────────────────────────────────
 
@@ -1081,23 +1082,10 @@ function RenderFigmaNode({ node, ox, oy }) {
   );
 }
 
-// ── Draft localStorage utils ─────────────────────────────────────────────────
-const DRAFTS_KEY = "yds_draft_components";
-function loadDrafts() {
-  try { return JSON.parse(localStorage.getItem(DRAFTS_KEY) || "[]"); }
-  catch { return []; }
-}
-function saveDraftToStorage(draft) {
-  const drafts = loadDrafts();
-  localStorage.setItem(DRAFTS_KEY, JSON.stringify([draft, ...drafts]));
-}
-function deleteDraftFromStorage(id) {
-  const drafts = loadDrafts().filter(d => d.id !== id);
-  localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
-}
-function renameDraftInStorage(id, name) {
-  const drafts = loadDrafts().map(d => d.id === id ? { ...d, name } : d);
-  localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
+// ── Draft utils (Supabase) ───────────────────────────────────────────────────
+// DB row → app 포맷 변환
+function rowToDraft(row) {
+  return { id: row.id, name: row.name, svgData: row.svg_data, w: row.w, h: row.h, createdAt: row.created_at };
 }
 
 // ── SVG dimension extractor ──────────────────────────────────────────────────
@@ -1161,7 +1149,7 @@ function FigmaImportPanel({ onAdd, onClose }) {
     : saveDurationMs < 1000 ? "약 1초"
     : saveDurationMs < 1600 ? "약 1~2초"
     : "약 2초 이상";
-  const storageLabel = "브라우저 로컬 저장소 (localStorage)";
+  const storageLabel = "Supabase 서버 (HWorld DB)";
 
   // 저장 버튼 클릭 → 확인 단계로
   const handleSaveClick = () => {
@@ -1175,32 +1163,29 @@ function FigmaImportPanel({ onAdd, onClose }) {
     setProgress(0);
     cancelRef.current = false;
 
-    // 프로그레스 애니메이션
+    // 프로그레스 애니메이션 (Supabase 업로드 동안)
     const start = Date.now();
     const tick = () => {
       const elapsed = Date.now() - start;
-      const pct = Math.min(elapsed / saveDurationMs, 0.95); // 실제 저장 전 95%까지
+      const pct = Math.min(elapsed / saveDurationMs, 0.9);
       setProgress(pct);
-      if (elapsed < saveDurationMs && !cancelRef.current) {
-        timerRef.current = requestAnimationFrame(tick);
-      }
+      if (!cancelRef.current) timerRef.current = requestAnimationFrame(tick);
     };
     timerRef.current = requestAnimationFrame(tick);
 
-    setTimeout(() => {
-      if (cancelRef.current) return;
-      cancelAnimationFrame(timerRef.current);
-      try {
-        const draft = { id: Date.now(), name, svgData: svg, w, h, createdAt: new Date().toISOString() };
-        saveDraftToStorage(draft);
+    saveComponent({ name, svgData: svg, w, h })
+      .then((row) => {
+        if (cancelRef.current) return;
+        cancelAnimationFrame(timerRef.current);
         setProgress(1);
         setStep("done");
-        toast(`"${name}" Draft에 저장됐습니다`, "success");
-      } catch (e) {
+        toast(`"${name}" 서버에 저장됐습니다`, "success");
+      })
+      .catch((e) => {
+        cancelAnimationFrame(timerRef.current);
         setStep("idle");
         toast("저장에 실패했습니다: " + e.message, "error");
-      }
-    }, saveDurationMs);
+      });
   };
 
   // 중지
@@ -1284,8 +1269,8 @@ function FigmaImportPanel({ onAdd, onClose }) {
             <span style={{ color:"#999" }}>이름</span>       <span style={{ color:"#333", fontWeight:600 }}>"{name}"</span>
           </div>
           <div style={{ fontSize:"10px", color:"#7755aa", background:"#ede5ff", borderRadius:"5px", padding:"7px 9px", lineHeight:1.6 }}>
-            브라우저 로컬에만 저장됩니다. 서버 전송 없음.<br/>
-            탭 닫아도 유지되지만, 브라우저 데이터 삭제 시 사라집니다.
+            Supabase 서버에 저장됩니다.<br/>
+            어떤 기기, 어떤 브라우저에서도 불러올 수 있습니다.
           </div>
           <div style={{ display:"flex", gap:"6px" }}>
             <button onClick={handleConfirm}
@@ -1340,6 +1325,7 @@ function FigmaImportPanel({ onAdd, onClose }) {
 }
 
 function SimulatorSection({ pendingDraft, onDraftConsumed }) {
+  const toast = useToast();
   const [platform,  setPlatform]  = useState("ios");
   const [deviceIdx, setDeviceIdx] = useState(2);
   const [items,     setItems]     = useState([]);
@@ -1349,6 +1335,8 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
   const [darkMode,      setDarkMode]      = useState(false);
   const [showFigmaPanel,  setShowFigmaPanel]  = useState(false);
   const [showDraftPicker, setShowDraftPicker] = useState(false);
+  const [pickerDrafts,    setPickerDrafts]    = useState([]);
+  const [pickerLoading,   setPickerLoading]   = useState(false);
 
   useEffect(() => {
     if (!pendingDraft) return;
@@ -1774,15 +1762,28 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
               onMouseLeave={e => { if (!showFigmaPanel) { e.currentTarget.style.borderColor="#e5e5e5"; e.currentTarget.style.color="#888888"; e.currentTarget.style.background="transparent"; }}}>
               ◈  Figma SVG
             </button>
-            {(() => { const dc = loadDrafts(); return dc.length > 0 && (
-              <button onClick={() => { setShowDraftPicker(v => !v); setShowFigmaPanel(false); }}
+            {(
+              <button onClick={() => {
+                const next = !showDraftPicker;
+                setShowDraftPicker(next);
+                setShowFigmaPanel(false);
+                if (next) {
+                  setPickerLoading(true);
+                  fetchComponents()
+                    .then(rows => { setPickerDrafts(rows.map(rowToDraft)); setPickerLoading(false); })
+                    .catch(e => { toast("불러오기 실패: " + e.message, "error"); setPickerLoading(false); });
+                }
+              }}
                 style={{ padding:"8px 10px", borderRadius:"7px", background: showDraftPicker?"#5028c8":"transparent", border: showDraftPicker?"1px solid #5028c8":"1px solid #e5e5e5", color: showDraftPicker?"#ffffff":"#888888", fontSize:"11px", cursor:"pointer", textAlign:"left", transition:"all 0.15s", display:"flex", alignItems:"center", justifyContent:"space-between" }}
                 onMouseEnter={e => { if (!showDraftPicker) { e.currentTarget.style.borderColor="#c0c0c0"; e.currentTarget.style.color="#333333"; e.currentTarget.style.background="#f4f4f4"; }}}
                 onMouseLeave={e => { if (!showDraftPicker) { e.currentTarget.style.borderColor="#e5e5e5"; e.currentTarget.style.color="#888888"; e.currentTarget.style.background="transparent"; }}}>
                 <span>◈  From Drafts</span>
-                <span style={{ fontSize:"9px", background: showDraftPicker?"rgba(255,255,255,0.3)":"#e5e5e5", color: showDraftPicker?"#fff":"#888888", borderRadius:"10px", padding:"1px 6px" }}>{dc.length}</span>
+                {pickerLoading
+                  ? <span style={{ display:"inline-block", width:"10px", height:"10px", border:"1.5px solid rgba(255,255,255,0.4)", borderTopColor:"#fff", borderRadius:"50%", animation:"spin 0.6s linear infinite" }} />
+                  : <span style={{ fontSize:"9px", background: showDraftPicker?"rgba(255,255,255,0.3)":"#e5e5e5", color: showDraftPicker?"#fff":"#888888", borderRadius:"10px", padding:"1px 6px" }}>{pickerDrafts.length}</span>
+                }
               </button>
-            ); })()}
+            )}
           </div>
         </div>
 
@@ -1800,56 +1801,49 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
         )}
 
         {/* Draft Picker */}
-        {showDraftPicker && (() => {
-          const drafts = loadDrafts();
-          return (
-            <div style={{ background:"#ffffff", border:"1px solid #5028c8", borderRadius:"10px", padding:"12px", display:"flex", flexDirection:"column", gap:"6px" }}>
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                <div style={{ fontSize:"10px", fontWeight:700, color:"#5028c8", letterSpacing:"0.1em", textTransform:"uppercase" }}>Drafts</div>
-                <button onClick={() => setShowDraftPicker(false)} style={{ background:"none", border:"none", color:"#aaaaaa", cursor:"pointer", fontSize:"14px" }}>×</button>
-              </div>
-              {drafts.map(draft => {
-                const isSvg = !!draft.svgData;
-                const dw = draft.w || draft.figmaData?.absoluteBoundingBox?.width || 100;
-                const dh = draft.h || draft.figmaData?.absoluteBoundingBox?.height || 100;
-                const scale = Math.min(60 / dw, 40 / dh, 1);
-                return (
-                  <button key={draft.id}
-                    onClick={() => {
-                      const id = Date.now();
-                      if (isSvg) {
-                        setItems(prev => [...prev, { id, type:"svg", svgData: draft.svgData, w: dw, h: dh, x:16, y:Math.min(16+prev.length*40,400), isMaster:false }]);
-                      } else {
-                        const b = draft.figmaData?.absoluteBoundingBox;
-                        setItems(prev => [...prev, { id, type:"figma", figmaData: draft.figmaData, x:16, y:Math.min(16+prev.length*40,400), w:b?.width||100, isMaster:false }]);
-                      }
-                      setSelected(id);
-                      setShowDraftPicker(false);
-                    }}
-                    style={{ display:"flex", alignItems:"center", gap:"10px", padding:"8px", borderRadius:"7px", background:"transparent", border:"1px solid #e5e5e5", cursor:"pointer", textAlign:"left", transition:"all 0.15s" }}
-                    onMouseEnter={e => { e.currentTarget.style.background="#f4f0ff"; e.currentTarget.style.borderColor="#5028c8"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background="transparent"; e.currentTarget.style.borderColor="#e5e5e5"; }}>
-                    {/* Thumbnail */}
-                    <div style={{ width:60, height:40, background:"#f5f5f5", borderRadius:"5px", flexShrink:0, overflow:"hidden", display:"flex", alignItems:"center", justifyContent:"center", position:"relative" }}>
-                      {isSvg ? (
-                        <div style={{ transform:`scale(${scale})`, transformOrigin:"center center", lineHeight:0 }}
-                          dangerouslySetInnerHTML={{ __html: draft.svgData }} />
-                      ) : draft.figmaData?.absoluteBoundingBox && (
-                        <div style={{ position:"absolute", transform:`scale(${scale})`, transformOrigin:"top left", top:0, left:0, width:dw, height:dh }}>
-                          <RenderFigmaNode node={draft.figmaData} ox={draft.figmaData.absoluteBoundingBox.x} oy={draft.figmaData.absoluteBoundingBox.y} />
-                        </div>
-                      )}
-                    </div>
-                    <div style={{ flex:1, minWidth:0 }}>
-                      <div style={{ fontSize:"11px", fontWeight:600, color:"#333333", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{draft.name}</div>
-                      <div style={{ fontSize:"9px", color:"#aaaaaa", marginTop:"2px" }}>{Math.round(dw)}×{Math.round(dh)}px</div>
-                    </div>
-                  </button>
-                );
-              })}
+        {showDraftPicker && (
+          <div style={{ background:"#ffffff", border:"1px solid #5028c8", borderRadius:"10px", padding:"12px", display:"flex", flexDirection:"column", gap:"6px" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <div style={{ fontSize:"10px", fontWeight:700, color:"#5028c8", letterSpacing:"0.1em", textTransform:"uppercase" }}>Components</div>
+              <button onClick={() => setShowDraftPicker(false)} style={{ background:"none", border:"none", color:"#aaaaaa", cursor:"pointer", fontSize:"14px" }}>×</button>
             </div>
-          );
-        })()}
+            {pickerLoading && (
+              <div style={{ display:"flex", alignItems:"center", gap:"8px", padding:"8px 0", color:"#aaa", fontSize:"11px" }}>
+                <span style={{ display:"inline-block", width:"10px", height:"10px", border:"1.5px solid #e5e5e5", borderTopColor:"#5028c8", borderRadius:"50%", animation:"spin 0.6s linear infinite" }} />
+                불러오는 중...
+              </div>
+            )}
+            {!pickerLoading && pickerDrafts.length === 0 && (
+              <div style={{ fontSize:"11px", color:"#aaaaaa", padding:"8px 0" }}>저장된 컴포넌트가 없습니다</div>
+            )}
+            {!pickerLoading && pickerDrafts.map(draft => {
+              const dw = draft.w || 100;
+              const dh = draft.h || 100;
+              const scale = Math.min(60 / dw, 40 / dh, 1);
+              return (
+                <button key={draft.id}
+                  onClick={() => {
+                    const id = Date.now();
+                    setItems(prev => [...prev, { id, type:"svg", svgData: draft.svgData, w: dw, h: dh, x:16, y:Math.min(16+prev.length*40,400), isMaster:false }]);
+                    setSelected(id);
+                    setShowDraftPicker(false);
+                  }}
+                  style={{ display:"flex", alignItems:"center", gap:"10px", padding:"8px", borderRadius:"7px", background:"transparent", border:"1px solid #e5e5e5", cursor:"pointer", textAlign:"left", transition:"all 0.15s" }}
+                  onMouseEnter={e => { e.currentTarget.style.background="#f4f0ff"; e.currentTarget.style.borderColor="#5028c8"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background="transparent"; e.currentTarget.style.borderColor="#e5e5e5"; }}>
+                  <div style={{ width:60, height:40, background:"#f5f5f5", borderRadius:"5px", flexShrink:0, overflow:"hidden", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                    <div style={{ transform:`scale(${scale})`, transformOrigin:"center center", lineHeight:0 }}
+                      dangerouslySetInnerHTML={{ __html: draft.svgData }} />
+                  </div>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ fontSize:"11px", fontWeight:600, color:"#333333", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{draft.name}</div>
+                    <div style={{ fontSize:"9px", color:"#aaaaaa", marginTop:"2px" }}>{Math.round(dw)}×{Math.round(dh)}px</div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {/* Layers */}
         <div style={{ background:"#ffffff", border:"1px solid #e5e5e5", borderRadius:"10px", padding:"12px", flex:1 }}>
@@ -2589,16 +2583,24 @@ function IconsSection() {
 // ── Section: Drafts ──────────────────────────────────────────────────────────
 function DraftsSection({ onUseInSimulator }) {
   const toast = useToast();
-  const [drafts, setDrafts] = useState(() => loadDrafts());
+  const [drafts, setDrafts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [renamingId, setRenamingId] = useState(null);
   const [renameVal, setRenameVal] = useState("");
 
-  const refresh = () => setDrafts(loadDrafts());
+  const refresh = () => {
+    setLoading(true);
+    fetchComponents()
+      .then(rows => { setDrafts(rows.map(rowToDraft)); setLoading(false); })
+      .catch(e => { toast("불러오기 실패: " + e.message, "error"); setLoading(false); });
+  };
+
+  useEffect(() => { refresh(); }, []);
 
   const handleDelete = (draft) => {
-    deleteDraftFromStorage(draft.id);
-    refresh();
-    toast(`"${draft.name}" 삭제됐습니다`, "info");
+    deleteComponent(draft.id)
+      .then(() => { refresh(); toast(`"${draft.name}" 삭제됐습니다`, "info"); })
+      .catch(e => toast("삭제 실패: " + e.message, "error"));
   };
 
   const startRename = (draft) => {
@@ -2608,16 +2610,22 @@ function DraftsSection({ onUseInSimulator }) {
 
   const confirmRename = (id) => {
     const prev = drafts.find(d => d.id === id)?.name;
-    renameDraftInStorage(id, renameVal);
-    setRenamingId(null);
-    refresh();
-    toast(`"${prev}" → "${renameVal}" 이름 변경됐습니다`, "success");
+    renameComponent(id, renameVal)
+      .then(() => { setRenamingId(null); refresh(); toast(`"${prev}" → "${renameVal}" 이름 변경됐습니다`, "success"); })
+      .catch(e => toast("변경 실패: " + e.message, "error"));
   };
+
+  if (loading) return (
+    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"300px", gap:"10px", color:"#bbbbbb" }}>
+      <span style={{ display:"inline-block", width:"16px", height:"16px", border:"2px solid #e5e5e5", borderTopColor:"#5028c8", borderRadius:"50%", animation:"spin 0.7s linear infinite" }} />
+      <span style={{ fontSize:"13px" }}>불러오는 중...</span>
+    </div>
+  );
 
   if (drafts.length === 0) return (
     <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", height:"300px", gap:"12px", color:"#bbbbbb" }}>
       <div style={{ fontSize:"32px", opacity:0.4 }}>◈</div>
-      <div style={{ fontSize:"13px" }}>저장된 Draft가 없습니다</div>
+      <div style={{ fontSize:"13px" }}>저장된 컴포넌트가 없습니다</div>
       <div style={{ fontSize:"11px", color:"#d0d0d0", textAlign:"center", lineHeight:1.7 }}>
         시뮬레이터 → Add → Figma SVG<br/>에서 컴포넌트를 붙여넣어 저장하세요.
       </div>
@@ -2801,6 +2809,13 @@ function AppMenu({ current }) {
 export default function App() {
   const [active, setActive] = useState("colors");
   const [pendingDraft, setPendingDraft] = useState(null);
+  const [componentCount, setComponentCount] = useState(0);
+
+  useEffect(() => {
+    fetchComponents()
+      .then(rows => setComponentCount(rows.length))
+      .catch(() => {});
+  }, [active]); // 탭 전환할 때마다 갱신
 
   const renderContent = () => {
     if (active === "meta")       return <MetaTokensSection />;
@@ -2865,8 +2880,8 @@ export default function App() {
           <button key={n.id} onClick={() => setActive(n.id)}
             style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#e5e5e5" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #5028c8" : "2px solid transparent", color: active === n.id ? "#5028c8" : "#888888", fontSize: "12px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
             <span style={{ fontSize: "13px", opacity: 0.7 }}>{n.icon}</span>{n.label}
-            {n.id === "drafts" && loadDrafts().length > 0 && (
-              <span style={{ marginLeft:"auto", fontSize:"9px", background:"#5028c8", color:"#fff", borderRadius:"10px", padding:"1px 6px" }}>{loadDrafts().length}</span>
+            {n.id === "drafts" && componentCount > 0 && (
+              <span style={{ marginLeft:"auto", fontSize:"9px", background:"#5028c8", color:"#fff", borderRadius:"10px", padding:"1px 6px" }}>{componentCount}</span>
             )}
           </button>
         ))}
