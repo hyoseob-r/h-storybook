@@ -2855,6 +2855,7 @@ function FigmaSection() {
   const [activeItem, setActiveItem] = useState(null);
   const [scrollRatio, setScrollRatio] = useState(0);
   const scrollRef = useRef(null);
+  const dragRef = useRef({ down: false, startX: 0, scrollLeft: 0 });
   const row1 = CATEGORY_ITEMS.slice(0, 8);
   const row2 = [...CATEGORY_ITEMS.slice(8), LOTTERIA];
 
@@ -2862,6 +2863,21 @@ function FigmaSection() {
     const el = e.target;
     const ratio = el.scrollLeft / (el.scrollWidth - el.clientWidth) || 0;
     setScrollRatio(ratio);
+  };
+
+  const onMouseDown = (e) => {
+    dragRef.current = { down: true, startX: e.pageX - scrollRef.current.offsetLeft, scrollLeft: scrollRef.current.scrollLeft };
+    scrollRef.current.style.cursor = "grabbing";
+  };
+  const onMouseUp = () => {
+    dragRef.current.down = false;
+    scrollRef.current.style.cursor = "grab";
+  };
+  const onMouseMove = (e) => {
+    if (!dragRef.current.down) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    scrollRef.current.scrollLeft = dragRef.current.scrollLeft - (x - dragRef.current.startX);
   };
 
   const codeMap = { react: CATEGORY_REACT_CODE, swiftui: CATEGORY_SWIFTUI_CODE, compose: CATEGORY_COMPOSE_CODE, flutter: CATEGORY_FLUTTER_CODE };
@@ -2900,7 +2916,8 @@ function FigmaSection() {
         <div style={{ background: "#1a1a1a", borderRadius: "16px", width: "390px", overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}>
           {/* Scrollable 2-row grid */}
           <div ref={scrollRef} onScroll={handleScroll}
-            style={{ overflowX: "auto", scrollbarWidth: "none", msOverflowStyle: "none", padding: "16px 20px 12px" }}>
+            onMouseDown={onMouseDown} onMouseUp={onMouseUp} onMouseLeave={onMouseUp} onMouseMove={onMouseMove}
+            style={{ overflowX: "auto", scrollbarWidth: "none", msOverflowStyle: "none", padding: "16px 20px 12px", cursor: "grab", userSelect: "none" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: "8px", width: "max-content" }}>
               <div style={{ display: "flex", gap: "4px" }}>
                 {row1.map((item, i) => renderCategoryItem(item, i))}
