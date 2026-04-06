@@ -2892,13 +2892,13 @@ function FigmaSection() {
     <div key={i}
       onClick={() => setActiveItem(activeItem === i ? null : i)}
       style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", minWidth: "66px", cursor: "pointer", position: "relative" }}>
-      <div style={{ width: "52px", height: "52px", borderRadius: "14px", overflow: "hidden", background: "#2a2a2a", position: "relative" }}>
+      <div style={{ width: "52px", height: "52px", borderRadius: "14px", overflow: "hidden", background: colors.gray.gray25.value, position: "relative" }}>
         <img src={item.img} width="52" height="52" style={{ objectFit: "cover", display: "block" }} onError={e => { e.target.style.display = "none"; }} />
         {item.badge && (
           <div style={{ position: "absolute", bottom: "0", left: "0", right: "0", background: "#FA0050", fontSize: "7px", fontWeight: 700, color: "#fff", textAlign: "center", padding: "2px 0", lineHeight: 1.2 }}>{item.badge}</div>
         )}
       </div>
-      <span style={{ fontSize: "12px", color: "#cccccc", fontFamily: "Roboto, sans-serif", whiteSpace: "nowrap" }}>{item.label}</span>
+      <span style={{ fontSize: "12px", color: colors.gray.gray800.value, fontFamily: "Roboto, sans-serif", whiteSpace: "nowrap" }}>{item.label}</span>
     </div>
   );
 
@@ -2913,7 +2913,7 @@ function FigmaSection() {
       {/* Preview */}
       <div>
         <div style={{ fontSize: "11px", color: "#aaa", marginBottom: "10px", fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase" }}>Preview</div>
-        <div style={{ background: "#1a1a1a", borderRadius: "16px", width: "390px", overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}>
+        <div style={{ background: colors.background.primary.value, borderRadius: "16px", width: "390px", overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.08)", border: `1px solid ${colors.gray.gray100.value}` }}>
           {/* Scrollable 2-row grid */}
           <div ref={scrollRef} onScroll={handleScroll}
             onMouseDown={onMouseDown} onMouseUp={onMouseUp} onMouseLeave={onMouseUp} onMouseMove={onMouseMove}
@@ -2929,8 +2929,8 @@ function FigmaSection() {
           </div>
           {/* Scroll indicator */}
           <div style={{ display: "flex", justifyContent: "center", paddingBottom: "10px" }}>
-            <div style={{ width: "56px", height: "4px", background: "#333", borderRadius: "2px", position: "relative" }}>
-              <div style={{ width: "24px", height: "4px", background: "#ffffff", borderRadius: "2px", position: "absolute", left: `${scrollRatio * 32}px`, transition: "left 0.1s ease" }} />
+            <div style={{ width: "56px", height: "4px", background: colors.gray.gray100.value, borderRadius: "2px", position: "relative" }}>
+              <div style={{ width: "24px", height: "4px", background: colors.gray.gray800.value, borderRadius: "2px", position: "absolute", left: `${scrollRatio * 32}px`, transition: "left 0.1s ease" }} />
             </div>
           </div>
         </div>
