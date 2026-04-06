@@ -321,113 +321,77 @@ function MetaTokensSection() {
 
 // ── Section: Colors ───────────────────────────────────────────────────────────
 
-function ColorSwatch({ name, value, height = 56 }) {
-  const isDark = parseInt(value.replace("#", "").slice(0, 2), 16) < 128;
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "6px", cursor: "pointer" }} onClick={() => navigator.clipboard.writeText(value)}>
-      <div style={{ width: "100%", height: `${height}px`, background: value, borderRadius: "8px", border: "1px solid #e5e5e5", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ fontSize: "10px", color: isDark ? "#ffffff88" : "#00000088", fontFamily: "monospace" }}>{value}</span>
-      </div>
-      <div style={{ fontSize: "10px", color: "#888888", lineHeight: "1.4" }}>{name}</div>
+function ColorsSection() {
+  const [chipSize, setChipSize] = useState("M");
+  const px = chipSize === "S" ? 32 : chipSize === "L" ? 72 : 48;
+
+  const chip = (name, hex) => (
+    <div key={name} onClick={() => navigator.clipboard.writeText(hex)}
+      style={{ display: "flex", flexDirection: "column", gap: "5px", width: `${px + 12}px`, cursor: "pointer" }}>
+      <div style={{ width: `${px}px`, height: `${px}px`, borderRadius: "8px", background: hex, border: "1px solid rgba(0,0,0,0.08)", flexShrink: 0 }} />
+      <div style={{ fontSize: "9px", fontWeight: 600, color: "#333333", fontFamily: "monospace", lineHeight: "1.3", wordBreak: "break-all" }}>{name}</div>
+      <div style={{ fontSize: "9px", color: "#aaaaaa", fontFamily: "monospace", lineHeight: "1.2" }}>{hex}</div>
     </div>
   );
-}
 
-function ColorsSection() {
-  const [swatchSize, setSwatchSize] = useState("M");
-  const swH = swatchSize === "S" ? 36 : swatchSize === "L" ? 80 : 56;
-  const groups = [
-    { title: "Foundation", tokens: Object.values(colors.foundation) },
-    { title: "Light / Extended Palette", tokens: Object.values(colors.light), textRule: true },
-    { title: "Gray Scale", tokens: Object.values(colors.gray) },
-    { title: "Background", tokens: Object.values(colors.background) },
-    { title: "Variant", tokens: Object.values(colors.variant) },
-  ];
+  const sectionLabel = (text) => (
+    <div style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "#aaaaaa", marginBottom: "10px", marginTop: "24px" }}>{text}</div>
+  );
+
+  const allLight = Object.values(colors.light);
   const overlays = Object.values(states.overlay);
-  // Light palette: _100 토큰은 base 토큰과 쌍으로 표시
-  const lightPairs = [
-    ["primary_a", "primary_a_100"],
-    ["primary_b", "primary_b_100"],
-    ["accent",    "accent_100"],
-    ["ygy_green", "ygy_green_100"],
-    ["ygy_orange","ygy_orange_100"],
-  ];
-  // text color rule: base → white text, _100 → base color text
-  const lightTextColor = { primary_a: "#fff", primary_b: "#fff", accent: "#fff", ygy_green: "#fff", ygy_orange: "#fff", primary_a_100: "#fa0050", primary_b_100: "#28343c", accent_100: "#0c80e4", ygy_green_100: "#05947f", ygy_orange_100: "#f04600", gray_c: "#fff" };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
-      <div style={{ display: "flex", justifyContent: "flex-end" }}>
-        <SizeControl size={swatchSize} onChange={setSwatchSize} />
+    <div>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "8px" }}>
+        <SizeControl size={chipSize} onChange={setChipSize} />
       </div>
-      {groups.map(g => (
-        <div key={g.title}>
-          <div style={{ fontSize: "11px", color: "#999999", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "14px", fontWeight: 600 }}>{g.title}</div>
-          {g.textRule ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              {/* rule badge */}
-              <div style={{ display: "flex", gap: "8px", marginBottom: "4px" }}>
-                <div style={{ fontSize: "10px", color: "#999999", background: "#ffffff", border: "1px solid #e5e5e5", padding: "2px 8px", borderRadius: "4px" }}>규칙.1 숫자 없음 → TextColor #FFF or #333</div>
-                <div style={{ fontSize: "10px", color: "#999999", background: "#ffffff", border: "1px solid #e5e5e5", padding: "2px 8px", borderRadius: "4px" }}>규칙.2 _100 suffix → TextColor = base 색</div>
-              </div>
-              {lightPairs.map(([base, light]) => {
-                const bt = colors.light[base];
-                const lt = colors.light[light];
-                return (
-                  <div key={base} style={{ display: "flex", gap: "10px", alignItems: "stretch" }}>
-                    {/* base */}
-                    <div style={{ flex: 1, background: bt.value, borderRadius: "10px", padding: "14px 16px", display: "flex", flexDirection: "column", gap: "4px" }}>
-                      <span style={{ fontFamily: "monospace", fontSize: "10px", color: lightTextColor[base], opacity: 0.7 }}>{bt.name}</span>
-                      <span style={{ fontFamily: "monospace", fontSize: "11px", color: lightTextColor[base], fontWeight: 600 }}>버튼</span>
-                      <span style={{ fontFamily: "monospace", fontSize: "9px", color: lightTextColor[base], opacity: 0.6 }}>{bt.value.toUpperCase()}</span>
-                    </div>
-                    {/* arrow */}
-                    <div style={{ display: "flex", alignItems: "center", color: "#bbbbbb", fontSize: "12px" }}>→</div>
-                    {/* _100 */}
-                    <div style={{ flex: 1, background: lt.value, borderRadius: "10px", padding: "14px 16px", display: "flex", flexDirection: "column", gap: "4px", border: "1px solid #e5e5e5" }}>
-                      <span style={{ fontFamily: "monospace", fontSize: "10px", color: lightTextColor[light], opacity: 0.7 }}>{lt.name}</span>
-                      <span style={{ fontFamily: "monospace", fontSize: "11px", color: lightTextColor[light], fontWeight: 600 }}>버튼</span>
-                      <span style={{ fontFamily: "monospace", fontSize: "9px", color: lightTextColor[light], opacity: 0.6 }}>{lt.value.toUpperCase()}</span>
-                    </div>
-                  </div>
-                );
-              })}
-              {/* gray_c 단독 */}
-              <div style={{ display: "flex", gap: "10px" }}>
-                <div style={{ width: "calc(50% - 16px)", background: colors.light.gray_c.value, borderRadius: "10px", padding: "14px 16px", display: "flex", flexDirection: "column", gap: "4px" }}>
-                  <span style={{ fontFamily: "monospace", fontSize: "10px", color: "#fff", opacity: 0.7 }}>gray_c</span>
-                  <span style={{ fontFamily: "monospace", fontSize: "11px", color: "#fff", fontWeight: 600 }}>버튼</span>
-                  <span style={{ fontFamily: "monospace", fontSize: "9px", color: "#fff", opacity: 0.6 }}>#000000</span>
-                </div>
-              </div>
+
+      {sectionLabel("Foundation")}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "12px 10px" }}>
+        {Object.values(colors.foundation).map(t => chip(t.name, t.value))}
+      </div>
+
+      {sectionLabel("Light / Extended Palette")}
+      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "10px" }}>
+        <div style={{ fontSize: "10px", color: "#999999", background: "#ffffff", border: "1px solid #e5e5e5", padding: "2px 8px", borderRadius: "4px" }}>규칙.1 숫자 없음 → TextColor #FFF or #333</div>
+        <div style={{ fontSize: "10px", color: "#999999", background: "#ffffff", border: "1px solid #e5e5e5", padding: "2px 8px", borderRadius: "4px" }}>규칙.2 _100 suffix → TextColor = base 색</div>
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "12px 10px" }}>
+        {allLight.map(t => chip(t.name, t.value))}
+      </div>
+
+      {sectionLabel("Gray Scale")}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "12px 10px" }}>
+        {Object.values(colors.gray).map(t => chip(t.name, t.value))}
+      </div>
+
+      {sectionLabel("Background")}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "12px 10px" }}>
+        {Object.values(colors.background).map(t => chip(t.name, t.value))}
+      </div>
+
+      {sectionLabel("Variant")}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "12px 10px" }}>
+        {Object.values(colors.variant).map(t => chip(t.name, t.value))}
+      </div>
+
+      {sectionLabel("States / Overlay")}
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+        {overlays.map(o => (
+          <div key={o.name} style={{ padding: "14px 20px", background: "#ffffff", border: "1px solid #e5e5e5", borderRadius: "10px", display: "flex", alignItems: "center", gap: "16px" }}>
+            <div style={{ width: "48px", height: "32px", borderRadius: "6px", flexShrink: 0, position: "relative", overflow: "hidden" }}>
+              <div style={{ position: "absolute", inset: 0, backgroundImage: "repeating-conic-gradient(#bbbbbb 0% 25%, #e5e5e5 0% 50%)", backgroundSize: "10px 10px" }} />
+              <div style={{ position: "absolute", inset: 0, background: o.value }} />
             </div>
-          ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: "12px" }}>
-              {g.tokens.map(t => <ColorSwatch key={t.name} name={t.name} value={t.value} height={swH} />)}
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: "11px", color: "#333333", fontWeight: 600 }}>{o.label}</div>
+              <div style={{ fontSize: "10px", color: "#999999", fontFamily: "monospace", marginTop: "2px" }}>{o.name}</div>
             </div>
-          )}
-        </div>
-      ))}
-      {/* States / Overlay */}
-      <div>
-        <div style={{ fontSize: "11px", color: "#999999", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "14px", fontWeight: 600 }}>States / Overlay</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          {overlays.map(o => (
-            <div key={o.name} style={{ padding: "14px 20px", background: "#ffffff", border: "1px solid #e5e5e5", borderRadius: "10px", display: "flex", alignItems: "center", gap: "16px" }}>
-              {/* Checkerboard + overlay swatch */}
-              <div style={{ width: "48px", height: "32px", borderRadius: "6px", flexShrink: 0, position: "relative", overflow: "hidden" }}>
-                <div style={{ position: "absolute", inset: 0, backgroundImage: "repeating-conic-gradient(#bbbbbb 0% 25%, #e5e5e5 0% 50%)", backgroundSize: "10px 10px" }} />
-                <div style={{ position: "absolute", inset: 0, background: o.value }} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: "11px", color: "#333333", fontWeight: 600 }}>{o.label}</div>
-                <div style={{ fontSize: "10px", color: "#999999", fontFamily: "monospace", marginTop: "2px" }}>{o.name}</div>
-              </div>
-              <div style={{ fontFamily: "monospace", fontSize: "11px", color: "#888888" }}>{o.value.toUpperCase()}</div>
-              <div style={{ fontSize: "10px", color: "#c0c0c0", background: "#e5e5e5", padding: "2px 8px", borderRadius: "4px" }}>opacity {o.opacity}</div>
-            </div>
-          ))}
-        </div>
+            <div style={{ fontFamily: "monospace", fontSize: "11px", color: "#888888" }}>{o.value.toUpperCase()}</div>
+            <div style={{ fontSize: "10px", color: "#c0c0c0", background: "#e5e5e5", padding: "2px 8px", borderRadius: "4px" }}>opacity {o.opacity}</div>
+          </div>
+        ))}
       </div>
     </div>
   );
