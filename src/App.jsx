@@ -1204,7 +1204,8 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
   const [hovered,   setHovered]   = useState(null);
   const [snapGrid,      setSnapGrid]      = useState(true);
   const [darkMode,      setDarkMode]      = useState(false);
-  const [showFigmaPanel, setShowFigmaPanel] = useState(false);
+  const [showFigmaPanel,  setShowFigmaPanel]  = useState(false);
+  const [showDraftPicker, setShowDraftPicker] = useState(false);
 
   useEffect(() => {
     if (!pendingDraft) return;
@@ -1614,12 +1615,21 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
                 + {c.label}
               </button>
             ))}
-            <button onClick={() => setShowFigmaPanel(v => !v)}
+            <button onClick={() => { setShowFigmaPanel(v => !v); setShowDraftPicker(false); }}
               style={{ padding:"8px 10px", borderRadius:"7px", background: showFigmaPanel?"#111111":"transparent", border: showFigmaPanel?"1px solid #333333":"1px solid #e5e5e5", color: showFigmaPanel?"#ffffff":"#888888", fontSize:"11px", cursor:"pointer", textAlign:"left", transition:"all 0.15s" }}
               onMouseEnter={e => { if (!showFigmaPanel) { e.currentTarget.style.borderColor="#c0c0c0"; e.currentTarget.style.color="#333333"; e.currentTarget.style.background="#f4f4f4"; }}}
               onMouseLeave={e => { if (!showFigmaPanel) { e.currentTarget.style.borderColor="#e5e5e5"; e.currentTarget.style.color="#888888"; e.currentTarget.style.background="transparent"; }}}>
               ◈  Figma JSON
             </button>
+            {(() => { const dc = loadDrafts(); return dc.length > 0 && (
+              <button onClick={() => { setShowDraftPicker(v => !v); setShowFigmaPanel(false); }}
+                style={{ padding:"8px 10px", borderRadius:"7px", background: showDraftPicker?"#5028c8":"transparent", border: showDraftPicker?"1px solid #5028c8":"1px solid #e5e5e5", color: showDraftPicker?"#ffffff":"#888888", fontSize:"11px", cursor:"pointer", textAlign:"left", transition:"all 0.15s", display:"flex", alignItems:"center", justifyContent:"space-between" }}
+                onMouseEnter={e => { if (!showDraftPicker) { e.currentTarget.style.borderColor="#c0c0c0"; e.currentTarget.style.color="#333333"; e.currentTarget.style.background="#f4f4f4"; }}}
+                onMouseLeave={e => { if (!showDraftPicker) { e.currentTarget.style.borderColor="#e5e5e5"; e.currentTarget.style.color="#888888"; e.currentTarget.style.background="transparent"; }}}>
+                <span>◈  From Drafts</span>
+                <span style={{ fontSize:"9px", background: showDraftPicker?"rgba(255,255,255,0.3)":"#e5e5e5", color: showDraftPicker?"#fff":"#888888", borderRadius:"10px", padding:"1px 6px" }}>{dc.length}</span>
+              </button>
+            ); })()}
           </div>
         </div>
 
@@ -1636,6 +1646,46 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
             }}
           />
         )}
+
+        {/* Draft Picker */}
+        {showDraftPicker && (() => {
+          const drafts = loadDrafts();
+          return (
+            <div style={{ background:"#ffffff", border:"1px solid #5028c8", borderRadius:"10px", padding:"12px", display:"flex", flexDirection:"column", gap:"6px" }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                <div style={{ fontSize:"10px", fontWeight:700, color:"#5028c8", letterSpacing:"0.1em", textTransform:"uppercase" }}>Drafts</div>
+                <button onClick={() => setShowDraftPicker(false)} style={{ background:"none", border:"none", color:"#aaaaaa", cursor:"pointer", fontSize:"14px" }}>×</button>
+              </div>
+              {drafts.map(draft => {
+                const b = draft.figmaData?.absoluteBoundingBox;
+                const scale = b ? Math.min(60 / b.width, 40 / b.height, 1) : 1;
+                return (
+                  <button key={draft.id}
+                    onClick={() => {
+                      const id = Date.now();
+                      setItems(prev => [...prev, { id, type:"figma", figmaData: draft.figmaData, x:16, y:Math.min(16+prev.length*40,400), w:b?.width||100, isMaster:false }]);
+                      setSelected(id);
+                      setShowDraftPicker(false);
+                    }}
+                    style={{ display:"flex", alignItems:"center", gap:"10px", padding:"8px", borderRadius:"7px", background:"transparent", border:"1px solid #e5e5e5", cursor:"pointer", textAlign:"left", transition:"all 0.15s" }}
+                    onMouseEnter={e => { e.currentTarget.style.background="#f4f0ff"; e.currentTarget.style.borderColor="#5028c8"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background="transparent"; e.currentTarget.style.borderColor="#e5e5e5"; }}>
+                    {/* Thumbnail */}
+                    <div style={{ width:60, height:40, background:"#f5f5f5", borderRadius:"5px", flexShrink:0, overflow:"hidden", position:"relative" }}>
+                      {b && <div style={{ position:"absolute", transform:`scale(${scale})`, transformOrigin:"top left", top:0, left:0, width:b.width, height:b.height }}>
+                        <RenderFigmaNode node={draft.figmaData} ox={b.x} oy={b.y} />
+                      </div>}
+                    </div>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div style={{ fontSize:"11px", fontWeight:600, color:"#333333", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{draft.name}</div>
+                      <div style={{ fontSize:"9px", color:"#aaaaaa", marginTop:"2px" }}>{b ? `${Math.round(b.width)}×${Math.round(b.height)}dp` : ""}</div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          );
+        })()}
 
         {/* Layers */}
         <div style={{ background:"#ffffff", border:"1px solid #e5e5e5", borderRadius:"10px", padding:"12px", flex:1 }}>
