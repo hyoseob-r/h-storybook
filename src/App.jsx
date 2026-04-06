@@ -377,19 +377,15 @@ function ColorsSection() {
       </div>
 
       {sectionLabel("States / Overlay")}
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "12px 10px" }}>
         {overlays.map(o => (
-          <div key={o.name} style={{ padding: "14px 20px", background: "#ffffff", border: "1px solid #e5e5e5", borderRadius: "10px", display: "flex", alignItems: "center", gap: "16px" }}>
-            <div style={{ width: "48px", height: "32px", borderRadius: "6px", flexShrink: 0, position: "relative", overflow: "hidden" }}>
-              <div style={{ position: "absolute", inset: 0, backgroundImage: "repeating-conic-gradient(#bbbbbb 0% 25%, #e5e5e5 0% 50%)", backgroundSize: "10px 10px" }} />
+          <div key={o.name} style={{ display: "flex", flexDirection: "column", gap: "5px", width: `${px + 12}px` }}>
+            <div style={{ width: `${px}px`, height: `${px}px`, borderRadius: "8px", border: "1px solid rgba(0,0,0,0.08)", flexShrink: 0, position: "relative", overflow: "hidden" }}>
+              <div style={{ position: "absolute", inset: 0, backgroundImage: "repeating-conic-gradient(#bbbbbb 0% 25%, #e5e5e5 0% 50%)", backgroundSize: "8px 8px" }} />
               <div style={{ position: "absolute", inset: 0, background: o.value }} />
             </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: "11px", color: "#333333", fontWeight: 600 }}>{o.label}</div>
-              <div style={{ fontSize: "10px", color: "#999999", fontFamily: "monospace", marginTop: "2px" }}>{o.name}</div>
-            </div>
-            <div style={{ fontFamily: "monospace", fontSize: "11px", color: "#888888" }}>{o.value.toUpperCase()}</div>
-            <div style={{ fontSize: "10px", color: "#c0c0c0", background: "#e5e5e5", padding: "2px 8px", borderRadius: "4px" }}>opacity {o.opacity}</div>
+            <div style={{ fontSize: "9px", fontWeight: 600, color: "#333333", fontFamily: "monospace", lineHeight: "1.3", wordBreak: "break-all" }}>{o.name}</div>
+            <div style={{ fontSize: "9px", color: "#aaaaaa", fontFamily: "monospace", lineHeight: "1.2" }}>opacity {o.opacity}</div>
           </div>
         ))}
       </div>
