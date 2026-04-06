@@ -1117,6 +1117,7 @@ function extractSvgSize(svgStr) {
 
 // ── Figma Import Panel (SVG paste) ──────────────────────────────────────────
 function FigmaImportPanel({ onAdd, onClose }) {
+  const toast = useToast();
   const [svg,    setSvg]    = useState("");
   const [error,  setError]  = useState("");
   const [name,   setName]   = useState("Untitled");
@@ -1143,20 +1144,35 @@ function FigmaImportPanel({ onAdd, onClose }) {
   const handleSave = () => {
     if (!ready || saving) return;
     setSaving(true);
-    // localStorage는 동기식이지만 큰 SVG는 잠깐 블로킹될 수 있으므로 다음 틱으로 넘김
     setTimeout(() => {
-      const draft = { id: Date.now(), name, svgData: svg, w, h, createdAt: new Date().toISOString() };
-      saveDraftToStorage(draft);
-      setSaving(false);
-      setSaved(true);
+      try {
+        const draft = { id: Date.now(), name, svgData: svg, w, h, createdAt: new Date().toISOString() };
+        saveDraftToStorage(draft);
+        setSaving(false);
+        setSaved(true);
+        toast(`"${name}" Draft에 저장됐습니다`, "success");
+      } catch (e) {
+        setSaving(false);
+        toast("저장에 실패했습니다: " + e.message, "error");
+      }
     }, 0);
+  };
+
+  const handleAddWithoutSave = () => {
+    onAdd({ svgData: svg, w, h });
+    toast("저장하지 않고 캔버스에 추가했습니다", "info");
+  };
+
+  const handleClose = () => {
+    if (ready && !saved) toast("저장하지 않고 닫았습니다", "warning");
+    onClose();
   };
 
   return (
     <div style={{ background:"#ffffff", border:"1px solid #e5e5e5", borderRadius:"10px", padding:"12px", display:"flex", flexDirection:"column", gap:"8px" }}>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
         <div style={{ fontSize:"10px", fontWeight:700, color:"#333333", letterSpacing:"0.1em", textTransform:"uppercase" }}>Figma → SVG 붙여넣기</div>
-        <button onClick={onClose} style={{ background:"none", border:"none", color:"#aaaaaa", cursor:"pointer", fontSize:"14px", lineHeight:1 }}>×</button>
+        <button onClick={handleClose} style={{ background:"none", border:"none", color:"#aaaaaa", cursor:"pointer", fontSize:"14px", lineHeight:1 }}>×</button>
       </div>
       <div style={{ background:"#f0f4ff", border:"1px solid #c5d3f5", borderRadius:"6px", padding:"8px 10px", fontSize:"10px", color:"#3355aa", lineHeight:1.7 }}>
         Figma에서 레이어 선택<br/>
@@ -1195,7 +1211,7 @@ function FigmaImportPanel({ onAdd, onClose }) {
                   </>
                 ) : "Draft로 저장"}
               </button>
-              <button onClick={() => onAdd({ svgData: svg, w, h })} disabled={saving}
+              <button onClick={handleAddWithoutSave} disabled={saving}
                 style={{ flex:1, padding:"6px", borderRadius:"5px", background:"transparent", border:"1px solid #d0d0d0", color: saving ? "#cccccc" : "#888888", fontSize:"11px", cursor: saving ? "default" : "pointer" }}>
                 저장 없이 추가
               </button>
@@ -1209,7 +1225,7 @@ function FigmaImportPanel({ onAdd, onClose }) {
           <div style={{ fontSize:"11px", color:"#2a7a2a", fontWeight:700 }}>✓ Draft에 저장됐습니다</div>
           <div style={{ fontSize:"10px", color:"#4a9a4a" }}>Drafts 페이지에서 관리하거나 시뮬레이터에 추가할 수 있습니다.</div>
           <div style={{ display:"flex", gap:"6px" }}>
-            <button onClick={() => onAdd({ svgData: svg, w, h })}
+            <button onClick={() => { onAdd({ svgData: svg, w, h }); toast("캔버스에 추가됐습니다", "success"); }}
               style={{ flex:1, padding:"6px", borderRadius:"5px", background:"#111111", border:"none", color:"#ffffff", fontSize:"11px", fontWeight:700, cursor:"pointer" }}>
               캔버스에 추가
             </button>
@@ -2473,15 +2489,17 @@ function IconsSection() {
 
 // ── Section: Drafts ──────────────────────────────────────────────────────────
 function DraftsSection({ onUseInSimulator }) {
+  const toast = useToast();
   const [drafts, setDrafts] = useState(() => loadDrafts());
   const [renamingId, setRenamingId] = useState(null);
   const [renameVal, setRenameVal] = useState("");
 
   const refresh = () => setDrafts(loadDrafts());
 
-  const handleDelete = (id) => {
-    deleteDraftFromStorage(id);
+  const handleDelete = (draft) => {
+    deleteDraftFromStorage(draft.id);
     refresh();
+    toast(`"${draft.name}" 삭제됐습니다`, "info");
   };
 
   const startRename = (draft) => {
@@ -2490,9 +2508,11 @@ function DraftsSection({ onUseInSimulator }) {
   };
 
   const confirmRename = (id) => {
+    const prev = drafts.find(d => d.id === id)?.name;
     renameDraftInStorage(id, renameVal);
     setRenamingId(null);
     refresh();
+    toast(`"${prev}" → "${renameVal}" 이름 변경됐습니다`, "success");
   };
 
   if (drafts.length === 0) return (
@@ -2557,11 +2577,11 @@ function DraftsSection({ onUseInSimulator }) {
 
                 {/* Actions */}
                 <div style={{ display:"flex", gap:"6px", marginTop:"auto" }}>
-                  <button onClick={() => onUseInSimulator(draft)}
+                  <button onClick={() => { onUseInSimulator(draft); toast(`"${draft.name}" 시뮬레이터에 추가됐습니다`, "success"); }}
                     style={{ flex:1, padding:"6px", borderRadius:"6px", background:"#111111", border:"none", color:"#ffffff", fontSize:"10px", fontWeight:700, cursor:"pointer" }}>
                     시뮬레이터에 추가
                   </button>
-                  <button onClick={() => handleDelete(draft.id)}
+                  <button onClick={() => handleDelete(draft)}
                     style={{ padding:"6px 10px", borderRadius:"6px", background:"transparent", border:"1px solid #f0b0b0", color:"#aa3333", fontSize:"10px", cursor:"pointer" }}
                     onMouseEnter={e => { e.currentTarget.style.background="#ffeaea"; }}
                     onMouseLeave={e => { e.currentTarget.style.background="transparent"; }}>
@@ -2590,6 +2610,42 @@ const NAV = [
   { id: "glassnav",    label: "Liquid Glass",  icon: "✦" },
   { id: "drafts",      label: "Drafts",        icon: "◈" },
 ];
+
+// ── Toast system ─────────────────────────────────────────────────────────────
+const ToastContext = React.createContext(null);
+function useToast() { return React.useContext(ToastContext); }
+
+function ToastProvider({ children }) {
+  const [toasts, setToasts] = useState([]);
+  const show = (msg, type = "success") => {
+    const id = Date.now() + Math.random();
+    setToasts(prev => [...prev, { id, msg, type }]);
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3200);
+  };
+  const icons  = { success: "✓", error: "✕", info: "i", warning: "!" };
+  const colors = {
+    success: { bg: "#111111", text: "#ffffff", icon: "#4cdd80" },
+    error:   { bg: "#2a0a0a", text: "#ffffff", icon: "#ff5555" },
+    info:    { bg: "#0a1a2a", text: "#ffffff", icon: "#5599ff" },
+    warning: { bg: "#1a1200", text: "#ffffff", icon: "#ffcc44" },
+  };
+  return (
+    <ToastContext.Provider value={show}>
+      {children}
+      <div style={{ position:"fixed", bottom:"24px", left:"50%", transform:"translateX(-50%)", display:"flex", flexDirection:"column", gap:"8px", zIndex:9999, alignItems:"center", pointerEvents:"none" }}>
+        {toasts.map(t => {
+          const c = colors[t.type] || colors.info;
+          return (
+            <div key={t.id} style={{ background:c.bg, color:c.text, borderRadius:"10px", padding:"10px 16px", fontSize:"12px", fontWeight:500, display:"flex", alignItems:"center", gap:"10px", boxShadow:"0 4px 20px rgba(0,0,0,0.25)", whiteSpace:"nowrap", animation:"toastIn 0.22s cubic-bezier(0.34,1.56,0.64,1)" }}>
+              <span style={{ color:c.icon, fontWeight:700, fontSize:"13px" }}>{icons[t.type]}</span>
+              {t.msg}
+            </div>
+          );
+        })}
+      </div>
+    </ToastContext.Provider>
+  );
+}
 
 const H_WORLD_APPS = [
   { id: "launcher",  label: "h's world",      sub: "Launcher",          href: "https://alfred-launcher.vercel.app",     color: "#111111" },
@@ -2665,8 +2721,9 @@ export default function App() {
   const subtitles = { meta: "YDS 2.0 Primitive Layer — Meta → Semantic → Component", colors: "YDS 2.0 Customer Token", typography: "Roboto 기반 타입 스케일", spacing: "스페이싱 및 보더 라디우스", elevation: "YDS 2.0 Elevation — Level 1 · 2 (normal & inverse)", button: "버튼 컴포넌트 — 멀티 플랫폼 코드", label: "라벨 컴포넌트 — 멀티 플랫폼 코드", icons: "YDS 2.0 System Icon — Figma 원본 기반", simulator: "iOS / Android 실시간 화면 시뮬레이션", glassnav: "OS 버전별 Glass Nav Bar — 호환성 + 코드 생성", drafts: "Figma에서 가져온 컴포넌트 — 관리 및 시뮬레이터 연동" };
 
   return (
+    <ToastProvider>
     <div style={{ display: "flex", height: "100vh", background: "#f5f5f5", color: "#111111", fontFamily: "'Pretendard', -apple-system, sans-serif" }}>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } } @keyframes toastIn { from { opacity:0; transform:translateY(10px) scale(0.95); } to { opacity:1; transform:translateY(0) scale(1); } }`}</style>
       {/* Sidebar */}
       <div style={{ width: "200px", flexShrink: 0, background: "#ffffff", borderRight: "1px solid #e5e5e5", display: "flex", flexDirection: "column", padding: "20px 0" }}>
         <div style={{ padding: "0 16px 20px", borderBottom: "1px solid #e5e5e5", marginBottom: "12px" }}>
@@ -2742,5 +2799,6 @@ export default function App() {
         ::-webkit-scrollbar-thumb { background: #e5e5e5; border-radius: 2px; }
       `}</style>
     </div>
+    </ToastProvider>
   );
 }
