@@ -193,10 +193,10 @@ function MetaTokensSection() {
   );
 
   const chip = (label, sub, color) => (
-    <div key={label} style={{ background: "#f8f8f8", border: "1px solid #e5e5e5", borderRadius: "8px", padding: "10px 12px", display: "flex", flexDirection: "column", gap: "4px", minWidth: "90px" }}>
-      {color && <div style={{ width: "28px", height: "28px", borderRadius: "6px", background: color, border: "1px solid #e0e0e0", marginBottom: "4px" }} />}
-      <div style={{ fontSize: "11px", fontWeight: 600, color: "#333333", fontFamily: "monospace" }}>{label}</div>
-      {sub && <div style={{ fontSize: "10px", color: "#999999", fontFamily: "monospace" }}>{sub}</div>}
+    <div key={label} style={{ display: "flex", flexDirection: "column", gap: "5px", width: "60px" }}>
+      <div style={{ width: "48px", height: "48px", borderRadius: "8px", background: color || "#eeeeee", border: "1px solid rgba(0,0,0,0.08)", flexShrink: 0 }} />
+      <div style={{ fontSize: "9px", fontWeight: 600, color: "#333333", fontFamily: "monospace", lineHeight: "1.3", wordBreak: "break-all" }}>{label}</div>
+      {sub && sub !== label && <div style={{ fontSize: "9px", color: "#aaaaaa", fontFamily: "monospace", lineHeight: "1.2" }}>{sub}</div>}
     </div>
   );
 
@@ -210,7 +210,7 @@ function MetaTokensSection() {
       {Object.entries(metaTokens.colors).map(([family, tokens]) => (
         <div key={family}>
           {sectionLabel(family)}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "12px 10px" }}>
             {Object.entries(tokens).filter(([, v]) => v).map(([name, hex]) => chip(name, hex, hex))}
           </div>
         </div>
