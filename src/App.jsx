@@ -2981,74 +2981,6 @@ function FigmaSection() {
   );
 }
 
-// ── Proposals Section ─────────────────────────────────────────────────────────
-
-const PROPOSALS = [
-  { id: "pitch",          docId: "p-001", label: "파트너 AI 피치",   file: "/proposals/pitch-partner-ai.html",         accent: "#fa0050", tag: "Elevator Pitch" },
-  { id: "partner-ai",     docId: "p-002", label: "파트너 AI 제안",   file: "/proposals/proposal-partner-ai.html",      accent: "#fa0050", tag: "Full Proposal" },
-  { id: "closing-deal",   docId: "p-003", label: "마감딜",           file: "/proposals/proposal-closing-deal.html",    accent: "#f04600", tag: "Product Proposal" },
-  { id: "reorder",        docId: "p-004", label: "재주문 숏컷",      file: "/proposals/proposal-reorder.html",         accent: "#1a1a2e", tag: "Product Proposal" },
-  { id: "morning-pickup", docId: "p-005", label: "모닝 픽업",        file: "/proposals/proposal-morning-pickup.html",  accent: "#f5a623", tag: "Product Proposal" },
-  { id: "orderhero",      docId: "p-006", label: "오더히어로",       file: "/proposals/mockup-orderhero.html",         accent: "#05947f", tag: "Screen Mockup" },
-];
-
-function ProposalsSection() {
-  const [active, setActive] = useState("pitch");
-  const current = PROPOSALS.find(p => p.id === active) || PROPOSALS[0];
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "16px", height: "100%" }}>
-      {/* Sub-nav */}
-      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-        {PROPOSALS.map(p => (
-          <button
-            key={p.id}
-            onClick={() => setActive(p.id)}
-            style={{
-              padding: "7px 14px",
-              borderRadius: `${radius.rfull.value}px`,
-              border: active === p.id ? `1.5px solid ${p.accent}` : "1.5px solid #e5e5e5",
-              background: active === p.id ? p.accent : "#fff",
-              color: active === p.id ? "#fff" : "#555",
-              fontSize: "12px",
-              fontWeight: active === p.id ? 700 : 500,
-              cursor: "pointer",
-              transition: "all 0.15s",
-              whiteSpace: "nowrap",
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-            }}
-          >
-            <span style={{ fontSize: "10px", opacity: active === p.id ? 0.75 : 0.5, fontWeight: 700, letterSpacing: "0.02em" }}>#{p.docId}</span>
-            {p.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Meta bar */}
-      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-        <div style={{ background: current.accent, color: "#fff", fontSize: "9px", fontWeight: 700, padding: "3px 9px", borderRadius: "4px", letterSpacing: "0.08em" }}>{current.tag}</div>
-        <div style={{ fontSize: "11px", color: "#aaa" }}>{current.file.split("/").pop()}</div>
-        <a href={current.file} target="_blank" rel="noreferrer" style={{ marginLeft: "auto", fontSize: "11px", color: "#aaa", textDecoration: "none", padding: "4px 10px", border: "1px solid #e5e5e5", borderRadius: "6px", transition: "all 0.15s" }}
-          onMouseEnter={e => { e.currentTarget.style.background = "#f5f5f5"; e.currentTarget.style.color = "#555"; }}
-          onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#aaa"; }}>
-          새 탭에서 열기 ↗
-        </a>
-      </div>
-
-      {/* iframe viewer */}
-      <div style={{ flex: 1, minHeight: "600px", borderRadius: `${radius.r4.value}px`, overflow: "hidden", border: "1px solid #e5e5e5", background: "#f2f2f2" }}>
-        <iframe
-          key={current.file}
-          src={current.file}
-          title={current.label}
-          style={{ width: "100%", height: "100%", minHeight: "700px", border: "none", display: "block" }}
-        />
-      </div>
-    </div>
-  );
-}
 
 const NAV = [
   { id: "meta",        label: "Meta Tokens",   icon: "◉" },
@@ -3063,7 +2995,6 @@ const NAV = [
   { id: "glassnav",    label: "Liquid Glass",  icon: "✦" },
   { id: "drafts",      label: "Drafts",        icon: "◈" },
   { id: "figma",       label: "Category",      icon: "✦" },
-  { id: "proposals",   label: "Proposals",     icon: "📄" },
 ];
 
 // ── Toast system ─────────────────────────────────────────────────────────────
@@ -3178,11 +3109,10 @@ export default function App() {
     if (active === "glassnav")   return <GlassNavSection />;
     if (active === "drafts")     return <DraftsSection onUseInSimulator={draft => { setPendingDraft(draft); setActive("simulator"); }} />;
     if (active === "figma")      return <FigmaSection />;
-    if (active === "proposals")  return <ProposalsSection />;
   };
 
-  const titles    = { meta: "Meta Tokens", colors: "Color Tokens", typography: "Typography", spacing: "Spacing & Radius", elevation: "Elevation / Shadow", button: "Button", label: "Label", icons: "Icons", simulator: "Simulator", glassnav: "Liquid Glass Nav", drafts: "Drafts", figma: "Category", proposals: "Proposals" };
-  const subtitles = { meta: "YDS 2.0 Primitive Layer — Meta → Semantic → Component", colors: "YDS 2.0 Customer Token", typography: "Roboto 기반 타입 스케일", spacing: "스페이싱 및 보더 라디우스", elevation: "YDS 2.0 Elevation — Level 1 · 2 (normal & inverse)", button: "버튼 컴포넌트 — 멀티 플랫폼 코드", label: "라벨 컴포넌트 — 멀티 플랫폼 코드", icons: "YDS 2.0 System Icon — Figma 원본 기반", simulator: "iOS / Android 실시간 화면 시뮬레이션", glassnav: "OS 버전별 Glass Nav Bar — 호환성 + 코드 생성", drafts: "Figma에서 가져온 컴포넌트 — 관리 및 시뮬레이터 연동", figma: "Figma에서 추출한 카테고리 컴포넌트 — 리뉴얼-2026", proposals: "요기요 제품 제안서 — YDS 토큰 기반 문서 뷰어" };
+  const titles    = { meta: "Meta Tokens", colors: "Color Tokens", typography: "Typography", spacing: "Spacing & Radius", elevation: "Elevation / Shadow", button: "Button", label: "Label", icons: "Icons", simulator: "Simulator", glassnav: "Liquid Glass Nav", drafts: "Drafts", figma: "Category" };
+  const subtitles = { meta: "YDS 2.0 Primitive Layer — Meta → Semantic → Component", colors: "YDS 2.0 Customer Token", typography: "Roboto 기반 타입 스케일", spacing: "스페이싱 및 보더 라디우스", elevation: "YDS 2.0 Elevation — Level 1 · 2 (normal & inverse)", button: "버튼 컴포넌트 — 멀티 플랫폼 코드", label: "라벨 컴포넌트 — 멀티 플랫폼 코드", icons: "YDS 2.0 System Icon — Figma 원본 기반", simulator: "iOS / Android 실시간 화면 시뮬레이션", glassnav: "OS 버전별 Glass Nav Bar — 호환성 + 코드 생성", drafts: "Figma에서 가져온 컴포넌트 — 관리 및 시뮬레이터 연동", figma: "Figma에서 추출한 카테고리 컴포넌트 — 리뉴얼-2026" };
 
   return (
     <ToastProvider>
@@ -3226,20 +3156,13 @@ export default function App() {
           </button>
         ))}
         <div style={{ fontSize: "9px", color: "#bbbbbb", letterSpacing: "0.15em", textTransform: "uppercase", padding: "16px 16px 6px", fontWeight: 600 }}>Library</div>
-        {NAV.slice(10, 12).map(n => (
+        {NAV.slice(10).map(n => (
           <button key={n.id} onClick={() => setActive(n.id)}
             style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#e5e5e5" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #5028c8" : "2px solid transparent", color: active === n.id ? "#5028c8" : "#888888", fontSize: "12px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
             <span style={{ fontSize: "13px", opacity: 0.7 }}>{n.icon}</span>{n.label}
             {n.id === "drafts" && componentCount > 0 && (
               <span style={{ marginLeft:"auto", fontSize:"9px", background:"#5028c8", color:"#fff", borderRadius:"10px", padding:"1px 6px" }}>{componentCount}</span>
             )}
-          </button>
-        ))}
-        <div style={{ fontSize: "9px", color: "#bbbbbb", letterSpacing: "0.15em", textTransform: "uppercase", padding: "16px 16px 6px", fontWeight: 600 }}>Proposals</div>
-        {NAV.slice(12).map(n => (
-          <button key={n.id} onClick={() => setActive(n.id)}
-            style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#fff0f4" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #fa0050" : "2px solid transparent", color: active === n.id ? "#fa0050" : "#888888", fontSize: "12px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
-            <span style={{ fontSize: "13px", opacity: 0.7 }}>{n.icon}</span>{n.label}
           </button>
         ))}
         <div style={{ flex: 1 }} />
