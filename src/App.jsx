@@ -2984,12 +2984,12 @@ function FigmaSection() {
 // ── Proposals Section ─────────────────────────────────────────────────────────
 
 const PROPOSALS = [
-  { id: "pitch",          label: "파트너 AI 피치",   file: "/proposals/pitch-partner-ai.html",         accent: "#fa0050", tag: "Elevator Pitch" },
-  { id: "partner-ai",     label: "파트너 AI 제안",   file: "/proposals/proposal-partner-ai.html",      accent: "#fa0050", tag: "Full Proposal" },
-  { id: "closing-deal",   label: "마감딜",           file: "/proposals/proposal-closing-deal.html",    accent: "#f04600", tag: "Product Proposal" },
-  { id: "reorder",        label: "재주문 숏컷",      file: "/proposals/proposal-reorder.html",         accent: "#1a1a2e", tag: "Product Proposal" },
-  { id: "morning-pickup", label: "모닝 픽업",        file: "/proposals/proposal-morning-pickup.html",  accent: "#f5a623", tag: "Product Proposal" },
-  { id: "orderhero",      label: "오더히어로",       file: "/proposals/mockup-orderhero.html",         accent: "#05947f", tag: "Screen Mockup" },
+  { id: "pitch",          docId: "p-001", label: "파트너 AI 피치",   file: "/proposals/pitch-partner-ai.html",         accent: "#fa0050", tag: "Elevator Pitch" },
+  { id: "partner-ai",     docId: "p-002", label: "파트너 AI 제안",   file: "/proposals/proposal-partner-ai.html",      accent: "#fa0050", tag: "Full Proposal" },
+  { id: "closing-deal",   docId: "p-003", label: "마감딜",           file: "/proposals/proposal-closing-deal.html",    accent: "#f04600", tag: "Product Proposal" },
+  { id: "reorder",        docId: "p-004", label: "재주문 숏컷",      file: "/proposals/proposal-reorder.html",         accent: "#1a1a2e", tag: "Product Proposal" },
+  { id: "morning-pickup", docId: "p-005", label: "모닝 픽업",        file: "/proposals/proposal-morning-pickup.html",  accent: "#f5a623", tag: "Product Proposal" },
+  { id: "orderhero",      docId: "p-006", label: "오더히어로",       file: "/proposals/mockup-orderhero.html",         accent: "#05947f", tag: "Screen Mockup" },
 ];
 
 function ProposalsSection() {
@@ -3015,8 +3015,12 @@ function ProposalsSection() {
               cursor: "pointer",
               transition: "all 0.15s",
               whiteSpace: "nowrap",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
             }}
           >
+            <span style={{ fontSize: "10px", opacity: active === p.id ? 0.75 : 0.5, fontWeight: 700, letterSpacing: "0.02em" }}>#{p.docId}</span>
             {p.label}
           </button>
         ))}
