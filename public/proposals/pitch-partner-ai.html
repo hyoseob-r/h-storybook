@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="doc-created" content="2026-04-13">
+<meta name="doc-updated" content="2026-04-13">
+<meta name="doc-status" content="in-progress">
+<title>요기요 파트너 AI — 엘리베이터 피치</title>
+<style>
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Pretendard', -apple-system, sans-serif;
+    background: #f2f2f2;
+    color: #1a1a1a;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+
+  .page {
+    width: 720px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.10);
+    overflow: hidden;
+  }
+
+  /* Header */
+  .header {
+    background: #fa0050;
+    padding: 36px 44px 32px;
+    color: #fff;
+  }
+  .tag {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 12px;
+    letter-spacing: 0.04em;
+    margin-bottom: 16px;
+  }
+  .header h1 {
+    font-size: 30px;
+    font-weight: 900;
+    line-height: 1.2;
+    margin-bottom: 10px;
+  }
+  .header-sub {
+    font-size: 15px;
+    opacity: 0.88;
+    line-height: 1.65;
+    font-weight: 400;
+  }
+
+  /* Body */
+  .body {
+    padding: 36px 44px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: #999;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  /* Problem */
+  .problem-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+  .problem-card {
+    background: #f7f7f7;
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .problem-card .num {
+    font-size: 22px;
+    font-weight: 900;
+    color: #fa0050;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .problem-card .desc {
+    font-size: 12px;
+    color: #555;
+    line-height: 1.55;
+  }
+
+  /* One-liner */
+  .oneliner {
+    background: #fff8f9;
+    border: 1.5px solid #fecdd7;
+    border-radius: 12px;
+    padding: 20px 24px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a1a1a;
+    line-height: 1.6;
+  }
+  .oneliner span {
+    color: #fa0050;
+  }
+
+  /* How */
+  .how-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .how-card {
+    border-radius: 10px;
+    background: #f7f7f7;
+    padding: 18px;
+  }
+  .how-card .icon {
+    font-size: 20px;
+    margin-bottom: 8px;
+  }
+  .how-card h3 {
+    font-size: 13px;
+    font-weight: 800;
+    color: #1a1a1a;
+    margin-bottom: 5px;
+  }
+  .how-card p {
+    font-size: 12px;
+    color: #555;
+    line-height: 1.6;
+  }
+
+  /* Why now */
+  .why-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+  .why-card {
+    border-radius: 10px;
+    background: #f7f7f7;
+    padding: 14px 16px;
+    font-size: 12px;
+    color: #444;
+    line-height: 1.6;
+  }
+  .why-card strong {
+    display: block;
+    font-size: 12px;
+    font-weight: 800;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+  }
+
+  /* Ask */
+  .ask {
+    background: #1a1a1a;
+    border-radius: 12px;
+    padding: 22px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+  }
+  .ask-text {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.5;
+  }
+  .ask-text span {
+    color: #fa0050;
+  }
+  .ask-sub {
+    font-size: 11px;
+    color: #888;
+    margin-top: 4px;
+    font-weight: 400;
+  }
+  .ask-badge {
+    flex-shrink: 0;
+    background: #fa0050;
+    color: #fff;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  /* Story */
+  .story-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
+    gap: 0;
+    align-items: center;
+  }
+  .story-step {
+    background: #f7f7f7;
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .story-step.highlight {
+    background: #fff8f9;
+    border: 1.5px solid #fecdd7;
+  }
+  .story-num {
+    font-size: 10px;
+    font-weight: 800;
+    color: #fa0050;
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+  }
+  .story-text {
+    font-size: 12px;
+    color: #444;
+    line-height: 1.6;
+  }
+  .story-arrow {
+    text-align: center;
+    color: #ccc;
+    font-size: 16px;
+    padding: 0 6px;
+  }
+
+  /* Footer */
+  .footer {
+    padding: 16px 44px;
+    border-top: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .footer-left {
+    font-size: 11px;
+    color: #bbb;
+  }
+  .footer-right {
+    font-size: 11px;
+    color: #bbb;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="tag">Elevator Pitch · 요기요 파트너 AI</div>
+    <h1>요기요 사장님 이탈의<br>진짜 이유는 정보 비대칭입니다.</h1>
+    <p class="header-sub">사장님은 요기요가 불리하다고 느낍니다. 실제로 불리한 게 아닌데도.<br>파트너 AI는 그 인식을 데이터로 바꿉니다.</p>
+  </div>
+
+  <div class="body">
+
+    <!-- Story -->
+    <div>
+      <div class="label">Story — 왜 이 문제인가</div>
+      <div class="story-row">
+        <div class="story-step">
+          <div class="story-num">01</div>
+          <div class="story-text">사장님 대부분은 배민 위주로 운영합니다. 요기요는 2순위, 관리도 덜 합니다.</div>
+        </div>
+        <div class="story-arrow">→</div>
+        <div class="story-step">
+          <div class="story-num">02</div>
+          <div class="story-text">요기요엔 차등 수수료 구조가 있습니다. 주문이 쌓일수록 추가 주문의 수수료가 낮아집니다.</div>
+        </div>
+        <div class="story-arrow">→</div>
+        <div class="story-step">
+          <div class="story-num">03</div>
+          <div class="story-text">하지만 아무도 말해주지 않습니다. 사장님은 요기요가 그냥 비싸다고 알고 있습니다.</div>
+        </div>
+        <div class="story-arrow">→</div>
+        <div class="story-step highlight">
+          <div class="story-num">04</div>
+          <div class="story-text">파트너 AI가 말해줍니다. 숫자로, 지금 이 가게 기준으로, 행동 가능한 형태로.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- What changes -->
+    <div class="oneliner">
+      사장님이 요기요에서 더 팔게 되면 — <span>요기요 GMV가 올라갑니다.</span><br>
+      사장님을 설득하는 게 아니라, 사장님이 스스로 움직이게 만드는 구조입니다.
+    </div>
+
+    <!-- How -->
+    <div>
+      <div class="label">How — 파트너 AI가 하는 일</div>
+      <div class="how-row">
+        <div class="how-card">
+          <div class="icon">📊</div>
+          <h3>수수료 구조를 사장님 언어로</h3>
+          <p>"다음 구간까지 47건 더 팔면 이번 달 37,500원 아낍니다."<br>복잡한 구간 구조를 실시간 진행 바로 보여줍니다.</p>
+        </div>
+        <div class="how-card">
+          <div class="icon">💡</div>
+          <h3>분석 말고 실행</h3>
+          <p>"배달비 300원 낮추면 주문 +28% 예상 — 지금 바꿀까요?"<br>리포트로 끝나지 않고 탭 하나로 즉시 적용합니다.</p>
+        </div>
+        <div class="how-card">
+          <div class="icon">🔔</div>
+          <h3>사장님이 먼저 알게</h3>
+          <p>주문 -20% 감지 즉시 원인 추정 + 대응 제안.<br>대시보드 들어가서 확인할 필요 없습니다.</p>
+        </div>
+        <div class="how-card">
+          <div class="icon">📋</div>
+          <h3>정산을 투명하게</h3>
+          <p>주문 완료 즉시 예상 정산액 표시.<br>업계 전체가 깜깜이인 지금, 이것만으로 신뢰가 됩니다.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Why yogiyo wins -->
+    <div>
+      <div class="label">Why Yogiyo Wins</div>
+      <div class="why-row">
+        <div class="why-card">
+          <strong>배민은 이미 1위</strong>
+          점유율 1위 플랫폼이 사장님 관계를 바꿀 유인이 없습니다. 요기요만 이 카드를 쓸 수 있습니다.
+        </div>
+        <div class="why-card">
+          <strong>포스가 접점입니다</strong>
+          사장님이 하루 8시간 보는 건 앱이 아니라 포스입니다. 포스에 먼저 들어가면 배민 전용 가게에도 닿습니다.
+        </div>
+        <div class="why-card">
+          <strong>무료로 시작합니다</strong>
+          AI 어드바이저 무료 → 신뢰 구축 → 쿠폰·광고 집행으로 수익화. 사장님이 거절할 이유가 없습니다.
+        </div>
+      </div>
+    </div>
+
+    <!-- Ask -->
+    <div class="ask">
+      <div>
+        <div class="ask-text">요청: <span>파일럿 사장님 100명 + 포스사 MOU 협의 시작</span></div>
+        <div class="ask-sub">지방(대구·부산·경남) 먼저 · 8주 MVP · 포스 계약 없이도 사장님센터 단독 실행 가능</div>
+      </div>
+      <div class="ask-badge">세부 제안서 →</div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <span class="footer-left">요기요 파트너 AI · Elevator Pitch</span>
+    <span class="footer-right">세부 내용 → proposal-partner-ai</span>
+  </div>
+
+</div>
+</body>
+</html>
