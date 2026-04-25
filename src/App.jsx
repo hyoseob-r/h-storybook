@@ -1929,6 +1929,51 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
           </button>
         </div>
 
+        {/* Scroll */}
+        <div style={{ paddingTop:"10px", borderTop:"1px solid #e5e5e5", marginTop:"4px" }}>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"6px" }}>
+            <div style={{ fontSize:"10px", color:"#999999", letterSpacing:"0.08em", textTransform:"uppercase", fontWeight:600 }}>스크롤</div>
+            <button
+              onClick={() => updateItem(sel.id, { scroll: sel.scroll?.enabled ? null : { enabled:true, direction:"horizontal", clipW: sel.w||200, clipH: sel.h||120 } })}
+              style={{ padding:"2px 8px", borderRadius:"10px", fontSize:"9px", fontWeight:700, border:"none", cursor:"pointer", background: sel.scroll?.enabled ? "#111111" : "#f0f0f0", color: sel.scroll?.enabled ? "#ffffff" : "#888888", transition:"all 0.12s" }}>
+              {sel.scroll?.enabled ? "ON" : "OFF"}
+            </button>
+          </div>
+          {sel.scroll?.enabled && (<>
+            <div style={{ marginBottom:"6px" }}>
+              <div style={{ fontSize:"9px", color:"#bbbbbb", marginBottom:"3px" }}>방향</div>
+              <div style={{ display:"flex", gap:"4px" }}>
+                {[["horizontal","⇔ 가로"],["vertical","⇕ 세로"]].map(([d, label]) => (
+                  <button key={d}
+                    onClick={() => updateItem(sel.id, { scroll: { ...sel.scroll, direction:d } })}
+                    style={{ flex:1, padding:"5px", borderRadius:"5px", fontSize:"10px", background: sel.scroll.direction===d?"#111111":"transparent", color: sel.scroll.direction===d?"#ffffff":"#888888", border: sel.scroll.direction===d?"none":"1px solid #e5e5e5", cursor:"pointer", fontWeight: sel.scroll.direction===d?700:400 }}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"6px", marginBottom:"6px" }}>
+              <div>
+                <div style={{ fontSize:"9px", color:"#bbbbbb", marginBottom:"3px" }}>보이는 폭 (dp)</div>
+                <input type="number"
+                  value={sel.scroll.clipW}
+                  onChange={e => updateItem(sel.id, { scroll: { ...sel.scroll, clipW: Number(e.target.value) } })}
+                  style={{ width:"100%", padding:"4px 6px", borderRadius:"5px", border:"1px solid #d0d0d0", fontSize:"11px", color:"#111111", outline:"none", boxSizing:"border-box" }} />
+              </div>
+              <div>
+                <div style={{ fontSize:"9px", color:"#bbbbbb", marginBottom:"3px" }}>보이는 높이 (dp)</div>
+                <input type="number"
+                  value={sel.scroll.clipH}
+                  onChange={e => updateItem(sel.id, { scroll: { ...sel.scroll, clipH: Number(e.target.value) } })}
+                  style={{ width:"100%", padding:"4px 6px", borderRadius:"5px", border:"1px solid #d0d0d0", fontSize:"11px", color:"#111111", outline:"none", boxSizing:"border-box" }} />
+              </div>
+            </div>
+            <div style={{ fontSize:"9px", color:"#2591b5", background:"#f0f8fc", padding:"4px 7px", borderRadius:"5px", lineHeight:1.5 }}>
+              조립: 점선 클립 표시<br/>프로토타입: 실제 {sel.scroll.direction==="horizontal"?"좌우":"상하"} 스크롤
+            </div>
+          </>)}
+        </div>
+
         {/* Interaction */}
         {screens.length > 1 && (
           <div style={{ paddingTop:"10px", borderTop:"1px solid #e5e5e5", marginTop:"4px" }}>
@@ -2205,10 +2250,26 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
       <div style={{ flex:1, display:"flex", justifyContent:"center" }}>
         <PhoneFrame platform={platform} device={device} canvasMode darkMode={darkMode}>
           <div style={{ position:"absolute", inset:0 }} onClick={() => !isProto && setSelected(null)}>
-            {(isProto ? protoScreen?.items || [] : items).map(item => (
+            {(isProto ? protoScreen?.items || [] : items).map(item => {
+              const sc = item.scroll?.enabled ? item.scroll : null;
+              const clipW = sc?.clipW || item.w;
+              const clipH = sc?.clipH || item.h;
+              return (
               <div key={item.id}
                 ref={el => compRefs.current[item.id] = el}
-                style={{ position:"absolute", left:`${item.x}px`, top:`${item.y}px`, cursor: isProto ? (item.onTap ? "pointer" : "default") : item.isMaster?"pointer":"grab", ...(item.w ? { width:`${item.w}px` } : {}) }}
+                style={{
+                  position:"absolute", left:`${item.x}px`, top:`${item.y}px`,
+                  cursor: isProto ? (item.onTap ? "pointer" : "default") : item.isMaster?"pointer":"grab",
+                  ...(sc ? {
+                    width: `${clipW}px`,
+                    height: `${clipH}px`,
+                    overflowX: sc.direction==="horizontal" ? (isProto?"scroll":"hidden") : "hidden",
+                    overflowY: sc.direction==="vertical"   ? (isProto?"scroll":"hidden") : "hidden",
+                    WebkitOverflowScrolling:"touch",
+                    outline: !isProto ? `${sdp(1.5)}px dashed #2591b5` : "none",
+                    boxSizing:"border-box",
+                  } : item.w ? { width:`${item.w}px` } : {})
+                }}
                 onMouseDown={e => !isProto && startDrag(e, item)}
                 onMouseEnter={() => !isProto && setHovered(item.id)}
                 onMouseLeave={() => !isProto && setHovered(null)}
@@ -2218,11 +2279,18 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
                   }
                 }}
               >
+                {/* scroll direction badge (assembly only) */}
+                {!isProto && sc && (
+                  <div style={{ position:"absolute", top:`${sdp(-14)}px`, left:0, fontSize:`${sdp(9)}px`, color:"#2591b5", background:"#e8f5fa", padding:`${sdp(1)}px ${sdp(5)}px`, borderRadius:`${sdp(4)}px`, whiteSpace:"nowrap", zIndex:10, pointerEvents:"none", fontWeight:700 }}>
+                    {sc.direction==="horizontal" ? "⇔ 가로 스크롤" : "⇕ 세로 스크롤"}
+                  </div>
+                )}
                 {renderComp(item)}
                 {!isProto && hovered === item.id && selected !== item.id && renderSelectionBox(item, true)}
                 {!isProto && selected === item.id && renderSelectionBox(item, false)}
               </div>
-            ))}
+              );
+            })}
             {(isProto ? protoScreen?.items || [] : items).length === 0 && (
               <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", color:"#bbb", fontSize:`${sdp(12)}px`, fontFamily:"system-ui", pointerEvents:"none", flexDirection:"column", gap:`${sdp(6)}px` }}>
                 <span style={{ fontSize:`${sdp(24)}px`, opacity:0.3 }}>+</span>
