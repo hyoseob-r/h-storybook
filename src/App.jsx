@@ -1928,6 +1928,34 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
             삭제
           </button>
         </div>
+
+        {/* Interaction */}
+        {screens.length > 1 && (
+          <div style={{ paddingTop:"10px", borderTop:"1px solid #e5e5e5", marginTop:"4px" }}>
+            <div style={{ fontSize:"10px", color:"#999999", marginBottom:"6px", letterSpacing:"0.08em", textTransform:"uppercase", fontWeight:600 }}>인터랙션</div>
+            <div style={{ display:"flex", alignItems:"center", gap:"5px" }}>
+              <span style={{ fontSize:"10px", color:"#888888", flexShrink:0 }}>탭 →</span>
+              <select
+                value={sel.onTap?.screenId || ""}
+                onChange={e => {
+                  const val = e.target.value;
+                  updateItem(sel.id, { onTap: val ? { type:"navigate", screenId: Number(val) } : null });
+                }}
+                style={{ flex:1, padding:"4px 6px", borderRadius:"5px", border:"1px solid #d0d0d0", background:"#ffffff", fontSize:"10px", color:"#333333", outline:"none" }}>
+                <option value="">없음</option>
+                {screens.filter(s => s.id !== activeId).map(s => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+            </div>
+            {sel.onTap?.screenId && (
+              <div style={{ marginTop:"5px", fontSize:"9px", color:"#5028c8", background:"#f4f0ff", padding:"4px 7px", borderRadius:"5px", lineHeight:1.5 }}>
+                ▶ 프로토타입 모드에서 탭하면<br/>
+                "{screens.find(s => s.id === sel.onTap.screenId)?.name}"으로 이동
+              </div>
+            )}
+          </div>
+        )}
       </div>
     );
   };
@@ -2180,10 +2208,15 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
             {(isProto ? protoScreen?.items || [] : items).map(item => (
               <div key={item.id}
                 ref={el => compRefs.current[item.id] = el}
-                style={{ position:"absolute", left:`${item.x}px`, top:`${item.y}px`, cursor: isProto ? "default" : item.isMaster?"pointer":"grab", ...(item.w ? { width:`${item.w}px` } : {}) }}
+                style={{ position:"absolute", left:`${item.x}px`, top:`${item.y}px`, cursor: isProto ? (item.onTap ? "pointer" : "default") : item.isMaster?"pointer":"grab", ...(item.w ? { width:`${item.w}px` } : {}) }}
                 onMouseDown={e => !isProto && startDrag(e, item)}
                 onMouseEnter={() => !isProto && setHovered(item.id)}
                 onMouseLeave={() => !isProto && setHovered(null)}
+                onClick={() => {
+                  if (isProto && item.onTap?.type === "navigate") {
+                    setProtoScreenId(item.onTap.screenId);
+                  }
+                }}
               >
                 {renderComp(item)}
                 {!isProto && hovered === item.id && selected !== item.id && renderSelectionBox(item, true)}
