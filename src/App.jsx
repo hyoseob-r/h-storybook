@@ -1103,9 +1103,32 @@ function extractSvgSize(svgStr) {
   return { w: w || 100, h: h || 100 };
 }
 
-// ── Figma Import Panel (SVG paste) ──────────────────────────────────────────
+// ── Figma URL 파싱 유틸 ───────────────────────────────────────────────────────
+function parseFigmaUrl(url) {
+  try {
+    const u = new URL(url.trim());
+    const parts = u.pathname.split("/").filter(Boolean);
+    // /design/{fileKey}/... or /file/{fileKey}/...
+    const keyIdx = parts.findIndex(p => p === "design" || p === "file" || p === "proto");
+    if (keyIdx === -1 || keyIdx + 1 >= parts.length) return null;
+    const fileKey = parts[keyIdx + 1];
+    const rawId = u.searchParams.get("node-id") || u.searchParams.get("nodeId") || null;
+    const nodeId = rawId ? rawId.replace(/-/g, ":") : null;
+    return { fileKey, nodeId };
+  } catch { return null; }
+}
+
+// ── Figma Import Panel (SVG paste + URL fetch) ───────────────────────────────
 function FigmaImportPanel({ onAdd, onClose }) {
   const toast = useToast();
+  const [tab,      setTab]      = useState("url"); // "url" | "svg"
+  // URL 탭
+  const [figmaUrl, setFigmaUrl] = useState("");
+  const [token,    setToken]    = useState(() => localStorage.getItem("figma_token") || "");
+  const [showToken, setShowToken] = useState(false);
+  const [fetching, setFetching] = useState(false);
+  const [fetchError, setFetchError] = useState("");
+  // SVG 탭 (기존)
   const [svg,      setSvg]      = useState("");
   const [error,    setError]    = useState("");
   const [name,     setName]     = useState("Untitled");
@@ -1115,6 +1138,64 @@ function FigmaImportPanel({ onAdd, onClose }) {
   const [progress, setProgress] = useState(0);
   const cancelRef  = useRef(false);
   const timerRef   = useRef(null);
+
+  const saveToken = (t) => {
+    setToken(t);
+    localStorage.setItem("figma_token", t);
+  };
+
+  const handleFetchFromUrl = async () => {
+    setFetchError("");
+    const parsed = parseFigmaUrl(figmaUrl);
+    if (!parsed) { setFetchError("올바른 Figma URL이 아닙니다."); return; }
+    if (!token.trim()) { setFetchError("Figma Access Token을 입력해주세요."); return; }
+    const { fileKey, nodeId } = parsed;
+    if (!nodeId) { setFetchError("node-id가 URL에 없습니다. 레이어를 선택하고 링크를 복사해주세요."); return; }
+    setFetching(true);
+    try {
+      // 1. Figma API로 SVG export URL 요청
+      const idsParam = encodeURIComponent(nodeId);
+      const res = await fetch(
+        `https://api.figma.com/v1/images/${fileKey}?ids=${idsParam}&format=svg&svg_include_id=true`,
+        { headers: { "X-Figma-Token": token.trim() } }
+      );
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || `Figma API 오류 (${res.status})`);
+      }
+      const data = await res.json();
+      const svgUrl = data.images?.[nodeId] || Object.values(data.images || {})[0];
+      if (!svgUrl) throw new Error("SVG URL을 가져오지 못했습니다.");
+
+      // 2. SVG 파일 fetch
+      const svgRes = await fetch(svgUrl);
+      if (!svgRes.ok) throw new Error("SVG 다운로드 실패");
+      const svgText = await svgRes.text();
+
+      // 3. 이름 추출 (노드명 가져오기)
+      let frameName = "Untitled";
+      try {
+        const nodeRes = await fetch(
+          `https://api.figma.com/v1/files/${fileKey}/nodes?ids=${idsParam}`,
+          { headers: { "X-Figma-Token": token.trim() } }
+        );
+        const nodeData = await nodeRes.json();
+        const node = Object.values(nodeData.nodes || {})[0];
+        if (node?.document?.name) frameName = node.document.name;
+      } catch {}
+
+      // 4. SVG 탭으로 이동해서 저장 플로우 이어받기
+      setSvg(svgText);
+      setName(frameName);
+      setTab("svg");
+      setTimeout(() => handlePaste(svgText), 0);
+      toast("Figma에서 가져왔습니다!", "success");
+    } catch (e) {
+      setFetchError(e.message);
+    } finally {
+      setFetching(false);
+    }
+  };
 
   const handlePaste = (val) => {
     setSvg(val);
@@ -1213,25 +1294,84 @@ function FigmaImportPanel({ onAdd, onClose }) {
 
   return (
     <div style={{ background:"#ffffff", border:"1px solid #e5e5e5", borderRadius:"10px", padding:"12px", display:"flex", flexDirection:"column", gap:"8px" }}>
+      {/* 헤더 */}
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-        <div style={{ fontSize:"10px", fontWeight:700, color:"#333333", letterSpacing:"0.1em", textTransform:"uppercase" }}>Figma → SVG 붙여넣기</div>
+        <div style={{ display:"flex", gap:"4px" }}>
+          {[["url","🔗 URL"], ["svg","📋 SVG"]].map(([t, label]) => (
+            <button key={t} onClick={() => setTab(t)}
+              style={{ padding:"3px 10px", borderRadius:"20px", fontSize:"10px", fontWeight: tab===t ? 700 : 400, background: tab===t ? "#111111" : "transparent", color: tab===t ? "#ffffff" : "#aaaaaa", border: tab===t ? "none" : "1px solid #e5e5e5", cursor:"pointer" }}>
+              {label}
+            </button>
+          ))}
+        </div>
         <button onClick={handleClose} style={{ background:"none", border:"none", color:"#aaaaaa", cursor:"pointer", fontSize:"14px", lineHeight:1 }}>×</button>
       </div>
-      <div style={{ background:"#f0f4ff", border:"1px solid #c5d3f5", borderRadius:"6px", padding:"8px 10px", fontSize:"10px", color:"#3355aa", lineHeight:1.7 }}>
-        Figma에서 레이어 선택<br/>
-        → 우클릭 → <b>Copy/Paste as → Copy as SVG</b><br/>
-        → 아래에 붙여넣기 (Ctrl+V / ⌘V)
-      </div>
-      <textarea
-        value={svg}
-        onChange={e => handlePaste(e.target.value)}
-        onPaste={e => { setTimeout(() => handlePaste(e.target.value), 0); }}
-        placeholder="<svg xmlns=... 여기에 붙여넣기"
-        style={{ width:"100%", height:"64px", background:"#f8f8f8", border:`1px solid ${error?"#cc3333":ready?"#5028c8":"#d0d0d0"}`, borderRadius:"6px", padding:"6px 8px", fontSize:"10px", fontFamily:"monospace", color:"#333333", resize:"none", outline:"none", boxSizing:"border-box" }}
-      />
-      {error && <div style={{ fontSize:"10px", color:"#cc3333", lineHeight:1.5 }}>{error}</div>}
 
-      {ready && step === "idle" && (
+      {/* URL 탭 */}
+      {tab === "url" && (
+        <div style={{ display:"flex", flexDirection:"column", gap:"8px" }}>
+          {/* Token 설정 */}
+          <div style={{ background:"#f8f8f8", border:"1px solid #e5e5e5", borderRadius:"6px", padding:"8px 10px", display:"flex", flexDirection:"column", gap:"6px" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <span style={{ fontSize:"10px", fontWeight:700, color:"#555555" }}>Figma Access Token</span>
+              <button onClick={() => setShowToken(p => !p)} style={{ fontSize:"9px", color:"#aaaaaa", background:"none", border:"none", cursor:"pointer" }}>{showToken ? "숨기기" : "보기"}</button>
+            </div>
+            <input
+              type={showToken ? "text" : "password"}
+              value={token}
+              onChange={e => saveToken(e.target.value)}
+              placeholder="figd_xxxxxxxx..."
+              style={{ width:"100%", padding:"5px 8px", borderRadius:"5px", border:"1px solid #e0e0e0", fontSize:"10px", fontFamily:"monospace", color:"#333333", outline:"none", boxSizing:"border-box", background:"#ffffff" }}
+            />
+            {!token && (
+              <div style={{ fontSize:"9px", color:"#aaaaaa", lineHeight:1.6 }}>
+                Figma → Settings → Security → Personal access tokens → Generate new token
+              </div>
+            )}
+          </div>
+
+          {/* URL 입력 */}
+          <input
+            value={figmaUrl}
+            onChange={e => { setFigmaUrl(e.target.value); setFetchError(""); }}
+            placeholder="https://www.figma.com/design/..."
+            style={{ width:"100%", padding:"7px 10px", borderRadius:"6px", border:`1px solid ${fetchError?"#cc3333":"#e0e0e0"}`, fontSize:"11px", color:"#333333", outline:"none", boxSizing:"border-box" }}
+          />
+          {fetchError && <div style={{ fontSize:"10px", color:"#cc3333" }}>{fetchError}</div>}
+
+          <button
+            onClick={handleFetchFromUrl}
+            disabled={fetching || !figmaUrl.trim()}
+            style={{ padding:"8px", borderRadius:"6px", background: fetching || !figmaUrl.trim() ? "#cccccc" : "#111111", border:"none", color:"#ffffff", fontSize:"11px", fontWeight:700, cursor: fetching || !figmaUrl.trim() ? "default" : "pointer" }}>
+            {fetching ? "가져오는 중..." : "→ 컴포넌트로 가져오기"}
+          </button>
+
+          <div style={{ fontSize:"9px", color:"#aaaaaa", lineHeight:1.7 }}>
+            Figma에서 레이어 선택 → 우클릭 → Copy link to selection → 붙여넣기
+          </div>
+        </div>
+      )}
+
+      {/* SVG 탭 (기존) */}
+      {tab === "svg" && (
+        <>
+          <div style={{ background:"#f0f4ff", border:"1px solid #c5d3f5", borderRadius:"6px", padding:"8px 10px", fontSize:"10px", color:"#3355aa", lineHeight:1.7 }}>
+            Figma에서 레이어 선택<br/>
+            → 우클릭 → <b>Copy/Paste as → Copy as SVG</b><br/>
+            → 아래에 붙여넣기 (Ctrl+V / ⌘V)
+          </div>
+          <textarea
+            value={svg}
+            onChange={e => handlePaste(e.target.value)}
+            onPaste={e => { setTimeout(() => handlePaste(e.target.value), 0); }}
+            placeholder="<svg xmlns=... 여기에 붙여넣기"
+            style={{ width:"100%", height:"64px", background:"#f8f8f8", border:`1px solid ${error?"#cc3333":ready?"#5028c8":"#d0d0d0"}`, borderRadius:"6px", padding:"6px 8px", fontSize:"10px", fontFamily:"monospace", color:"#333333", resize:"none", outline:"none", boxSizing:"border-box" }}
+          />
+          {error && <div style={{ fontSize:"10px", color:"#cc3333", lineHeight:1.5 }}>{error}</div>}
+        </>
+      )}
+
+      {tab === "svg" && ready && step === "idle" && (
         <>
           {/* Preview */}
           <div style={{ background:"#f5f5f5", border:"1px solid #e5e5e5", borderRadius:"6px", padding:"8px", overflow:"hidden", display:"flex", flexDirection:"column", gap:"6px" }}>
@@ -1259,7 +1399,7 @@ function FigmaImportPanel({ onAdd, onClose }) {
       )}
 
       {/* ── 저장 전 확인 단계 ── */}
-      {step === "confirming" && (
+      {tab === "svg" && step === "confirming" && (
         <div style={{ background:"#f5f0ff", border:"1px solid #b090ee", borderRadius:"8px", padding:"12px", display:"flex", flexDirection:"column", gap:"10px" }}>
           <div style={{ fontSize:"11px", fontWeight:700, color:"#3a0a8a" }}>저장하기 전에 확인해주세요</div>
           <div style={{ display:"grid", gridTemplateColumns:"auto 1fr", gap:"4px 10px", fontSize:"10px" }}>
@@ -1286,7 +1426,7 @@ function FigmaImportPanel({ onAdd, onClose }) {
       )}
 
       {/* ── 저장 진행 중 ── */}
-      {step === "saving" && (
+      {tab === "svg" && step === "saving" && (
         <div style={{ background:"#f8f8f8", border:"1px solid #e0e0e0", borderRadius:"8px", padding:"12px", display:"flex", flexDirection:"column", gap:"10px" }}>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
             <div style={{ fontSize:"11px", fontWeight:600, color:"#333" }}>저장 중...</div>
@@ -1304,7 +1444,7 @@ function FigmaImportPanel({ onAdd, onClose }) {
       )}
 
       {/* ── 저장 완료 ── */}
-      {step === "done" && (
+      {tab === "svg" && step === "done" && (
         <div style={{ background:"#e8f5e8", border:"1px solid #5aaa5a", borderRadius:"6px", padding:"10px", display:"flex", flexDirection:"column", gap:"8px" }}>
           <div style={{ fontSize:"11px", color:"#2a7a2a", fontWeight:700 }}>✓ Draft에 저장됐습니다</div>
           <div style={{ height:"4px", background:"#5aaa5a", borderRadius:"2px" }} />
