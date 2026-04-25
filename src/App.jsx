@@ -1491,12 +1491,56 @@ function FigmaImportPanel({ onAdd, onClose }) {
   );
 }
 
+const newScreenId = () => Date.now();
+const makeScreen = (name) => ({ id: newScreenId(), name, items: [] });
+
 function SimulatorSection({ pendingDraft, onDraftConsumed }) {
   const toast = useToast();
   const [mode,      setMode]      = useState("assembly"); // "assembly" | "prototype"
   const [platform,  setPlatform]  = useState("ios");
   const [deviceIdx, setDeviceIdx] = useState(2);
-  const [items,     setItems]     = useState([]);
+
+  // ── 화면 관리 ────────────────────────────────────────────────────────────────
+  const [screens,        setScreens]        = useState([makeScreen("Screen 1")]);
+  const [activeScreenId, setActiveScreenId] = useState(null);
+  const [protoScreenId,  setProtoScreenId]  = useState(null); // 프로토 모드 현재 화면
+  const [renamingId,     setRenamingId]     = useState(null);
+  const [renameVal,      setRenameVal]      = useState("");
+
+  const activeId     = activeScreenId ?? screens[0]?.id;
+  const activeScreen = screens.find(s => s.id === activeId) || screens[0];
+  const items        = activeScreen?.items || [];
+
+  const setItems = (updater) => {
+    setScreens(prev => prev.map(s =>
+      s.id === activeId
+        ? { ...s, items: typeof updater === "function" ? updater(s.items) : updater }
+        : s
+    ));
+  };
+
+  const addScreen = () => {
+    const s = makeScreen(`Screen ${screens.length + 1}`);
+    setScreens(prev => [...prev, s]);
+    setActiveScreenId(s.id);
+  };
+
+  const removeScreen = (id) => {
+    if (screens.length === 1) { toast("마지막 화면은 삭제할 수 없습니다", "warning"); return; }
+    setScreens(prev => prev.filter(s => s.id !== id));
+    if (activeId === id) setActiveScreenId(screens.find(s => s.id !== id)?.id || null);
+  };
+
+  const startRename = (s) => { setRenamingId(s.id); setRenameVal(s.name); };
+  const commitRename = () => {
+    if (renameVal.trim()) setScreens(prev => prev.map(s => s.id === renamingId ? { ...s, name: renameVal.trim() } : s));
+    setRenamingId(null);
+  };
+
+  // 프로토타입 현재 화면
+  const protoId     = protoScreenId ?? screens[0]?.id;
+  const protoScreen = screens.find(s => s.id === protoId) || screens[0];
+
   const [selected,  setSelected]  = useState(null);
   const [hovered,   setHovered]   = useState(null);
   const [snapGrid,      setSnapGrid]      = useState(true);
@@ -1505,6 +1549,7 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
   const [showDraftPicker, setShowDraftPicker] = useState(false);
   const [pickerDrafts,    setPickerDrafts]    = useState([]);
   const [pickerLoading,   setPickerLoading]   = useState(false);
+  const [showCode,        setShowCode]        = useState(false);
 
   const isProto = mode === "prototype";
 
@@ -1904,6 +1949,81 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
         </div>
       </div>
 
+      {/* Screens tab bar */}
+      <div style={{ display:"flex", alignItems:"center", gap:"4px", padding:"6px 10px", background:"#f8f8f8", border:"1px solid #e5e5e5", borderRadius:"10px", minHeight:"36px" }}>
+        {isProto ? (
+          /* Prototype mode: prev/next navigation */
+          <>
+            <button
+              onClick={() => {
+                const idx = screens.findIndex(s => s.id === protoId);
+                if (idx > 0) setProtoScreenId(screens[idx - 1].id);
+              }}
+              disabled={screens.findIndex(s => s.id === protoId) === 0}
+              style={{ padding:"3px 8px", borderRadius:"5px", background:"transparent", border:"1px solid #e0e0e0", color: screens.findIndex(s => s.id === protoId) === 0 ? "#d0d0d0" : "#555555", fontSize:"11px", cursor: screens.findIndex(s => s.id === protoId) === 0 ? "default" : "pointer" }}>
+              ‹
+            </button>
+            <div style={{ display:"flex", gap:"3px", flex:1, justifyContent:"center" }}>
+              {screens.map((s, idx) => (
+                <button key={s.id} onClick={() => setProtoScreenId(s.id)}
+                  style={{ padding:"4px 12px", borderRadius:"16px", fontSize:"11px", background: protoId === s.id ? "#111111" : "transparent", color: protoId === s.id ? "#ffffff" : "#888888", border: protoId === s.id ? "none" : "1px solid #e0e0e0", cursor:"pointer", fontWeight: protoId === s.id ? 700 : 400, transition:"all 0.12s" }}>
+                  {s.name}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => {
+                const idx = screens.findIndex(s => s.id === protoId);
+                if (idx < screens.length - 1) setProtoScreenId(screens[idx + 1].id);
+              }}
+              disabled={screens.findIndex(s => s.id === protoId) === screens.length - 1}
+              style={{ padding:"3px 8px", borderRadius:"5px", background:"transparent", border:"1px solid #e0e0e0", color: screens.findIndex(s => s.id === protoId) === screens.length - 1 ? "#d0d0d0" : "#555555", fontSize:"11px", cursor: screens.findIndex(s => s.id === protoId) === screens.length - 1 ? "default" : "pointer" }}>
+              ›
+            </button>
+          </>
+        ) : (
+          /* Assembly mode: screen tabs + add/rename/delete */
+          <>
+            {screens.map(s => (
+              <div key={s.id} style={{ display:"flex", alignItems:"center", gap:"2px", position:"relative" }}>
+                {renamingId === s.id ? (
+                  <input
+                    autoFocus
+                    value={renameVal}
+                    onChange={e => setRenameVal(e.target.value)}
+                    onBlur={() => { setScreens(prev => prev.map(sc => sc.id === s.id ? { ...sc, name: renameVal || sc.name } : sc)); setRenamingId(null); }}
+                    onKeyDown={e => {
+                      if (e.key === "Enter") { setScreens(prev => prev.map(sc => sc.id === s.id ? { ...sc, name: renameVal || sc.name } : sc)); setRenamingId(null); }
+                      if (e.key === "Escape") setRenamingId(null);
+                    }}
+                    style={{ padding:"3px 8px", borderRadius:"5px", border:"1px solid #5028c8", fontSize:"11px", color:"#111111", outline:"none", width:"90px", background:"#fff" }}
+                  />
+                ) : (
+                  <button
+                    onClick={() => setActiveScreenId(s.id)}
+                    onDoubleClick={() => { setRenamingId(s.id); setRenameVal(s.name); }}
+                    style={{ padding:"4px 10px", borderRadius:"16px", fontSize:"11px", background: activeId === s.id ? "#111111" : "transparent", color: activeId === s.id ? "#ffffff" : "#888888", border: activeId === s.id ? "none" : "1px solid #e0e0e0", cursor:"pointer", fontWeight: activeId === s.id ? 700 : 400, transition:"all 0.12s", display:"flex", alignItems:"center", gap:"5px" }}>
+                    {s.name}
+                    {screens.length > 1 && (
+                      <span
+                        onClick={e => { e.stopPropagation(); removeScreen(s.id); }}
+                        style={{ fontSize:"10px", color: activeId === s.id ? "#ffffff88" : "#cccccc", lineHeight:1, marginLeft:"2px" }}>×</span>
+                    )}
+                  </button>
+                )}
+              </div>
+            ))}
+            <button onClick={addScreen}
+              style={{ padding:"4px 8px", borderRadius:"5px", background:"transparent", border:"1px dashed #d0d0d0", color:"#aaaaaa", fontSize:"11px", cursor:"pointer", flexShrink:0, marginLeft:"2px" }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor="#5028c8"; e.currentTarget.style.color="#5028c8"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor="#d0d0d0"; e.currentTarget.style.color="#aaaaaa"; }}>
+              + 화면
+            </button>
+            <div style={{ fontSize:"9px", color:"#cccccc", marginLeft:"auto", flexShrink:0 }}>더블클릭 → 이름 편집</div>
+          </>
+        )}
+      </div>
+
     <div style={{ display:"flex", gap:"16px", alignItems:"flex-start" }}>
 
       {/* Left: Device + Palette + Layers */}
@@ -2057,7 +2177,7 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
       <div style={{ flex:1, display:"flex", justifyContent:"center" }}>
         <PhoneFrame platform={platform} device={device} canvasMode darkMode={darkMode}>
           <div style={{ position:"absolute", inset:0 }} onClick={() => !isProto && setSelected(null)}>
-            {items.map(item => (
+            {(isProto ? protoScreen?.items || [] : items).map(item => (
               <div key={item.id}
                 ref={el => compRefs.current[item.id] = el}
                 style={{ position:"absolute", left:`${item.x}px`, top:`${item.y}px`, cursor: isProto ? "default" : item.isMaster?"pointer":"grab", ...(item.w ? { width:`${item.w}px` } : {}) }}
@@ -2070,7 +2190,7 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
                 {!isProto && selected === item.id && renderSelectionBox(item, false)}
               </div>
             ))}
-            {items.length === 0 && (
+            {(isProto ? protoScreen?.items || [] : items).length === 0 && (
               <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", color:"#bbb", fontSize:`${sdp(12)}px`, fontFamily:"system-ui", pointerEvents:"none", flexDirection:"column", gap:`${sdp(6)}px` }}>
                 <span style={{ fontSize:`${sdp(24)}px`, opacity:0.3 }}>+</span>
                 <span style={{ opacity:0.4 }}>{isProto ? "조립 모드에서 컴포넌트를 추가하세요" : "Add에서 컴포넌트 추가"}</span>
