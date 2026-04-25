@@ -1493,6 +1493,7 @@ function FigmaImportPanel({ onAdd, onClose }) {
 
 function SimulatorSection({ pendingDraft, onDraftConsumed }) {
   const toast = useToast();
+  const [mode,      setMode]      = useState("assembly"); // "assembly" | "prototype"
   const [platform,  setPlatform]  = useState("ios");
   const [deviceIdx, setDeviceIdx] = useState(2);
   const [items,     setItems]     = useState([]);
@@ -1504,6 +1505,8 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
   const [showDraftPicker, setShowDraftPicker] = useState(false);
   const [pickerDrafts,    setPickerDrafts]    = useState([]);
   const [pickerLoading,   setPickerLoading]   = useState(false);
+
+  const isProto = mode === "prototype";
 
   useEffect(() => {
     if (!pendingDraft) return;
@@ -1886,10 +1889,25 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
 
   // ── layout ───────────────────────────────────────────────────────────────────
   return (
+    <div style={{ display:"flex", flexDirection:"column", gap:"12px" }}>
+
+      {/* Mode toggle */}
+      <div style={{ display:"flex", alignItems:"center", gap:"6px" }}>
+        {[["assembly","⬚ 조립"], ["prototype","▶ 프로토타이핑"]].map(([m, label]) => (
+          <button key={m} onClick={() => { setMode(m); setSelected(null); }}
+            style={{ padding:"6px 16px", borderRadius:"20px", fontSize:"11px", fontWeight: mode===m ? 700 : 400, background: mode===m ? "#111111" : "transparent", color: mode===m ? "#ffffff" : "#888888", border: mode===m ? "none" : "1px solid #e0e0e0", cursor:"pointer", transition:"all 0.15s" }}>
+            {label}
+          </button>
+        ))}
+        <div style={{ fontSize:"10px", color:"#cccccc", marginLeft:"8px" }}>
+          {isProto ? "실제 앱처럼 — 클릭/인터랙션 확인" : "컴포넌트 배치 및 편집"}
+        </div>
+      </div>
+
     <div style={{ display:"flex", gap:"16px", alignItems:"flex-start" }}>
 
       {/* Left: Device + Palette + Layers */}
-      <div style={{ width:"196px", flexShrink:0, display:"flex", flexDirection:"column", gap:"10px" }}>
+      {!isProto && <div style={{ width:"196px", flexShrink:0, display:"flex", flexDirection:"column", gap:"10px" }}>
 
         <div style={{ background:"#ffffff", border:"1px solid #e5e5e5", borderRadius:"10px", padding:"12px" }}>
           <div style={{ fontSize:"10px", color:"#999999", letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:"8px", fontWeight:600 }}>Platform</div>
@@ -2033,40 +2051,41 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
               </div>
           }
         </div>
-      </div>
+      </div>}
 
       {/* Center: Phone canvas */}
       <div style={{ flex:1, display:"flex", justifyContent:"center" }}>
         <PhoneFrame platform={platform} device={device} canvasMode darkMode={darkMode}>
-          <div style={{ position:"absolute", inset:0 }} onClick={() => setSelected(null)}>
+          <div style={{ position:"absolute", inset:0 }} onClick={() => !isProto && setSelected(null)}>
             {items.map(item => (
               <div key={item.id}
                 ref={el => compRefs.current[item.id] = el}
-                style={{ position:"absolute", left:`${item.x}px`, top:`${item.y}px`, cursor: item.isMaster?"pointer":"grab", ...(item.w ? { width:`${item.w}px` } : {}) }}
-                onMouseDown={e => startDrag(e, item)}
-                onMouseEnter={() => setHovered(item.id)}
-                onMouseLeave={() => setHovered(null)}
+                style={{ position:"absolute", left:`${item.x}px`, top:`${item.y}px`, cursor: isProto ? "default" : item.isMaster?"pointer":"grab", ...(item.w ? { width:`${item.w}px` } : {}) }}
+                onMouseDown={e => !isProto && startDrag(e, item)}
+                onMouseEnter={() => !isProto && setHovered(item.id)}
+                onMouseLeave={() => !isProto && setHovered(null)}
               >
                 {renderComp(item)}
-                {hovered === item.id && selected !== item.id && renderSelectionBox(item, true)}
-                {selected === item.id && renderSelectionBox(item, false)}
+                {!isProto && hovered === item.id && selected !== item.id && renderSelectionBox(item, true)}
+                {!isProto && selected === item.id && renderSelectionBox(item, false)}
               </div>
             ))}
             {items.length === 0 && (
               <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", color:"#bbb", fontSize:`${sdp(12)}px`, fontFamily:"system-ui", pointerEvents:"none", flexDirection:"column", gap:`${sdp(6)}px` }}>
                 <span style={{ fontSize:`${sdp(24)}px`, opacity:0.3 }}>+</span>
-                <span style={{ opacity:0.4 }}>Add에서 컴포넌트 추가</span>
+                <span style={{ opacity:0.4 }}>{isProto ? "조립 모드에서 컴포넌트를 추가하세요" : "Add에서 컴포넌트 추가"}</span>
               </div>
             )}
           </div>
         </PhoneFrame>
       </div>
 
-      {/* Right: Properties */}
-      <div style={{ width:"196px", flexShrink:0, background:"#ffffff", border:"1px solid #e5e5e5", borderRadius:"10px", overflow:"hidden" }}>
+      {/* Right: Properties (조립 모드만) */}
+      {!isProto && <div style={{ width:"196px", flexShrink:0, background:"#ffffff", border:"1px solid #e5e5e5", borderRadius:"10px", overflow:"hidden" }}>
         {renderProps()}
-      </div>
+      </div>}
 
+    </div>
     </div>
   );
 }
