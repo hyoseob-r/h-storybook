@@ -1128,6 +1128,9 @@ function FigmaImportPanel({ onAdd, onClose }) {
   const [showToken, setShowToken] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [fetchError, setFetchError] = useState("");
+  const [fetchStart, setFetchStart] = useState(null);
+  const [fetchElapsed, setFetchElapsed] = useState(0);
+  const fetchTimerRef = useRef(null);
   // SVG 탭 (기존)
   const [svg,      setSvg]      = useState("");
   const [error,    setError]    = useState("");
@@ -1151,7 +1154,13 @@ function FigmaImportPanel({ onAdd, onClose }) {
     if (!token.trim()) { setFetchError("Figma Access Token을 입력해주세요."); return; }
     const { fileKey, nodeId } = parsed;
     if (!nodeId) { setFetchError("node-id가 URL에 없습니다. 레이어를 선택하고 링크를 복사해주세요."); return; }
+    const start = Date.now();
+    setFetchStart(start);
+    setFetchElapsed(0);
     setFetching(true);
+    fetchTimerRef.current = setInterval(() => {
+      setFetchElapsed(Math.floor((Date.now() - start) / 1000));
+    }, 500);
     try {
       // 1. Figma API로 SVG export URL 요청
       const idsParam = encodeURIComponent(nodeId);
@@ -1193,7 +1202,9 @@ function FigmaImportPanel({ onAdd, onClose }) {
     } catch (e) {
       setFetchError(e.message);
     } finally {
+      clearInterval(fetchTimerRef.current);
       setFetching(false);
+      setFetchStart(null);
     }
   };
 
@@ -1342,9 +1353,25 @@ function FigmaImportPanel({ onAdd, onClose }) {
           <button
             onClick={handleFetchFromUrl}
             disabled={fetching || !figmaUrl.trim()}
-            style={{ padding:"8px", borderRadius:"6px", background: fetching || !figmaUrl.trim() ? "#cccccc" : "#111111", border:"none", color:"#ffffff", fontSize:"11px", fontWeight:700, cursor: fetching || !figmaUrl.trim() ? "default" : "pointer" }}>
-            {fetching ? "가져오는 중..." : "→ 컴포넌트로 가져오기"}
+            style={{ padding:"8px", borderRadius:"6px", background: fetching || !figmaUrl.trim() ? "#cccccc" : "#111111", border:"none", color:"#ffffff", fontSize:"11px", fontWeight:700, cursor: fetching || !figmaUrl.trim() ? "default" : "pointer", display:"flex", alignItems:"center", justifyContent:"space-between", gap:"8px" }}>
+            <span>{fetching ? "가져오는 중..." : "→ 컴포넌트로 가져오기"}</span>
+            {fetching && (
+              <span style={{ fontSize:"10px", fontWeight:400, opacity:0.85, fontVariantNumeric:"tabular-nums", whiteSpace:"nowrap" }}>
+                {fetchElapsed}s <span style={{ opacity:0.6 }}>/ ~{fetchElapsed < 3 ? 8 : fetchElapsed < 6 ? 12 : 15}s</span>
+              </span>
+            )}
           </button>
+          {fetching && (
+            <div style={{ height:"3px", background:"#e5e5e5", borderRadius:"2px", overflow:"hidden" }}>
+              <div style={{
+                height:"100%",
+                width:`${Math.min((fetchElapsed / 15) * 100, 92)}%`,
+                background:"linear-gradient(90deg, #5028c8, #8855ff)",
+                borderRadius:"2px",
+                transition:"width 0.5s ease"
+              }} />
+            </div>
+          )}
 
           <div style={{ fontSize:"9px", color:"#aaaaaa", lineHeight:1.7 }}>
             Figma에서 레이어 선택 → 우클릭 → Copy link to selection → 붙여넣기
