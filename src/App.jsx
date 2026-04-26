@@ -1602,6 +1602,41 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
   const itemsRef = useRef(items);
   useEffect(() => { itemsRef.current = items; }, [items]);
 
+  // ── prototype pinch-zoom ──────────────────────────────────────────────────────
+  const [protoScale, setProtoScale] = useState(1);
+  const pinchRef = useRef(null); // { dist0, scale0 }
+  const protoFrameRef = useRef(null);
+  useEffect(() => {
+    const el = protoFrameRef.current;
+    if (!el || !isProto) return;
+    const dist = (t) => {
+      const dx = t[0].clientX - t[1].clientX;
+      const dy = t[0].clientY - t[1].clientY;
+      return Math.hypot(dx, dy);
+    };
+    const onStart = (e) => {
+      if (e.touches.length === 2) {
+        pinchRef.current = { dist0: dist(e.touches), scale0: protoScale };
+      }
+    };
+    const onMove = (e) => {
+      if (e.touches.length === 2 && pinchRef.current) {
+        e.preventDefault();
+        const ratio = dist(e.touches) / pinchRef.current.dist0;
+        setProtoScale(Math.min(3, Math.max(0.4, pinchRef.current.scale0 * ratio)));
+      }
+    };
+    const onEnd = () => { if (pinchRef.current) pinchRef.current = null; };
+    el.addEventListener("touchstart", onStart, { passive: true });
+    el.addEventListener("touchmove",  onMove,  { passive: false });
+    el.addEventListener("touchend",   onEnd,   { passive: true });
+    return () => {
+      el.removeEventListener("touchstart", onStart);
+      el.removeEventListener("touchmove",  onMove);
+      el.removeEventListener("touchend",   onEnd);
+    };
+  }, [isProto, protoScale]);
+
   useEffect(() => {
     if (!pendingDraft) return;
     const id = Date.now();
@@ -1903,6 +1938,7 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
     return (
       <div key={item.id}
         ref={el => compRefs.current[item.id] = el}
+        className={sc && isProto ? "sim-noscrollbar" : undefined}
         style={{
           ...posStyle,
           cursor: isProto ? (item.onTap?"pointer":"default") : item.isMaster?"pointer":"grab",
@@ -1911,6 +1947,9 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
             overflowX: sc.direction==="horizontal" ? (isProto?"scroll":"hidden") : "hidden",
             overflowY: sc.direction==="vertical"   ? (isProto?"scroll":"hidden") : "hidden",
             WebkitOverflowScrolling:"touch",
+            scrollbarWidth:"none",
+            msOverflowStyle:"none",
+            touchAction: isProto ? (sc.direction==="horizontal" ? "pan-x" : "pan-y") : "none",
             outline: !isProto ? `${sdp(1.5)}px dashed #2591b5` : "none",
             boxSizing:"border-box",
           } : resolvedW ? { width:`${resolvedW}px` } : {}),
@@ -2366,7 +2405,13 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
           </button>
         ))}
         <div style={{ fontSize:"10px", color:"#cccccc", marginLeft:"8px" }}>
-          {isProto ? "실제 앱처럼 — 클릭/인터랙션 확인" : "컴포넌트 배치 및 편집"}
+          {isProto ? "실제 앱처럼 — 터치 스크롤 / 핀치 줌" : "컴포넌트 배치 및 편집"}
+          {isProto && protoScale !== 1 && (
+            <button onClick={() => setProtoScale(1)}
+              style={{ marginLeft:"6px", padding:"2px 8px", borderRadius:"10px", fontSize:"9px", background:"#f0f0f0", border:"1px solid #d0d0d0", color:"#555", cursor:"pointer" }}>
+              {Math.round(protoScale*100)}% ↺
+            </button>
+          )}
         </div>
       </div>
 
@@ -2597,9 +2642,19 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
       </div>}
 
       {/* Center: Phone canvas */}
+      <style>{`.sim-noscrollbar::-webkit-scrollbar{display:none}`}</style>
       <div style={{ flex:1, display:"flex", justifyContent:"center" }}>
         <PhoneFrame platform={platform} device={device} canvasMode darkMode={darkMode}>
-          <div style={{ position:"absolute", inset:0 }} onClick={() => !isProto && setSelected(null)}>
+          <div
+            ref={protoFrameRef}
+            style={{
+              position:"absolute", inset:0,
+              transform: isProto && protoScale !== 1 ? `scale(${protoScale})` : undefined,
+              transformOrigin:"top center",
+              touchAction: isProto ? "pan-y pinch-zoom" : "none",
+            }}
+            onClick={() => !isProto && setSelected(null)}
+          >
             {(isProto ? protoScreen?.items || [] : items).map(item => renderItemWrapper(item, null, 0))}
             {(isProto ? protoScreen?.items || [] : items).length === 0 && (
               <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", color:"#bbb", fontSize:`${sdp(12)}px`, fontFamily:"system-ui", pointerEvents:"none", flexDirection:"column", gap:`${sdp(6)}px` }}>
