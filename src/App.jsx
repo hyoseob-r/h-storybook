@@ -1898,10 +1898,46 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
                   style={{ width:"100%", background:"#ffffff", border:"1px solid #d0d0d0", borderRadius:"5px", padding:"4px 6px", color: locked?"#555570":"#111111", fontSize:"11px", outline:"none", boxSizing:"border-box" }} />
               </div>
             ))}
-            <div>
-              <div style={{ fontSize:"9px", color:"#bbbbbb", marginBottom:"3px" }}>W (dp)</div>
-              <input type="number" value={sel.w || ""} placeholder="auto" onChange={e => !locked && updateItem(sel.id, { w: e.target.value ? Number(e.target.value) : undefined })} readOnly={locked}
-                style={{ width:"100%", background:"#ffffff", border:"1px solid #d0d0d0", borderRadius:"5px", padding:"4px 6px", color: locked?"#555570":"#111111", fontSize:"11px", outline:"none", boxSizing:"border-box" }} />
+            <div style={{ gridColumn:"1 / -1" }}>
+              <div style={{ fontSize:"9px", color:"#bbbbbb", marginBottom:"4px" }}>W</div>
+              {/* mode pills */}
+              <div style={{ display:"flex", gap:"3px", marginBottom:"5px" }}>
+                {[["dp","dp"],["pct","%"],["fill","fill"]].map(([m, label]) => (
+                  <button key={m} onClick={() => {
+                    if (locked) return;
+                    if (m === "fill") updateItem(sel.id, { wMode:"fill", w: device.w, wPct: 100 });
+                    else if (m === "pct") updateItem(sel.id, { wMode:"pct", wPct: sel.wPct || Math.round((sel.w||device.w)*100/device.w) });
+                    else updateItem(sel.id, { wMode:"dp" });
+                  }}
+                    style={{ flex:1, padding:"3px 0", borderRadius:"4px", fontSize:"10px", fontWeight: (sel.wMode||"dp")===m?700:400, background: (sel.wMode||"dp")===m?"#111111":"transparent", color: (sel.wMode||"dp")===m?"#ffffff":"#888888", border: (sel.wMode||"dp")===m?"none":"1px solid #e5e5e5", cursor: locked?"default":"pointer" }}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+              {/* value input */}
+              {(sel.wMode||"dp") === "dp" && (
+                <input type="number" value={sel.w||""} placeholder="auto" readOnly={locked}
+                  onChange={e => !locked && updateItem(sel.id, { w: e.target.value ? Number(e.target.value) : undefined })}
+                  style={{ width:"100%", background:"#ffffff", border:"1px solid #d0d0d0", borderRadius:"5px", padding:"4px 6px", color: locked?"#555570":"#111111", fontSize:"11px", outline:"none", boxSizing:"border-box" }} />
+              )}
+              {(sel.wMode||"dp") === "pct" && (
+                <div style={{ display:"flex", alignItems:"center", gap:"4px" }}>
+                  <input type="number" min={1} max={100} value={sel.wPct||100} readOnly={locked}
+                    onChange={e => !locked && updateItem(sel.id, { wPct: Number(e.target.value), w: Math.round(device.w * Number(e.target.value) / 100) })}
+                    style={{ flex:1, background:"#ffffff", border:"1px solid #d0d0d0", borderRadius:"5px", padding:"4px 6px", color: locked?"#555570":"#111111", fontSize:"11px", outline:"none", boxSizing:"border-box" }} />
+                  <span style={{ fontSize:"10px", color:"#aaaaaa" }}>% = {Math.round(device.w*(sel.wPct||100)/100)}dp</span>
+                </div>
+              )}
+              {(sel.wMode||"dp") === "fill" && (
+                <div style={{ padding:"4px 7px", background:"#f0f0f0", borderRadius:"5px", fontSize:"10px", color:"#555555" }}>
+                  {device.w}dp (기기 폭 전체)
+                </div>
+              )}
+              {/* platform code hint */}
+              <div style={{ marginTop:"5px", fontSize:"8px", color:"#aaaaaa", lineHeight:1.6 }}>
+                {(sel.wMode||"dp")==="fill" && <>Swift: <span style={{color:"#888"}}>maxWidth: .infinity</span><br/>Compose: <span style={{color:"#888"}}>fillMaxWidth()</span><br/>XML: <span style={{color:"#888"}}>match_parent</span></>}
+                {(sel.wMode||"dp")==="pct" && <>Swift: <span style={{color:"#888"}}>geo.size.width × {(sel.wPct||100)/100}</span><br/>Compose: <span style={{color:"#888"}}>fillMaxWidth({((sel.wPct||100)/100).toFixed(2)}f)</span><br/>XML: <span style={{color:"#888"}}>layout_weight</span></>}
+              </div>
             </div>
             <div>
               <div style={{ fontSize:"9px", color:"#bbbbbb", marginBottom:"3px" }}>Snap</div>
@@ -2252,7 +2288,11 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
           <div style={{ position:"absolute", inset:0 }} onClick={() => !isProto && setSelected(null)}>
             {(isProto ? protoScreen?.items || [] : items).map(item => {
               const sc = item.scroll?.enabled ? item.scroll : null;
-              const clipW = sc?.clipW || item.w;
+              // resolve actual dp width from wMode
+              const resolvedW = item.wMode==="fill" ? device.w
+                : item.wMode==="pct" ? Math.round(device.w*(item.wPct||100)/100)
+                : item.w;
+              const clipW = sc?.clipW || resolvedW;
               const clipH = sc?.clipH || item.h;
               return (
               <div key={item.id}
@@ -2268,7 +2308,7 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
                     WebkitOverflowScrolling:"touch",
                     outline: !isProto ? `${sdp(1.5)}px dashed #2591b5` : "none",
                     boxSizing:"border-box",
-                  } : item.w ? { width:`${item.w}px` } : {})
+                  } : resolvedW ? { width:`${resolvedW}px` } : {})
                 }}
                 onMouseDown={e => !isProto && startDrag(e, item)}
                 onMouseEnter={() => !isProto && setHovered(item.id)}
