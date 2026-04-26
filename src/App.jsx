@@ -2386,12 +2386,12 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
                 </button>
               ))}
             </div>
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"4px" }}>
-              {[["Clip W","clipW"],["Clip H","clipH"]].map(([label,key]) => (
-                <div key={key} style={{ display:"flex", alignItems:"center", gap:"4px", background:"#f7f7f7", border:"1px solid #e5e5e5", borderRadius:"5px", padding:"3px 6px" }}>
-                  <span style={{ fontSize:"8px", color:"#aaa", flexShrink:0 }}>{label}</span>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"4px", overflow:"hidden" }}>
+              {[["W","clipW"],["H","clipH"]].map(([label,key]) => (
+                <div key={key} style={{ display:"flex", alignItems:"center", gap:"3px", background:"#f7f7f7", border:"1px solid #e5e5e5", borderRadius:"5px", padding:"3px 5px", overflow:"hidden", minWidth:0 }}>
+                  <span style={{ fontSize:"9px", color:"#aaa", flexShrink:0 }}>{label}</span>
                   <input type="number" value={sel.scroll[key]} onChange={e => updateItem(sel.id, { scroll:{ ...sel.scroll, [key]:Number(e.target.value) } })}
-                    style={{ flex:1, background:"transparent", border:"none", outline:"none", fontSize:"11px", color:"#111", padding:0, minWidth:0 }} />
+                    style={{ flex:1, background:"transparent", border:"none", outline:"none", fontSize:"11px", color:"#111", padding:0, minWidth:0, width:0 }} />
                 </div>
               ))}
             </div>
