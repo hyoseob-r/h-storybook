@@ -1491,6 +1491,53 @@ function FigmaImportPanel({ onAdd, onClose }) {
   );
 }
 
+// ── Deep tree helpers (Frame nesting) ────────────────────────────────────────
+function findDeep(items, id) {
+  for (const it of items) {
+    if (it.id === id) return it;
+    if (it.children) { const f = findDeep(it.children, id); if (f) return f; }
+  }
+  return null;
+}
+function updateDeep(items, id, patch) {
+  return items.map(it => {
+    if (it.id === id) return { ...it, ...patch };
+    if (it.children) return { ...it, children: updateDeep(it.children, id, patch) };
+    return it;
+  });
+}
+function removeDeep(items, id) {
+  return items
+    .filter(it => it.id !== id)
+    .map(it => it.children ? { ...it, children: removeDeep(it.children, id) } : it);
+}
+function insertIntoFrame(items, frameId, child) {
+  return items.map(it => {
+    if (it.id === frameId) return { ...it, children: [...(it.children||[]), child] };
+    if (it.children) return { ...it, children: insertIntoFrame(it.children, frameId, child) };
+    return it;
+  });
+}
+function reparentInto(items, itemId, frameId) {
+  const item = findDeep(items, itemId);
+  if (!item) return items;
+  const frame = findDeep(items, frameId);
+  const relX = Math.max(0, (item.x||0) - (frame?.x||0));
+  const relY = Math.max(0, (item.y||0) - (frame?.y||0));
+  const without = removeDeep(items, itemId);
+  return insertIntoFrame(without, frameId, { ...item, x: relX, y: relY });
+}
+function flattenTree(items, depth = 0) {
+  const result = [];
+  for (const it of [...items].reverse()) {
+    result.push({ item: it, depth });
+    if (it.type === "frame" && it.children?.length) {
+      result.push(...flattenTree([...it.children].reverse(), depth + 1));
+    }
+  }
+  return result;
+}
+
 const newScreenId = () => Date.now();
 const makeScreen = (name) => ({ id: newScreenId(), name, items: [] });
 
@@ -1552,6 +1599,8 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
   const [showCode,        setShowCode]        = useState(false);
 
   const isProto = mode === "prototype";
+  const itemsRef = useRef(items);
+  useEffect(() => { itemsRef.current = items; }, [items]);
 
   useEffect(() => {
     if (!pendingDraft) return;
@@ -1589,24 +1638,50 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
         const { id, startMX, startMY, startX, startY } = dragRef.current;
         const dx = (e.clientX - startMX) / scaleRef.current;
         const dy = (e.clientY - startMY) / scaleRef.current;
-        setItems(prev => prev.map(i => i.id === id
-          ? { ...i, x: Math.max(0, snap(startX + dx)), y: Math.max(0, snap(startY + dy)) }
-          : i));
+        setItems(prev => updateDeep(prev, id, { x: Math.max(0, Math.round((startX + dx) / 8) * 8), y: Math.max(0, Math.round((startY + dy) / 8) * 8) }));
       }
       if (resizeRef.current) {
         const { id, handle, startMX, startW, startX } = resizeRef.current;
         const dx = (e.clientX - startMX) / scaleRef.current;
         let upd = {};
-        if (handle.includes("e")) { upd.w = Math.max(60, snap(startW + dx)); }
+        if (handle.includes("e")) { upd.w = Math.max(60, Math.round((startW + dx) / 8) * 8); }
         if (handle.includes("w")) {
-          const nw = Math.max(60, snap(startW - dx));
+          const nw = Math.max(60, Math.round((startW - dx) / 8) * 8);
           upd.w = nw;
-          upd.x = Math.max(0, snap(startX + (startW - nw)));
+          upd.x = Math.max(0, Math.round((startX + (startW - nw)) / 8) * 8);
         }
-        setItems(prev => prev.map(i => i.id === id ? { ...i, ...upd } : i));
+        setItems(prev => updateDeep(prev, id, upd));
       }
     };
-    const onUp = () => { dragRef.current = null; resizeRef.current = null; };
+    const onUp = (e) => {
+      if (dragRef.current) {
+        const { id, startMX, startMY, startX, startY } = dragRef.current;
+        const dx = (e.clientX - startMX) / scaleRef.current;
+        const dy = (e.clientY - startMY) / scaleRef.current;
+        const finalX = Math.max(0, Math.round((startX + dx) / 8) * 8);
+        const finalY = Math.max(0, Math.round((startY + dy) / 8) * 8);
+        // frame drop detection: only for root-level items
+        const cur = itemsRef.current;
+        const isRoot = cur.some(it => it.id === id);
+        if (isRoot) {
+          const draggedItem = findDeep(cur, id);
+          const iw = draggedItem?.w || 60;
+          const ih = draggedItem?.h || 30;
+          const cx = finalX + iw / 2;
+          const cy = finalY + ih / 2;
+          const targetFrame = cur.find(it =>
+            it.type === "frame" && it.id !== id &&
+            cx >= it.x && cx <= it.x + (it.w || 200) &&
+            cy >= it.y && cy <= it.y + (it.h || 150)
+          );
+          if (targetFrame) {
+            setItems(prev => reparentInto(prev, id, targetFrame.id));
+          }
+        }
+      }
+      dragRef.current = null;
+      resizeRef.current = null;
+    };
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup",   onUp);
     return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
@@ -1623,7 +1698,7 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
 
       if ((e.key === "Delete" || e.key === "Backspace") && !item.isMaster) {
         e.preventDefault();
-        setItems(prev => prev.filter(i => i.id !== selected));
+        setItems(prev => removeDeep(prev, selected));
         setSelected(null);
         return;
       }
@@ -1631,16 +1706,16 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
       if ((e.metaKey || e.ctrlKey) && e.key === "d") {
         e.preventDefault();
         const nid = Date.now();
-        setItems(prev => [...prev, { ...item, id: nid, x: item.x + 24, y: item.y + 24, isMaster: false }]);
+        setItems(prev => [...prev, { ...item, id: nid, x: (item.x||0) + 24, y: (item.y||0) + 24, isMaster: false }]);
         setSelected(nid);
         return;
       }
       if (!item.isMaster) {
         const N = e.shiftKey ? 10 : 1;
-        if (e.key === "ArrowLeft")  { e.preventDefault(); setItems(p => p.map(i => i.id===selected ? { ...i, x: Math.max(0, i.x-N) } : i)); }
-        if (e.key === "ArrowRight") { e.preventDefault(); setItems(p => p.map(i => i.id===selected ? { ...i, x: i.x+N } : i)); }
-        if (e.key === "ArrowUp")    { e.preventDefault(); setItems(p => p.map(i => i.id===selected ? { ...i, y: Math.max(0, i.y-N) } : i)); }
-        if (e.key === "ArrowDown")  { e.preventDefault(); setItems(p => p.map(i => i.id===selected ? { ...i, y: i.y+N } : i)); }
+        if (e.key === "ArrowLeft")  { e.preventDefault(); setItems(p => updateDeep(p, selected, { x: Math.max(0, (item.x||0)-N) })); }
+        if (e.key === "ArrowRight") { e.preventDefault(); setItems(p => updateDeep(p, selected, { x: (item.x||0)+N })); }
+        if (e.key === "ArrowUp")    { e.preventDefault(); setItems(p => updateDeep(p, selected, { y: Math.max(0, (item.y||0)-N) })); }
+        if (e.key === "ArrowDown")  { e.preventDefault(); setItems(p => updateDeep(p, selected, { y: (item.y||0)+N })); }
       }
     };
     window.addEventListener("keydown", onKey);
@@ -1650,21 +1725,34 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
   // ── item helpers ─────────────────────────────────────────────────────────────
   const addItem = (type) => {
     const id = Date.now();
-    const base = type === "labelButton"
+    const base = type === "frame"
+      ? { type:"frame", w:240, h:160, children:[], frameBg:"rgba(0,0,0,0.03)", frameBorder:"#cccccc", frameRadius:8, isMaster:false }
+      : type === "labelButton"
       ? { type:"labelButton", shape:"filled", colorStyle:"primary_v2", size:"medium", config:"labelOnly", iconPos:"left", iconName:"chevron_right", labelText:"버튼", isMaster:false }
       : { type:"text", style:"Body/body_6", content:"텍스트", color:"#333333", isMaster:false };
-    setItems(prev => [...prev, { id, x: 16, y: Math.min(16 + prev.length * 64, 480), ...base }]);
+    // if selected item is a frame, add inside it
+    const selItem = findDeep(itemsRef.current, selected);
+    if (selItem?.type === "frame") {
+      const childCount = selItem.children?.length || 0;
+      const newChild = { id, x:8, y:8 + childCount*52, ...base };
+      setItems(prev => updateDeep(prev, selItem.id, { children: [...(selItem.children||[]), newChild] }));
+    } else {
+      setItems(prev => [...prev, { id, x:16, y:Math.min(16 + prev.length * 64, 480), ...base }]);
+    }
     setSelected(id);
   };
 
-  const updateItem    = (id, upd) => setItems(prev => prev.map(i => i.id === id ? { ...i, ...upd } : i));
-  const removeItem    = (id) => { setItems(prev => prev.filter(i => i.id !== id)); if (selected === id) setSelected(null); };
+  const updateItem    = (id, upd) => setItems(prev => updateDeep(prev, id, upd));
+  const removeItem    = (id) => { setItems(prev => removeDeep(prev, id)); if (selected === id) setSelected(null); };
   const duplicateItem = (item) => {
     const nid = Date.now();
-    setItems(prev => [...prev, { ...item, id: nid, x: item.x + 24, y: item.y + 24, isMaster: false }]);
+    const copy = JSON.parse(JSON.stringify({ ...item, id: nid, x: (item.x||0) + 24, y: (item.y||0) + 24, isMaster: false }));
+    const assignIds = (node) => { node.id = Date.now() + Math.random(); if (node.children) node.children.forEach(assignIds); };
+    if (copy.children) copy.children.forEach(assignIds);
+    setItems(prev => [...prev, copy]);
     setSelected(nid);
   };
-  const sel = items.find(i => i.id === selected);
+  const sel = findDeep(items, selected);
 
   const changeShape = (s) => {
     if (!sel) return;
@@ -1689,6 +1777,7 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
 
   // ── render component ─────────────────────────────────────────────────────────
   const renderComp = (item) => {
+    if (item.type === "frame") return null; // frames rendered by wrapper
     if (item.type === "labelButton") {
       const h  = item.size === "medium" ? 48 : 36;
       const ph = item.size === "medium" ? 16 : 12;
@@ -1731,6 +1820,116 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
           dangerouslySetInnerHTML={{ __html: item.svgData }} />
       );
     }
+  };
+
+  // ── recursive item wrapper (handles frame nesting) ───────────────────────────
+  const renderItemWrapper = (item, parentAL = null, depth = 0) => {
+    const sc = !parentAL && item.scroll?.enabled ? item.scroll : null;
+    const resolvedW = item.wMode==="fill" ? device.w
+      : item.wMode==="pct" ? Math.round(device.w*(item.wPct||100)/100)
+      : item.w;
+    const resolvedH = item.hMode==="fill" ? device.h
+      : item.hMode==="pct" ? Math.round(device.h*(item.hPct||100)/100)
+      : item.h;
+
+    if (item.type === "frame") {
+      const al = item.autoLayout?.enabled ? item.autoLayout : null;
+      const flexDir = al?.direction==="horizontal" ? "row" : "column";
+      const justMap = { start:"flex-start", center:"center", end:"flex-end", "space-between":"space-between" };
+      const alignMap = { start:"flex-start", center:"center", end:"flex-end" };
+      const wPx = resolvedW || item.w || 240;
+      const hPx = item.hMode==="hug" ? undefined : (resolvedH || item.h || 160);
+      const posStyle = parentAL ? {
+        position:"relative",
+        flexShrink: item.wMode==="hug" ? 0 : (item.wMode==="fill" ? 1 : 0),
+        flex: item.wMode==="fill" ? "1 1 auto" : undefined,
+      } : {
+        position:"absolute", left:`${item.x||0}px`, top:`${item.y||0}px`,
+      };
+      return (
+        <div key={item.id}
+          ref={el => compRefs.current[item.id] = el}
+          style={{
+            ...posStyle,
+            width: item.wMode==="fill" ? "100%" : `${wPx}px`,
+            height: hPx ? `${hPx}px` : undefined,
+            background: item.frameBg || "rgba(0,0,0,0.03)",
+            border: `1px solid ${item.frameBorder || "#cccccc"}`,
+            borderRadius: `${item.frameRadius||0}px`,
+            overflow: "hidden",
+            boxSizing: "border-box",
+            display: al ? "flex" : "block",
+            flexDirection: al ? flexDir : undefined,
+            gap: al ? `${al.gap||0}px` : undefined,
+            padding: al ? `${al.padT||0}px ${al.padR||0}px ${al.padB||0}px ${al.padL||0}px` : 0,
+            justifyContent: al ? (justMap[al.mainAlign]||"flex-start") : undefined,
+            alignItems: al ? (alignMap[al.crossAlign]||"center") : undefined,
+            flexWrap: al?.wrap ? "wrap" : "nowrap",
+            cursor: isProto ? (item.onTap?"pointer":"default") : "grab",
+          }}
+          onMouseDown={e => { if (!isProto) { e.stopPropagation(); setSelected(item.id); if (!item.isMaster) dragRef.current = { id:item.id, startMX:e.clientX, startMY:e.clientY, startX:item.x||0, startY:item.y||0 }; } }}
+          onMouseEnter={() => !isProto && setHovered(item.id)}
+          onMouseLeave={() => !isProto && setHovered(null)}
+          onClick={e => { e.stopPropagation(); if (!isProto) setSelected(item.id); if (isProto && item.onTap?.type==="navigate") setProtoScreenId(item.onTap.screenId); }}
+        >
+          {/* children */}
+          {item.children?.map(child => renderItemWrapper(child, al, depth+1))}
+          {/* empty placeholder */}
+          {!isProto && (!item.children || item.children.length===0) && (
+            <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", fontSize:`${sdp(10)}px`, color:"#c0c0c0", pointerEvents:"none", userSelect:"none" }}>Frame</div>
+          )}
+          {/* frame label badge */}
+          {!isProto && (
+            <div style={{ position:"absolute", top:`${sdp(-13)}px`, left:0, fontSize:`${sdp(9)}px`, color:"#888", background:"#f0f0f0", padding:`${sdp(1)}px ${sdp(4)}px`, borderRadius:`${sdp(3)}px`, whiteSpace:"nowrap", pointerEvents:"none", zIndex:10 }}>
+              {item.name||"Frame"}
+            </div>
+          )}
+          {!isProto && hovered===item.id && selected!==item.id && renderSelectionBox(item, true)}
+          {!isProto && selected===item.id && renderSelectionBox(item, false)}
+        </div>
+      );
+    }
+
+    // leaf item
+    const clipW = sc?.clipW || resolvedW;
+    const clipH = sc?.clipH || resolvedH || item.h;
+    const posStyle = parentAL ? {
+      position:"relative",
+      flexShrink: item.wMode==="hug" ? 0 : (item.wMode==="fill" ? 1 : 0),
+      flex: item.wMode==="fill" ? "1 1 auto" : undefined,
+    } : {
+      position:"absolute", left:`${item.x||0}px`, top:`${item.y||0}px`,
+    };
+    return (
+      <div key={item.id}
+        ref={el => compRefs.current[item.id] = el}
+        style={{
+          ...posStyle,
+          cursor: isProto ? (item.onTap?"pointer":"default") : item.isMaster?"pointer":"grab",
+          ...(sc ? {
+            width:`${clipW}px`, height:`${clipH}px`,
+            overflowX: sc.direction==="horizontal" ? (isProto?"scroll":"hidden") : "hidden",
+            overflowY: sc.direction==="vertical"   ? (isProto?"scroll":"hidden") : "hidden",
+            WebkitOverflowScrolling:"touch",
+            outline: !isProto ? `${sdp(1.5)}px dashed #2591b5` : "none",
+            boxSizing:"border-box",
+          } : resolvedW ? { width:`${resolvedW}px` } : {}),
+        }}
+        onMouseDown={e => { if (!isProto) { e.stopPropagation(); startDrag(e, item); } }}
+        onMouseEnter={() => !isProto && setHovered(item.id)}
+        onMouseLeave={() => !isProto && setHovered(null)}
+        onClick={e => { e.stopPropagation(); if (isProto && item.onTap?.type==="navigate") setProtoScreenId(item.onTap.screenId); else if (!isProto) setSelected(item.id); }}
+      >
+        {!isProto && sc && (
+          <div style={{ position:"absolute", top:`${sdp(-14)}px`, left:0, fontSize:`${sdp(9)}px`, color:"#2591b5", background:"#e8f5fa", padding:`${sdp(1)}px ${sdp(5)}px`, borderRadius:`${sdp(4)}px`, whiteSpace:"nowrap", zIndex:10, pointerEvents:"none", fontWeight:700 }}>
+            {sc.direction==="horizontal" ? "⇔ 가로 스크롤" : "⇕ 세로 스크롤"}
+          </div>
+        )}
+        {renderComp(item)}
+        {!isProto && hovered===item.id && selected!==item.id && renderSelectionBox(item, true)}
+        {!isProto && selected===item.id && renderSelectionBox(item, false)}
+      </div>
+    );
   };
 
   // ── selection / hover overlay with resize handles ────────────────────────────
@@ -1812,7 +2011,7 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
         {/* Header */}
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"10px" }}>
           <div style={{ fontSize:"10px", color: locked?"#ccaa00":"#999999", letterSpacing:"0.12em", textTransform:"uppercase", fontWeight:600 }}>
-            {locked && "🔒 "}{sel.type === "labelButton" ? "LabelButton" : "Text"}
+            {locked && "🔒 "}{sel.type === "frame" ? "Frame" : sel.type === "labelButton" ? "LabelButton" : "Text"}
           </div>
           <button onClick={() => updateItem(sel.id, { isMaster: !locked })}
             style={{ padding:"2px 6px", borderRadius:"4px", background: locked?"#fffbe6":"transparent", border: locked?"1px solid #e6c800":"1px solid #d0d0d0", color: locked?"#997700":"#888888", fontSize:"9px", cursor:"pointer" }}
@@ -1887,6 +2086,29 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
           </div>
         </>}
 
+        {/* Frame-specific properties */}
+        {sel.type === "frame" && (
+          <div style={{ marginBottom:"10px" }}>
+            <div style={{ fontSize:"10px", color:"#aaaaaa", marginBottom:"6px" }}>Frame 이름</div>
+            <input value={sel.name||""} onChange={e => updateItem(sel.id, { name:e.target.value })}
+              placeholder="Frame"
+              style={{ width:"100%", background:"#fff", border:"1px solid #d0d0d0", borderRadius:"5px", padding:"5px 8px", fontSize:"11px", color:"#111", outline:"none", boxSizing:"border-box" }} />
+            <div style={{ fontSize:"10px", color:"#aaaaaa", marginTop:"8px", marginBottom:"4px" }}>배경 / 테두리</div>
+            <div style={{ display:"flex", gap:"6px", alignItems:"center" }}>
+              <input type="color" value={sel.frameBg?.startsWith("rgba") ? "#f0f0f0" : (sel.frameBg||"#f0f0f0")}
+                onChange={e => updateItem(sel.id, { frameBg: e.target.value })}
+                style={{ width:"28px", height:"28px", border:"none", background:"none", cursor:"pointer", padding:0 }} />
+              <input type="color" value={sel.frameBorder||"#cccccc"}
+                onChange={e => updateItem(sel.id, { frameBorder: e.target.value })}
+                style={{ width:"28px", height:"28px", border:"none", background:"none", cursor:"pointer", padding:0 }} />
+              <div style={{ display:"flex", alignItems:"center", gap:"4px", flex:1, background:"#f7f7f7", border:"1px solid #e5e5e5", borderRadius:"5px", padding:"3px 6px" }}>
+                <span style={{ fontSize:"9px", color:"#aaa" }}>R</span>
+                <input type="number" value={sel.frameRadius||0} onChange={e => updateItem(sel.id, { frameRadius: Number(e.target.value) })}
+                  style={{ flex:1, background:"transparent", border:"none", outline:"none", fontSize:"11px", color:"#111", padding:0 }} />
+              </div>
+            </div>
+          </div>
+        )}
         {/* ── FRAME: Position & Size (Figma-style) ── */}
         <div style={{ borderTop:"1px solid #e5e5e5", paddingTop:"10px", marginBottom:"2px" }}>
           {/* X Y row */}
@@ -2005,14 +2227,34 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
               {/* Padding */}
               <div style={{ marginBottom:"6px" }}>
                 <div style={{ fontSize:"9px", color:"#aaa", marginBottom:"4px" }}>Padding</div>
-                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"4px" }}>
-                  {[["Top","padT"],["Right","padR"],["Bottom","padB"],["Left","padL"]].map(([label,key]) => (
-                    <div key={key} style={{ display:"flex", alignItems:"center", gap:"4px", background:"#f7f7f7", border:"1px solid #e5e5e5", borderRadius:"5px", padding:"3px 6px" }}>
-                      <span style={{ fontSize:"8px", color:"#aaa", width:"22px" }}>{label}</span>
-                      <input type="number" value={al[key]||0} onChange={e => upAl({ [key]:Number(e.target.value) })}
-                        style={{ flex:1, background:"transparent", border:"none", outline:"none", fontSize:"11px", color:"#111", padding:0, minWidth:0 }} />
-                    </div>
-                  ))}
+                {/* Top row */}
+                <div style={{ display:"flex", justifyContent:"center", marginBottom:"3px" }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:"3px", background:"#f7f7f7", border:"1px solid #e5e5e5", borderRadius:"5px", padding:"3px 8px", width:"60px" }}>
+                    <span style={{ fontSize:"8px", color:"#aaa" }}>T</span>
+                    <input type="number" value={al.padT||0} onChange={e => upAl({ padT:Number(e.target.value) })}
+                      style={{ flex:1, background:"transparent", border:"none", outline:"none", fontSize:"11px", color:"#111", padding:0, minWidth:0 }} />
+                  </div>
+                </div>
+                {/* Middle row: L and R */}
+                <div style={{ display:"flex", gap:"4px", justifyContent:"space-between", marginBottom:"3px" }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:"3px", background:"#f7f7f7", border:"1px solid #e5e5e5", borderRadius:"5px", padding:"3px 8px", width:"60px" }}>
+                    <span style={{ fontSize:"8px", color:"#aaa" }}>L</span>
+                    <input type="number" value={al.padL||0} onChange={e => upAl({ padL:Number(e.target.value) })}
+                      style={{ flex:1, background:"transparent", border:"none", outline:"none", fontSize:"11px", color:"#111", padding:0, minWidth:0 }} />
+                  </div>
+                  <div style={{ display:"flex", alignItems:"center", gap:"3px", background:"#f7f7f7", border:"1px solid #e5e5e5", borderRadius:"5px", padding:"3px 8px", width:"60px" }}>
+                    <span style={{ fontSize:"8px", color:"#aaa" }}>R</span>
+                    <input type="number" value={al.padR||0} onChange={e => upAl({ padR:Number(e.target.value) })}
+                      style={{ flex:1, background:"transparent", border:"none", outline:"none", fontSize:"11px", color:"#111", padding:0, minWidth:0 }} />
+                  </div>
+                </div>
+                {/* Bottom row */}
+                <div style={{ display:"flex", justifyContent:"center" }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:"3px", background:"#f7f7f7", border:"1px solid #e5e5e5", borderRadius:"5px", padding:"3px 8px", width:"60px" }}>
+                    <span style={{ fontSize:"8px", color:"#aaa" }}>B</span>
+                    <input type="number" value={al.padB||0} onChange={e => upAl({ padB:Number(e.target.value) })}
+                      style={{ flex:1, background:"transparent", border:"none", outline:"none", fontSize:"11px", color:"#111", padding:0, minWidth:0 }} />
+                  </div>
                 </div>
               </div>
               {/* Align main axis */}
@@ -2246,7 +2488,7 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
         <div style={{ background:"#ffffff", border:"1px solid #e5e5e5", borderRadius:"10px", padding:"12px" }}>
           <div style={{ fontSize:"10px", color:"#999999", letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:"8px", fontWeight:600 }}>Add</div>
           <div style={{ display:"flex", flexDirection:"column", gap:"5px" }}>
-            {[{ type:"labelButton", label:"⬚  LabelButton" }, { type:"text", label:"T   Text" }].map(c => (
+            {[{ type:"frame", label:"▣  Frame" }, { type:"labelButton", label:"⬚  LabelButton" }, { type:"text", label:"T   Text" }].map(c => (
               <button key={c.type} onClick={() => addItem(c.type)}
                 style={{ padding:"8px 10px", borderRadius:"7px", background:"transparent", border:"1px solid #e5e5e5", color:"#888888", fontSize:"11px", cursor:"pointer", textAlign:"left", transition:"all 0.15s" }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor="#c0c0c0"; e.currentTarget.style.color="#333333"; e.currentTarget.style.background="#f4f4f4"; }}
@@ -2348,19 +2590,21 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
           <div style={{ fontSize:"10px", color:"#999999", letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:"8px", fontWeight:600 }}>Layers</div>
           {items.length === 0
             ? <div style={{ fontSize:"10px", color:"#d0d0d0", textAlign:"center", padding:"12px 0" }}>비어있음</div>
-            : <div style={{ display:"flex", flexDirection:"column", gap:"3px" }}>
-                {[...items].reverse().map(item => (
-                  <div key={item.id} onClick={() => setSelected(item.id)}
-                    style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"5px 8px", borderRadius:"5px", background: selected===item.id?"#e5e5e5":"transparent", border: selected===item.id ? (item.isMaster?"1px solid #665500":"1px solid #c0c0c0") : "1px solid transparent", cursor:"pointer" }}>
-                    <span style={{ fontSize:"10px", color: item.isMaster?"#ccaa00": selected===item.id?"#333333":"#888888", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", flex:1 }}>
-                      {item.isMaster ? "🔒 " : ""}{item.type==="labelButton"?"⬚":"T"} {item.type==="labelButton"?item.labelText:item.content}
-                    </span>
-                    <button onClick={e => { e.stopPropagation(); if (!item.isMaster) removeItem(item.id); }}
-                      style={{ background:"none", border:"none", color: item.isMaster?"#333330":"#bbbbbb", cursor: item.isMaster?"default":"pointer", fontSize:"12px", padding:"0 2px", flexShrink:0 }}>
-                      {item.isMaster ? "🔒" : "×"}
-                    </button>
-                  </div>
-                ))}
+            : <div style={{ display:"flex", flexDirection:"column", gap:"2px" }}>
+                {flattenTree(items).map(({ item, depth }) => {
+                  const icon = item.type==="frame" ? "▣" : item.type==="labelButton" ? "⬚" : item.type==="text" ? "T" : "◈";
+                  const label = item.type==="frame" ? (item.name||"Frame") : item.type==="labelButton" ? item.labelText : item.type==="text" ? item.content : (item.name||item.type);
+                  return (
+                    <div key={item.id} onClick={() => setSelected(item.id)}
+                      style={{ display:"flex", alignItems:"center", paddingLeft:`${8+depth*10}px`, paddingRight:"4px", paddingTop:"4px", paddingBottom:"4px", borderRadius:"5px", background: selected===item.id?"#e5e5e5":"transparent", border: selected===item.id?"1px solid #c0c0c0":"1px solid transparent", cursor:"pointer" }}>
+                      <span style={{ fontSize:"10px", color: item.type==="frame"?"#5028c8": item.isMaster?"#ccaa00": selected===item.id?"#333":"#888", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", flex:1 }}>
+                        {depth>0 ? "└ " : ""}{item.isMaster?"🔒 ":""}{icon} {label}
+                      </span>
+                      <button onClick={e => { e.stopPropagation(); if (!item.isMaster) removeItem(item.id); }}
+                        style={{ background:"none", border:"none", color:"#ccc", cursor: item.isMaster?"default":"pointer", fontSize:"11px", padding:"0 2px", flexShrink:0 }}>×</button>
+                    </div>
+                  );
+                })}
               </div>
           }
         </div>
@@ -2370,51 +2614,7 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
       <div style={{ flex:1, display:"flex", justifyContent:"center" }}>
         <PhoneFrame platform={platform} device={device} canvasMode darkMode={darkMode}>
           <div style={{ position:"absolute", inset:0 }} onClick={() => !isProto && setSelected(null)}>
-            {(isProto ? protoScreen?.items || [] : items).map(item => {
-              const sc = item.scroll?.enabled ? item.scroll : null;
-              // resolve actual dp width from wMode
-              const resolvedW = item.wMode==="fill" ? device.w
-                : item.wMode==="pct" ? Math.round(device.w*(item.wPct||100)/100)
-                : item.w;
-              const clipW = sc?.clipW || resolvedW;
-              const clipH = sc?.clipH || item.h;
-              return (
-              <div key={item.id}
-                ref={el => compRefs.current[item.id] = el}
-                style={{
-                  position:"absolute", left:`${item.x}px`, top:`${item.y}px`,
-                  cursor: isProto ? (item.onTap ? "pointer" : "default") : item.isMaster?"pointer":"grab",
-                  ...(sc ? {
-                    width: `${clipW}px`,
-                    height: `${clipH}px`,
-                    overflowX: sc.direction==="horizontal" ? (isProto?"scroll":"hidden") : "hidden",
-                    overflowY: sc.direction==="vertical"   ? (isProto?"scroll":"hidden") : "hidden",
-                    WebkitOverflowScrolling:"touch",
-                    outline: !isProto ? `${sdp(1.5)}px dashed #2591b5` : "none",
-                    boxSizing:"border-box",
-                  } : resolvedW ? { width:`${resolvedW}px` } : {})
-                }}
-                onMouseDown={e => !isProto && startDrag(e, item)}
-                onMouseEnter={() => !isProto && setHovered(item.id)}
-                onMouseLeave={() => !isProto && setHovered(null)}
-                onClick={() => {
-                  if (isProto && item.onTap?.type === "navigate") {
-                    setProtoScreenId(item.onTap.screenId);
-                  }
-                }}
-              >
-                {/* scroll direction badge (assembly only) */}
-                {!isProto && sc && (
-                  <div style={{ position:"absolute", top:`${sdp(-14)}px`, left:0, fontSize:`${sdp(9)}px`, color:"#2591b5", background:"#e8f5fa", padding:`${sdp(1)}px ${sdp(5)}px`, borderRadius:`${sdp(4)}px`, whiteSpace:"nowrap", zIndex:10, pointerEvents:"none", fontWeight:700 }}>
-                    {sc.direction==="horizontal" ? "⇔ 가로 스크롤" : "⇕ 세로 스크롤"}
-                  </div>
-                )}
-                {renderComp(item)}
-                {!isProto && hovered === item.id && selected !== item.id && renderSelectionBox(item, true)}
-                {!isProto && selected === item.id && renderSelectionBox(item, false)}
-              </div>
-              );
-            })}
+            {(isProto ? protoScreen?.items || [] : items).map(item => renderItemWrapper(item, null, 0))}
             {(isProto ? protoScreen?.items || [] : items).length === 0 && (
               <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", color:"#bbb", fontSize:`${sdp(12)}px`, fontFamily:"system-ui", pointerEvents:"none", flexDirection:"column", gap:`${sdp(6)}px` }}>
                 <span style={{ fontSize:`${sdp(24)}px`, opacity:0.3 }}>+</span>
