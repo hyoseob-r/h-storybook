@@ -2011,7 +2011,7 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
         {/* Header */}
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"10px" }}>
           <div style={{ fontSize:"10px", color: locked?"#ccaa00":"#999999", letterSpacing:"0.12em", textTransform:"uppercase", fontWeight:600 }}>
-            {locked && "🔒 "}{sel.type === "frame" ? "Frame" : sel.type === "labelButton" ? "LabelButton" : "Text"}
+            {locked && "🔒 "}{sel.type === "frame" ? "Frame" : sel.type === "labelButton" ? "LabelButton" : sel.type === "svg" ? "SVG" : sel.type === "figma" ? "Figma" : "Text"}
           </div>
           <button onClick={() => updateItem(sel.id, { isMaster: !locked })}
             style={{ padding:"2px 6px", borderRadius:"4px", background: locked?"#fffbe6":"transparent", border: locked?"1px solid #e6c800":"1px solid #d0d0d0", color: locked?"#997700":"#888888", fontSize:"9px", cursor:"pointer" }}
@@ -2112,13 +2112,13 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
         {/* ── FRAME: Position & Size (Figma-style) ── */}
         <div style={{ borderTop:"1px solid #e5e5e5", paddingTop:"10px", marginBottom:"2px" }}>
           {/* X Y row */}
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"4px", marginBottom:"4px" }}>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"4px", marginBottom:"4px", overflow:"hidden" }}>
             {[["X","x"],["Y","y"]].map(([label, key]) => (
-              <div key={key} style={{ display:"flex", alignItems:"center", gap:"4px", background:"#f7f7f7", border:"1px solid #e5e5e5", borderRadius:"5px", padding:"3px 6px" }}>
-                <span style={{ fontSize:"9px", color:"#aaaaaa", width:"10px", flexShrink:0 }}>{label}</span>
+              <div key={key} style={{ display:"flex", alignItems:"center", gap:"3px", background:"#f7f7f7", border:"1px solid #e5e5e5", borderRadius:"5px", padding:"3px 5px", overflow:"hidden", minWidth:0 }}>
+                <span style={{ fontSize:"9px", color:"#aaaaaa", flexShrink:0 }}>{label}</span>
                 <input type="number" value={sel[key]} readOnly={locked}
                   onChange={e => !locked && updateItem(sel.id, { [key]: Number(e.target.value) })}
-                  style={{ flex:1, background:"transparent", border:"none", outline:"none", fontSize:"11px", color: locked?"#999":"#111", padding:0, minWidth:0 }} />
+                  style={{ flex:1, background:"transparent", border:"none", outline:"none", fontSize:"11px", color: locked?"#999":"#111", padding:0, minWidth:0, width:0 }} />
               </div>
             ))}
           </div>
@@ -2130,51 +2130,37 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
             const curMode = sel[modeKey] || "fixed";
             const resolved = curMode==="fill" ? devSize : curMode==="pct" ? Math.round(devSize*(sel[pctKey]||100)/100) : (sel[dim]||"");
             return (
-              <div key={dim} style={{ display:"flex", alignItems:"center", gap:"4px", marginBottom:"4px" }}>
+              <div key={dim} style={{ display:"flex", alignItems:"center", gap:"3px", marginBottom:"4px", overflow:"hidden" }}>
                 {/* Fixed / Fill / Hug toggles */}
-                <div style={{ display:"flex", gap:"2px" }}>
-                  {[
-                    ["fixed", "—", "고정"],
-                    ["fill",  "⇔", dim==="w"?"부모 폭 채우기":"부모 높이 채우기"],
-                    ["hug",   "⤢", "내용에 맞춤"],
-                  ].map(([m, icon, tip]) => (
-                    <button key={m} title={tip} onClick={() => {
-                      if (locked) return;
-                      if (m==="fill") updateItem(sel.id, { [modeKey]:"fill" });
-                      else if (m==="hug") updateItem(sel.id, { [modeKey]:"hug" });
-                      else updateItem(sel.id, { [modeKey]:"fixed" });
-                    }}
-                      style={{ width:"20px", height:"20px", borderRadius:"4px", border:"none", cursor: locked?"default":"pointer", fontSize:"11px", display:"flex", alignItems:"center", justifyContent:"center", background: curMode===m?"#111":"#f0f0f0", color: curMode===m?"#fff":"#888" }}>
+                <div style={{ display:"flex", gap:"2px", flexShrink:0 }}>
+                  {[["fixed","—","고정"],["fill","⇔",dim==="w"?"부모 폭 채우기":"부모 높이 채우기"],["hug","⤢","내용에 맞춤"]].map(([m,icon,tip]) => (
+                    <button key={m} title={tip} onClick={() => { if(locked)return; updateItem(sel.id,{[modeKey]:m}); }}
+                      style={{ width:"18px", height:"18px", borderRadius:"3px", border:"none", cursor:locked?"default":"pointer", fontSize:"10px", display:"flex", alignItems:"center", justifyContent:"center", background:curMode===m?"#111":"#f0f0f0", color:curMode===m?"#fff":"#888", flexShrink:0 }}>
                       {icon}
                     </button>
                   ))}
                 </div>
-                {/* label */}
-                <span style={{ fontSize:"9px", color:"#aaa", width:"10px", flexShrink:0, textTransform:"uppercase" }}>{dim}</span>
+                {/* dim label */}
+                <span style={{ fontSize:"9px", color:"#aaa", flexShrink:0, textTransform:"uppercase", width:"9px" }}>{dim}</span>
                 {/* value field */}
-                <div style={{ flex:1, display:"flex", alignItems:"center", gap:"4px", background:"#f7f7f7", border:"1px solid #e5e5e5", borderRadius:"5px", padding:"3px 6px" }}>
-                  {curMode==="hug" ? (
-                    <span style={{ fontSize:"10px", color:"#aaaaaa" }}>hug</span>
-                  ) : curMode==="fill" ? (
-                    <span style={{ fontSize:"10px", color:"#aaaaaa" }}>{devSize}dp</span>
-                  ) : (
-                    <input type="number" value={sel[dim]||""} placeholder="auto" readOnly={locked}
-                      onChange={e => !locked && updateItem(sel.id, { [dim]: e.target.value ? Number(e.target.value) : undefined, [modeKey]:"fixed" })}
-                      style={{ flex:1, background:"transparent", border:"none", outline:"none", fontSize:"11px", color: locked?"#999":"#111", padding:0, minWidth:0 }} />
-                  )}
+                <div style={{ flex:1, display:"flex", alignItems:"center", background:"#f7f7f7", border:"1px solid #e5e5e5", borderRadius:"5px", padding:"3px 5px", overflow:"hidden", minWidth:0 }}>
+                  {curMode==="hug" ? <span style={{ fontSize:"10px", color:"#aaa" }}>hug</span>
+                  : curMode==="fill" ? <span style={{ fontSize:"10px", color:"#aaa" }}>{devSize}</span>
+                  : curMode==="pct" ? <>
+                      <input type="number" min={1} max={100} value={sel[pctKey]||100} readOnly={locked}
+                        onChange={e => !locked && updateItem(sel.id,{[pctKey]:Number(e.target.value)})}
+                        style={{ flex:1, background:"transparent", border:"none", outline:"none", fontSize:"11px", color:"#111", padding:0, minWidth:0, width:0 }} />
+                      <span style={{ fontSize:"9px", color:"#aaa", flexShrink:0 }}>%</span>
+                    </>
+                  : <input type="number" value={sel[dim]||""} placeholder="auto" readOnly={locked}
+                      onChange={e => !locked && updateItem(sel.id,{[dim]:e.target.value?Number(e.target.value):undefined,[modeKey]:"fixed"})}
+                      style={{ flex:1, background:"transparent", border:"none", outline:"none", fontSize:"11px", color:locked?"#999":"#111", padding:0, minWidth:0, width:0 }} />
+                  }
                 </div>
-                {/* % shortcut when fixed */}
+                {/* % toggle (fixed only) */}
                 {curMode==="fixed" && (
-                  <button title="퍼센트로 전환" onClick={() => !locked && updateItem(sel.id, { [modeKey]:"pct", [pctKey]: sel[pctKey]||Math.round((sel[dim]||devSize)*100/devSize) })}
-                    style={{ fontSize:"9px", color:"#aaa", background:"transparent", border:"1px solid #e5e5e5", borderRadius:"4px", padding:"2px 4px", cursor:"pointer" }}>%</button>
-                )}
-                {curMode==="pct" && (
-                  <div style={{ display:"flex", alignItems:"center", gap:"3px" }}>
-                    <input type="number" min={1} max={100} value={sel[pctKey]||100} readOnly={locked}
-                      onChange={e => !locked && updateItem(sel.id, { [pctKey]: Number(e.target.value) })}
-                      style={{ width:"36px", background:"#f7f7f7", border:"1px solid #d0d0d0", borderRadius:"4px", padding:"3px 4px", fontSize:"10px", color:"#111", outline:"none" }} />
-                    <span style={{ fontSize:"9px", color:"#aaa" }}>%</span>
-                  </div>
+                  <button title="%" onClick={() => !locked && updateItem(sel.id,{[modeKey]:"pct",[pctKey]:sel[pctKey]||Math.round((sel[dim]||devSize)*100/devSize)})}
+                    style={{ fontSize:"8px", color:"#aaa", background:"transparent", border:"1px solid #e5e5e5", borderRadius:"3px", padding:"2px 3px", cursor:"pointer", flexShrink:0 }}>%</button>
                 )}
               </div>
             );
@@ -2462,7 +2448,7 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
     <div style={{ display:"flex", gap:"16px", alignItems:"flex-start" }}>
 
       {/* Left: Device + Palette + Layers */}
-      {!isProto && <div style={{ width:"196px", flexShrink:0, display:"flex", flexDirection:"column", gap:"10px" }}>
+      {!isProto && <div style={{ width:"224px", flexShrink:0, display:"flex", flexDirection:"column", gap:"10px" }}>
 
         <div style={{ background:"#ffffff", border:"1px solid #e5e5e5", borderRadius:"10px", padding:"12px" }}>
           <div style={{ fontSize:"10px", color:"#999999", letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:"8px", fontWeight:600 }}>Platform</div>
@@ -2593,7 +2579,7 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
             : <div style={{ display:"flex", flexDirection:"column", gap:"2px" }}>
                 {flattenTree(items).map(({ item, depth }) => {
                   const icon = item.type==="frame" ? "▣" : item.type==="labelButton" ? "⬚" : item.type==="text" ? "T" : "◈";
-                  const label = item.type==="frame" ? (item.name||"Frame") : item.type==="labelButton" ? item.labelText : item.type==="text" ? item.content : (item.name||item.type);
+                  const label = item.type==="frame" ? (item.name||"Frame") : item.type==="labelButton" ? item.labelText : item.type==="text" ? item.content : item.type==="svg" ? (item.name||"SVG") : item.type==="figma" ? (item.name||"Figma") : (item.name||item.type);
                   return (
                     <div key={item.id} onClick={() => setSelected(item.id)}
                       style={{ display:"flex", alignItems:"center", paddingLeft:`${8+depth*10}px`, paddingRight:"4px", paddingTop:"4px", paddingBottom:"4px", borderRadius:"5px", background: selected===item.id?"#e5e5e5":"transparent", border: selected===item.id?"1px solid #c0c0c0":"1px solid transparent", cursor:"pointer" }}>
@@ -2626,7 +2612,7 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
       </div>
 
       {/* Right: Properties (조립 모드만) */}
-      {!isProto && <div style={{ width:"196px", flexShrink:0, background:"#ffffff", border:"1px solid #e5e5e5", borderRadius:"10px", overflow:"hidden" }}>
+      {!isProto && <div style={{ width:"224px", flexShrink:0, background:"#ffffff", border:"1px solid #e5e5e5", borderRadius:"10px", overflow:"hidden" }}>
         {renderProps()}
       </div>}
 
