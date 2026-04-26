@@ -1887,156 +1887,240 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
           </div>
         </>}
 
-        {/* Position & Size */}
-        <div style={{ paddingTop:"10px", borderTop:"1px solid #e5e5e5", marginBottom:"10px" }}>
-          <div style={{ fontSize:"10px", color:"#aaaaaa", marginBottom:"6px" }}>Position &amp; Size</div>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"6px" }}>
-            {["x","y"].map(axis => (
-              <div key={axis}>
-                <div style={{ fontSize:"9px", color:"#bbbbbb", marginBottom:"3px" }}>{axis.toUpperCase()} (dp)</div>
-                <input type="number" value={sel[axis]} onChange={e => !locked && updateItem(sel.id, { [axis]: Number(e.target.value) })} readOnly={locked}
-                  style={{ width:"100%", background:"#ffffff", border:"1px solid #d0d0d0", borderRadius:"5px", padding:"4px 6px", color: locked?"#555570":"#111111", fontSize:"11px", outline:"none", boxSizing:"border-box" }} />
+        {/* ── FRAME: Position & Size (Figma-style) ── */}
+        <div style={{ borderTop:"1px solid #e5e5e5", paddingTop:"10px", marginBottom:"2px" }}>
+          {/* X Y row */}
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"4px", marginBottom:"4px" }}>
+            {[["X","x"],["Y","y"]].map(([label, key]) => (
+              <div key={key} style={{ display:"flex", alignItems:"center", gap:"4px", background:"#f7f7f7", border:"1px solid #e5e5e5", borderRadius:"5px", padding:"3px 6px" }}>
+                <span style={{ fontSize:"9px", color:"#aaaaaa", width:"10px", flexShrink:0 }}>{label}</span>
+                <input type="number" value={sel[key]} readOnly={locked}
+                  onChange={e => !locked && updateItem(sel.id, { [key]: Number(e.target.value) })}
+                  style={{ flex:1, background:"transparent", border:"none", outline:"none", fontSize:"11px", color: locked?"#999":"#111", padding:0, minWidth:0 }} />
               </div>
             ))}
-            <div style={{ gridColumn:"1 / -1" }}>
-              <div style={{ fontSize:"9px", color:"#bbbbbb", marginBottom:"4px" }}>W</div>
-              {/* mode pills */}
-              <div style={{ display:"flex", gap:"3px", marginBottom:"5px" }}>
-                {[["dp","dp"],["pct","%"],["fill","fill"]].map(([m, label]) => (
-                  <button key={m} onClick={() => {
-                    if (locked) return;
-                    if (m === "fill") updateItem(sel.id, { wMode:"fill", w: device.w, wPct: 100 });
-                    else if (m === "pct") updateItem(sel.id, { wMode:"pct", wPct: sel.wPct || Math.round((sel.w||device.w)*100/device.w) });
-                    else updateItem(sel.id, { wMode:"dp" });
-                  }}
-                    style={{ flex:1, padding:"3px 0", borderRadius:"4px", fontSize:"10px", fontWeight: (sel.wMode||"dp")===m?700:400, background: (sel.wMode||"dp")===m?"#111111":"transparent", color: (sel.wMode||"dp")===m?"#ffffff":"#888888", border: (sel.wMode||"dp")===m?"none":"1px solid #e5e5e5", cursor: locked?"default":"pointer" }}>
+          </div>
+          {/* W H row with mode icons */}
+          {(["w","h"]).map(dim => {
+            const modeKey = dim+"Mode";
+            const pctKey  = dim+"Pct";
+            const devSize = dim==="w" ? device.w : device.h;
+            const curMode = sel[modeKey] || "fixed";
+            const resolved = curMode==="fill" ? devSize : curMode==="pct" ? Math.round(devSize*(sel[pctKey]||100)/100) : (sel[dim]||"");
+            return (
+              <div key={dim} style={{ display:"flex", alignItems:"center", gap:"4px", marginBottom:"4px" }}>
+                {/* Fixed / Fill / Hug toggles */}
+                <div style={{ display:"flex", gap:"2px" }}>
+                  {[
+                    ["fixed", "—", "고정"],
+                    ["fill",  "⇔", dim==="w"?"부모 폭 채우기":"부모 높이 채우기"],
+                    ["hug",   "⤢", "내용에 맞춤"],
+                  ].map(([m, icon, tip]) => (
+                    <button key={m} title={tip} onClick={() => {
+                      if (locked) return;
+                      if (m==="fill") updateItem(sel.id, { [modeKey]:"fill" });
+                      else if (m==="hug") updateItem(sel.id, { [modeKey]:"hug" });
+                      else updateItem(sel.id, { [modeKey]:"fixed" });
+                    }}
+                      style={{ width:"20px", height:"20px", borderRadius:"4px", border:"none", cursor: locked?"default":"pointer", fontSize:"11px", display:"flex", alignItems:"center", justifyContent:"center", background: curMode===m?"#111":"#f0f0f0", color: curMode===m?"#fff":"#888" }}>
+                      {icon}
+                    </button>
+                  ))}
+                </div>
+                {/* label */}
+                <span style={{ fontSize:"9px", color:"#aaa", width:"10px", flexShrink:0, textTransform:"uppercase" }}>{dim}</span>
+                {/* value field */}
+                <div style={{ flex:1, display:"flex", alignItems:"center", gap:"4px", background:"#f7f7f7", border:"1px solid #e5e5e5", borderRadius:"5px", padding:"3px 6px" }}>
+                  {curMode==="hug" ? (
+                    <span style={{ fontSize:"10px", color:"#aaaaaa" }}>hug</span>
+                  ) : curMode==="fill" ? (
+                    <span style={{ fontSize:"10px", color:"#aaaaaa" }}>{devSize}dp</span>
+                  ) : (
+                    <input type="number" value={sel[dim]||""} placeholder="auto" readOnly={locked}
+                      onChange={e => !locked && updateItem(sel.id, { [dim]: e.target.value ? Number(e.target.value) : undefined, [modeKey]:"fixed" })}
+                      style={{ flex:1, background:"transparent", border:"none", outline:"none", fontSize:"11px", color: locked?"#999":"#111", padding:0, minWidth:0 }} />
+                  )}
+                </div>
+                {/* % shortcut when fixed */}
+                {curMode==="fixed" && (
+                  <button title="퍼센트로 전환" onClick={() => !locked && updateItem(sel.id, { [modeKey]:"pct", [pctKey]: sel[pctKey]||Math.round((sel[dim]||devSize)*100/devSize) })}
+                    style={{ fontSize:"9px", color:"#aaa", background:"transparent", border:"1px solid #e5e5e5", borderRadius:"4px", padding:"2px 4px", cursor:"pointer" }}>%</button>
+                )}
+                {curMode==="pct" && (
+                  <div style={{ display:"flex", alignItems:"center", gap:"3px" }}>
+                    <input type="number" min={1} max={100} value={sel[pctKey]||100} readOnly={locked}
+                      onChange={e => !locked && updateItem(sel.id, { [pctKey]: Number(e.target.value) })}
+                      style={{ width:"36px", background:"#f7f7f7", border:"1px solid #d0d0d0", borderRadius:"4px", padding:"3px 4px", fontSize:"10px", color:"#111", outline:"none" }} />
+                    <span style={{ fontSize:"9px", color:"#aaa" }}>%</span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          {/* Snap toggle */}
+          <div style={{ display:"flex", justifyContent:"flex-end" }}>
+            <button onClick={() => setSnapGrid(v => !v)}
+              style={{ fontSize:"9px", padding:"2px 7px", borderRadius:"4px", background: snapGrid?"#111":"transparent", color: snapGrid?"#fff":"#aaa", border: snapGrid?"none":"1px solid #e5e5e5", cursor:"pointer" }}>
+              {snapGrid ? "Snap 8dp ✓" : "Snap off"}
+            </button>
+          </div>
+        </div>
+
+        {/* ── AUTO LAYOUT ── */}
+        <div style={{ borderTop:"1px solid #e5e5e5", paddingTop:"10px", marginBottom:"2px" }}>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"6px" }}>
+            <span style={{ fontSize:"10px", color:"#999", fontWeight:600, letterSpacing:"0.08em" }}>AUTO LAYOUT</span>
+            <button onClick={() => {
+              if (sel.autoLayout?.enabled)
+                updateItem(sel.id, { autoLayout: null });
+              else
+                updateItem(sel.id, { autoLayout: { enabled:true, direction:"horizontal", gap:8, padT:8, padR:8, padB:8, padL:8, mainAlign:"start", crossAlign:"center", wrap:false } });
+            }}
+              style={{ padding:"2px 8px", borderRadius:"10px", fontSize:"9px", fontWeight:700, border:"none", cursor:"pointer", background: sel.autoLayout?.enabled?"#111":"#f0f0f0", color: sel.autoLayout?.enabled?"#fff":"#888" }}>
+              {sel.autoLayout?.enabled ? "ON" : "OFF"}
+            </button>
+          </div>
+          {sel.autoLayout?.enabled && (() => {
+            const al = sel.autoLayout;
+            const upAl = (patch) => updateItem(sel.id, { autoLayout: { ...al, ...patch } });
+            return (<>
+              {/* Direction */}
+              <div style={{ display:"flex", gap:"4px", marginBottom:"6px" }}>
+                {[["horizontal","⇒ 가로"],["vertical","⇓ 세로"]].map(([d,label]) => (
+                  <button key={d} onClick={() => upAl({ direction:d })}
+                    style={{ flex:1, padding:"5px", borderRadius:"5px", fontSize:"10px", fontWeight: al.direction===d?700:400, background: al.direction===d?"#111":"transparent", color: al.direction===d?"#fff":"#888", border: al.direction===d?"none":"1px solid #e5e5e5", cursor:"pointer" }}>
                     {label}
                   </button>
                 ))}
               </div>
-              {/* value input */}
-              {(sel.wMode||"dp") === "dp" && (
-                <input type="number" value={sel.w||""} placeholder="auto" readOnly={locked}
-                  onChange={e => !locked && updateItem(sel.id, { w: e.target.value ? Number(e.target.value) : undefined })}
-                  style={{ width:"100%", background:"#ffffff", border:"1px solid #d0d0d0", borderRadius:"5px", padding:"4px 6px", color: locked?"#555570":"#111111", fontSize:"11px", outline:"none", boxSizing:"border-box" }} />
-              )}
-              {(sel.wMode||"dp") === "pct" && (
-                <div style={{ display:"flex", alignItems:"center", gap:"4px" }}>
-                  <input type="number" min={1} max={100} value={sel.wPct||100} readOnly={locked}
-                    onChange={e => !locked && updateItem(sel.id, { wPct: Number(e.target.value), w: Math.round(device.w * Number(e.target.value) / 100) })}
-                    style={{ flex:1, background:"#ffffff", border:"1px solid #d0d0d0", borderRadius:"5px", padding:"4px 6px", color: locked?"#555570":"#111111", fontSize:"11px", outline:"none", boxSizing:"border-box" }} />
-                  <span style={{ fontSize:"10px", color:"#aaaaaa" }}>% = {Math.round(device.w*(sel.wPct||100)/100)}dp</span>
+              {/* Gap */}
+              <div style={{ display:"flex", alignItems:"center", gap:"6px", marginBottom:"6px" }}>
+                <span style={{ fontSize:"9px", color:"#aaa", width:"30px" }}>Gap</span>
+                <div style={{ flex:1, display:"flex", alignItems:"center", gap:"4px", background:"#f7f7f7", border:"1px solid #e5e5e5", borderRadius:"5px", padding:"3px 6px" }}>
+                  <input type="number" value={al.gap} onChange={e => upAl({ gap:Number(e.target.value) })}
+                    style={{ flex:1, background:"transparent", border:"none", outline:"none", fontSize:"11px", color:"#111", padding:0, minWidth:0 }} />
+                  <span style={{ fontSize:"9px", color:"#aaa" }}>dp</span>
                 </div>
-              )}
-              {(sel.wMode||"dp") === "fill" && (
-                <div style={{ padding:"4px 7px", background:"#f0f0f0", borderRadius:"5px", fontSize:"10px", color:"#555555" }}>
-                  {device.w}dp (기기 폭 전체)
-                </div>
-              )}
-              {/* platform code hint */}
-              <div style={{ marginTop:"5px", fontSize:"8px", color:"#aaaaaa", lineHeight:1.6 }}>
-                {(sel.wMode||"dp")==="fill" && <>Swift: <span style={{color:"#888"}}>maxWidth: .infinity</span><br/>Compose: <span style={{color:"#888"}}>fillMaxWidth()</span><br/>XML: <span style={{color:"#888"}}>match_parent</span></>}
-                {(sel.wMode||"dp")==="pct" && <>Swift: <span style={{color:"#888"}}>geo.size.width × {(sel.wPct||100)/100}</span><br/>Compose: <span style={{color:"#888"}}>fillMaxWidth({((sel.wPct||100)/100).toFixed(2)}f)</span><br/>XML: <span style={{color:"#888"}}>layout_weight</span></>}
               </div>
-            </div>
-            <div>
-              <div style={{ fontSize:"9px", color:"#bbbbbb", marginBottom:"3px" }}>Snap</div>
-              <button onClick={() => setSnapGrid(v => !v)}
-                style={{ width:"100%", padding:"4px 0", borderRadius:"5px", background: snapGrid?"#f0f0f0":"transparent", border: snapGrid?"1px solid #c0c0c0":"1px solid #e5e5e5", color: snapGrid?"#333333":"#999999", fontSize:"10px", cursor:"pointer" }}>
-                {snapGrid ? "8dp ✓" : "free"}
-              </button>
-            </div>
-          </div>
+              {/* Padding */}
+              <div style={{ marginBottom:"6px" }}>
+                <div style={{ fontSize:"9px", color:"#aaa", marginBottom:"4px" }}>Padding</div>
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"4px" }}>
+                  {[["Top","padT"],["Right","padR"],["Bottom","padB"],["Left","padL"]].map(([label,key]) => (
+                    <div key={key} style={{ display:"flex", alignItems:"center", gap:"4px", background:"#f7f7f7", border:"1px solid #e5e5e5", borderRadius:"5px", padding:"3px 6px" }}>
+                      <span style={{ fontSize:"8px", color:"#aaa", width:"22px" }}>{label}</span>
+                      <input type="number" value={al[key]||0} onChange={e => upAl({ [key]:Number(e.target.value) })}
+                        style={{ flex:1, background:"transparent", border:"none", outline:"none", fontSize:"11px", color:"#111", padding:0, minWidth:0 }} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* Align main axis */}
+              <div style={{ marginBottom:"4px" }}>
+                <div style={{ fontSize:"9px", color:"#aaa", marginBottom:"3px" }}>{al.direction==="horizontal"?"가로 정렬":"세로 정렬"}</div>
+                <div style={{ display:"flex", gap:"3px" }}>
+                  {[["start","시작"],["center","중앙"],["end","끝"],["space-between","균등"]].map(([v,label]) => (
+                    <button key={v} onClick={() => upAl({ mainAlign:v })}
+                      style={{ flex:1, padding:"3px 2px", borderRadius:"4px", fontSize:"9px", background: al.mainAlign===v?"#111":"transparent", color: al.mainAlign===v?"#fff":"#888", border: al.mainAlign===v?"none":"1px solid #e5e5e5", cursor:"pointer" }}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {/* Align cross axis */}
+              <div style={{ marginBottom:"6px" }}>
+                <div style={{ fontSize:"9px", color:"#aaa", marginBottom:"3px" }}>{al.direction==="horizontal"?"세로 정렬":"가로 정렬"}</div>
+                <div style={{ display:"flex", gap:"3px" }}>
+                  {[["start","시작"],["center","중앙"],["end","끝"]].map(([v,label]) => (
+                    <button key={v} onClick={() => upAl({ crossAlign:v })}
+                      style={{ flex:1, padding:"3px 2px", borderRadius:"4px", fontSize:"9px", background: al.crossAlign===v?"#111":"transparent", color: al.crossAlign===v?"#fff":"#888", border: al.crossAlign===v?"none":"1px solid #e5e5e5", cursor:"pointer" }}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {/* Wrap */}
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"6px" }}>
+                <span style={{ fontSize:"9px", color:"#aaa" }}>Wrap</span>
+                <button onClick={() => upAl({ wrap: !al.wrap })}
+                  style={{ padding:"2px 8px", borderRadius:"10px", fontSize:"9px", fontWeight:700, border:"none", cursor:"pointer", background: al.wrap?"#111":"#f0f0f0", color: al.wrap?"#fff":"#888" }}>
+                  {al.wrap?"ON":"OFF"}
+                </button>
+              </div>
+              {/* Platform code hints */}
+              <div style={{ background:"#f4f4f4", borderRadius:"6px", padding:"7px 9px", fontSize:"8.5px", lineHeight:1.8, color:"#888" }}>
+                <div style={{ fontWeight:700, color:"#555", marginBottom:"3px", fontSize:"9px" }}>코드 변환</div>
+                <div><span style={{ color:"#5577cc" }}>iOS</span> {al.direction==="horizontal"
+                  ? `HStack(alignment: .${al.crossAlign==="start"?"top":al.crossAlign==="end"?"bottom":"center"}, spacing: ${al.gap})`
+                  : `VStack(alignment: .${al.crossAlign==="start"?"leading":al.crossAlign==="end"?"trailing":"center"}, spacing: ${al.gap})`}</div>
+                <div style={{ marginTop:"2px" }}><span style={{ color:"#aa5500" }}>Android</span> {al.direction==="horizontal"
+                  ? `Row(horizontalArrangement = Arrangement.${al.mainAlign==="space-between"?"SpaceBetween":al.mainAlign==="center"?"Center":al.mainAlign==="end"?"End":"Start"}, verticalAlignment = Alignment.${al.crossAlign==="start"?"Top":al.crossAlign==="end"?"Bottom":"CenterVertically"})`
+                  : `Column(verticalArrangement = Arrangement.${al.mainAlign==="space-between"?"SpaceBetween":al.mainAlign==="center"?"Center":al.mainAlign==="end"?"Bottom":"Top"}, horizontalAlignment = Alignment.${al.crossAlign==="start"?"Start":al.crossAlign==="end"?"End":"CenterHorizontally"})`}</div>
+                <div style={{ marginTop:"2px" }}><span style={{ color:"#338855" }}>XML</span> LinearLayout orientation="{al.direction==="horizontal"?"horizontal":"vertical"}" gravity="{al.mainAlign==="center"?"center":al.mainAlign==="end"?"end":"start"}"</div>
+              </div>
+            </>);
+          })()}
         </div>
 
-        {/* Duplicate + Delete */}
-        <div style={{ display:"flex", gap:"6px" }}>
-          <button onClick={() => duplicateItem(sel)}
-            style={{ flex:1, padding:"6px", borderRadius:"5px", background:"transparent", border:"1px solid #b0d0b8", color:"#2a7a4a", fontSize:"10px", cursor:"pointer" }}
-            onMouseEnter={e => { e.currentTarget.style.background="#e8f5ec"; e.currentTarget.style.color="#1a5a30"; }}
-            onMouseLeave={e => { e.currentTarget.style.background="transparent"; e.currentTarget.style.color="#2a7a4a"; }}>
-            복제
-          </button>
-          <button onClick={() => !locked && removeItem(sel.id)} disabled={locked}
-            style={{ flex:1, padding:"6px", borderRadius:"5px", background:"transparent", border: locked?"1px solid #dddddd":"1px solid #f0b0b0", color: locked?"#cccccc":"#aa3333", fontSize:"10px", cursor: locked?"default":"pointer" }}
-            onMouseEnter={e => { if (!locked) { e.currentTarget.style.background="#ffeaea"; e.currentTarget.style.color="#cc0000"; }}}
-            onMouseLeave={e => { if (!locked) { e.currentTarget.style.background="transparent"; e.currentTarget.style.color="#aa3333"; }}}>
-            삭제
-          </button>
-        </div>
-
-        {/* Scroll */}
-        <div style={{ paddingTop:"10px", borderTop:"1px solid #e5e5e5", marginTop:"4px" }}>
+        {/* ── SCROLL ── */}
+        <div style={{ borderTop:"1px solid #e5e5e5", paddingTop:"10px", marginBottom:"2px" }}>
           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"6px" }}>
-            <div style={{ fontSize:"10px", color:"#999999", letterSpacing:"0.08em", textTransform:"uppercase", fontWeight:600 }}>스크롤</div>
-            <button
-              onClick={() => updateItem(sel.id, { scroll: sel.scroll?.enabled ? null : { enabled:true, direction:"horizontal", clipW: sel.w||200, clipH: sel.h||120 } })}
-              style={{ padding:"2px 8px", borderRadius:"10px", fontSize:"9px", fontWeight:700, border:"none", cursor:"pointer", background: sel.scroll?.enabled ? "#111111" : "#f0f0f0", color: sel.scroll?.enabled ? "#ffffff" : "#888888", transition:"all 0.12s" }}>
-              {sel.scroll?.enabled ? "ON" : "OFF"}
+            <span style={{ fontSize:"10px", color:"#999", fontWeight:600, letterSpacing:"0.08em" }}>SCROLL</span>
+            <button onClick={() => updateItem(sel.id, { scroll: sel.scroll?.enabled ? null : { enabled:true, direction:"horizontal", clipW:sel.w||200, clipH:sel.h||120 } })}
+              style={{ padding:"2px 8px", borderRadius:"10px", fontSize:"9px", fontWeight:700, border:"none", cursor:"pointer", background: sel.scroll?.enabled?"#111":"#f0f0f0", color: sel.scroll?.enabled?"#fff":"#888" }}>
+              {sel.scroll?.enabled?"ON":"OFF"}
             </button>
           </div>
           {sel.scroll?.enabled && (<>
-            <div style={{ marginBottom:"6px" }}>
-              <div style={{ fontSize:"9px", color:"#bbbbbb", marginBottom:"3px" }}>방향</div>
-              <div style={{ display:"flex", gap:"4px" }}>
-                {[["horizontal","⇔ 가로"],["vertical","⇕ 세로"]].map(([d, label]) => (
-                  <button key={d}
-                    onClick={() => updateItem(sel.id, { scroll: { ...sel.scroll, direction:d } })}
-                    style={{ flex:1, padding:"5px", borderRadius:"5px", fontSize:"10px", background: sel.scroll.direction===d?"#111111":"transparent", color: sel.scroll.direction===d?"#ffffff":"#888888", border: sel.scroll.direction===d?"none":"1px solid #e5e5e5", cursor:"pointer", fontWeight: sel.scroll.direction===d?700:400 }}>
-                    {label}
-                  </button>
-                ))}
-              </div>
+            <div style={{ display:"flex", gap:"4px", marginBottom:"6px" }}>
+              {[["horizontal","⇔ 가로"],["vertical","⇕ 세로"]].map(([d,label]) => (
+                <button key={d} onClick={() => updateItem(sel.id, { scroll:{ ...sel.scroll, direction:d } })}
+                  style={{ flex:1, padding:"5px", borderRadius:"5px", fontSize:"10px", fontWeight: sel.scroll.direction===d?700:400, background: sel.scroll.direction===d?"#111":"transparent", color: sel.scroll.direction===d?"#fff":"#888", border: sel.scroll.direction===d?"none":"1px solid #e5e5e5", cursor:"pointer" }}>
+                  {label}
+                </button>
+              ))}
             </div>
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"6px", marginBottom:"6px" }}>
-              <div>
-                <div style={{ fontSize:"9px", color:"#bbbbbb", marginBottom:"3px" }}>보이는 폭 (dp)</div>
-                <input type="number"
-                  value={sel.scroll.clipW}
-                  onChange={e => updateItem(sel.id, { scroll: { ...sel.scroll, clipW: Number(e.target.value) } })}
-                  style={{ width:"100%", padding:"4px 6px", borderRadius:"5px", border:"1px solid #d0d0d0", fontSize:"11px", color:"#111111", outline:"none", boxSizing:"border-box" }} />
-              </div>
-              <div>
-                <div style={{ fontSize:"9px", color:"#bbbbbb", marginBottom:"3px" }}>보이는 높이 (dp)</div>
-                <input type="number"
-                  value={sel.scroll.clipH}
-                  onChange={e => updateItem(sel.id, { scroll: { ...sel.scroll, clipH: Number(e.target.value) } })}
-                  style={{ width:"100%", padding:"4px 6px", borderRadius:"5px", border:"1px solid #d0d0d0", fontSize:"11px", color:"#111111", outline:"none", boxSizing:"border-box" }} />
-              </div>
-            </div>
-            <div style={{ fontSize:"9px", color:"#2591b5", background:"#f0f8fc", padding:"4px 7px", borderRadius:"5px", lineHeight:1.5 }}>
-              조립: 점선 클립 표시<br/>프로토타입: 실제 {sel.scroll.direction==="horizontal"?"좌우":"상하"} 스크롤
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"4px" }}>
+              {[["Clip W","clipW"],["Clip H","clipH"]].map(([label,key]) => (
+                <div key={key} style={{ display:"flex", alignItems:"center", gap:"4px", background:"#f7f7f7", border:"1px solid #e5e5e5", borderRadius:"5px", padding:"3px 6px" }}>
+                  <span style={{ fontSize:"8px", color:"#aaa", flexShrink:0 }}>{label}</span>
+                  <input type="number" value={sel.scroll[key]} onChange={e => updateItem(sel.id, { scroll:{ ...sel.scroll, [key]:Number(e.target.value) } })}
+                    style={{ flex:1, background:"transparent", border:"none", outline:"none", fontSize:"11px", color:"#111", padding:0, minWidth:0 }} />
+                </div>
+              ))}
             </div>
           </>)}
         </div>
 
-        {/* Interaction */}
+        {/* ── INTERACTION ── */}
         {screens.length > 1 && (
-          <div style={{ paddingTop:"10px", borderTop:"1px solid #e5e5e5", marginTop:"4px" }}>
-            <div style={{ fontSize:"10px", color:"#999999", marginBottom:"6px", letterSpacing:"0.08em", textTransform:"uppercase", fontWeight:600 }}>인터랙션</div>
+          <div style={{ borderTop:"1px solid #e5e5e5", paddingTop:"10px", marginBottom:"2px" }}>
+            <div style={{ fontSize:"10px", color:"#999", fontWeight:600, letterSpacing:"0.08em", marginBottom:"6px" }}>INTERACTION</div>
             <div style={{ display:"flex", alignItems:"center", gap:"5px" }}>
-              <span style={{ fontSize:"10px", color:"#888888", flexShrink:0 }}>탭 →</span>
-              <select
-                value={sel.onTap?.screenId || ""}
-                onChange={e => {
-                  const val = e.target.value;
-                  updateItem(sel.id, { onTap: val ? { type:"navigate", screenId: Number(val) } : null });
-                }}
-                style={{ flex:1, padding:"4px 6px", borderRadius:"5px", border:"1px solid #d0d0d0", background:"#ffffff", fontSize:"10px", color:"#333333", outline:"none" }}>
+              <span style={{ fontSize:"9px", color:"#aaa", flexShrink:0 }}>탭 →</span>
+              <select value={sel.onTap?.screenId||""} onChange={e => { const v=e.target.value; updateItem(sel.id, { onTap: v?{ type:"navigate", screenId:Number(v) }:null }); }}
+                style={{ flex:1, padding:"4px 6px", borderRadius:"5px", border:"1px solid #d0d0d0", background:"#fff", fontSize:"10px", color:"#333", outline:"none" }}>
                 <option value="">없음</option>
-                {screens.filter(s => s.id !== activeId).map(s => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
-                ))}
+                {screens.filter(s=>s.id!==activeId).map(s=><option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
             {sel.onTap?.screenId && (
-              <div style={{ marginTop:"5px", fontSize:"9px", color:"#5028c8", background:"#f4f0ff", padding:"4px 7px", borderRadius:"5px", lineHeight:1.5 }}>
-                ▶ 프로토타입 모드에서 탭하면<br/>
-                "{screens.find(s => s.id === sel.onTap.screenId)?.name}"으로 이동
+              <div style={{ marginTop:"5px", fontSize:"9px", color:"#5028c8", background:"#f4f0ff", padding:"4px 7px", borderRadius:"5px" }}>
+                ▶ "{screens.find(s=>s.id===sel.onTap.screenId)?.name}"으로 이동
               </div>
             )}
           </div>
         )}
+
+        {/* ── ACTIONS ── */}
+        <div style={{ borderTop:"1px solid #e5e5e5", paddingTop:"10px", display:"flex", gap:"6px" }}>
+          <button onClick={() => duplicateItem(sel)}
+            style={{ flex:1, padding:"6px", borderRadius:"5px", background:"transparent", border:"1px solid #b0d0b8", color:"#2a7a4a", fontSize:"10px", cursor:"pointer" }}
+            onMouseEnter={e=>{e.currentTarget.style.background="#e8f5ec";}} onMouseLeave={e=>{e.currentTarget.style.background="transparent";}}>복제</button>
+          <button onClick={() => !locked && removeItem(sel.id)} disabled={locked}
+            style={{ flex:1, padding:"6px", borderRadius:"5px", background:"transparent", border: locked?"1px solid #ddd":"1px solid #f0b0b0", color: locked?"#ccc":"#aa3333", fontSize:"10px", cursor: locked?"default":"pointer" }}
+            onMouseEnter={e=>{if(!locked)e.currentTarget.style.background="#ffeaea";}} onMouseLeave={e=>{if(!locked)e.currentTarget.style.background="transparent";}}>삭제</button>
+        </div>
       </div>
     );
   };
