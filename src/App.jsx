@@ -2212,7 +2212,26 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
                 {/* Fixed / Fill / Hug toggles */}
                 <div style={{ display:"flex", gap:"2px", flexShrink:0 }}>
                   {[["fixed","—","고정"],["fill","⇔",dim==="w"?"부모 폭 채우기":"부모 높이 채우기"],["hug","⤢","내용에 맞춤"]].map(([m,icon,tip]) => (
-                    <button key={m} title={tip} onClick={() => { if(locked)return; updateItem(sel.id,{[modeKey]:m}); }}
+                    <button key={m} title={tip} onClick={() => {
+                      if(locked)return;
+                      const patch = {[modeKey]:m};
+                      if(m==="fill"){
+                        patch[dim]=devSize;
+                        // scroll clip도 같이 갱신
+                        if(sel.scroll?.enabled){
+                          const scPatch = {...(sel.scroll||{})};
+                          if(dim==="w") scPatch.clipW=devSize;
+                          else scPatch.clipH=devSize;
+                          patch.scroll=scPatch;
+                        }
+                      } else if(m==="hug"){
+                        patch[dim]=undefined;
+                      } else if(m==="fixed"){
+                        // fixed로 돌아올 때 현재 resolved 값 유지
+                        patch[dim]=resolved||devSize;
+                      }
+                      updateItem(sel.id,patch);
+                    }}
                       style={{ width:"18px", height:"18px", borderRadius:"3px", border:"none", cursor:locked?"default":"pointer", fontSize:"10px", display:"flex", alignItems:"center", justifyContent:"center", background:curMode===m?"#111":"#f0f0f0", color:curMode===m?"#fff":"#888", flexShrink:0 }}>
                       {icon}
                     </button>
@@ -2226,7 +2245,7 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
                   : curMode==="fill" ? <span style={{ fontSize:"10px", color:"#aaa" }}>{devSize}</span>
                   : curMode==="pct" ? <>
                       <input type="number" min={1} max={100} value={sel[pctKey]||100} readOnly={locked}
-                        onChange={e => !locked && updateItem(sel.id,{[pctKey]:Number(e.target.value)})}
+                        onChange={e => { if(locked)return; const pct=Number(e.target.value); updateItem(sel.id,{[pctKey]:pct,[dim]:Math.round(devSize*pct/100)}); }}
                         style={{ flex:1, background:"transparent", border:"none", outline:"none", fontSize:"11px", color:"#111", padding:0, minWidth:0, width:0 }} />
                       <span style={{ fontSize:"9px", color:"#aaa", flexShrink:0 }}>%</span>
                     </>
@@ -2237,7 +2256,7 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
                 </div>
                 {/* % toggle (fixed only) */}
                 {curMode==="fixed" && (
-                  <button title="%" onClick={() => !locked && updateItem(sel.id,{[modeKey]:"pct",[pctKey]:sel[pctKey]||Math.round((sel[dim]||devSize)*100/devSize)})}
+                  <button title="%" onClick={() => { if(locked)return; const pct=sel[pctKey]||Math.round((sel[dim]||devSize)*100/devSize); updateItem(sel.id,{[modeKey]:"pct",[pctKey]:pct,[dim]:Math.round(devSize*pct/100)}); }}
                     style={{ fontSize:"8px", color:"#aaa", background:"transparent", border:"1px solid #e5e5e5", borderRadius:"3px", padding:"2px 3px", cursor:"pointer", flexShrink:0 }}>%</button>
                 )}
               </div>
