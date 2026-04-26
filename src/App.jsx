@@ -1162,10 +1162,10 @@ function FigmaImportPanel({ onAdd, onClose }) {
       setFetchElapsed(Math.floor((Date.now() - start) / 1000));
     }, 500);
     try {
-      // 1. Figma API로 SVG export URL 요청
+      // Figma nodes API로 JSON 레이어 트리 가져오기
       const idsParam = encodeURIComponent(nodeId);
       const res = await fetch(
-        `https://api.figma.com/v1/images/${fileKey}?ids=${idsParam}&format=svg&svg_include_id=true`,
+        `https://api.figma.com/v1/files/${fileKey}/nodes?ids=${idsParam}`,
         { headers: { "X-Figma-Token": token.trim() } }
       );
       if (!res.ok) {
@@ -1173,32 +1173,15 @@ function FigmaImportPanel({ onAdd, onClose }) {
         throw new Error(err.message || `Figma API 오류 (${res.status})`);
       }
       const data = await res.json();
-      const svgUrl = data.images?.[nodeId] || Object.values(data.images || {})[0];
-      if (!svgUrl) throw new Error("SVG URL을 가져오지 못했습니다.");
-
-      // 2. SVG 파일 fetch
-      const svgRes = await fetch(svgUrl);
-      if (!svgRes.ok) throw new Error("SVG 다운로드 실패");
-      const svgText = await svgRes.text();
-
-      // 3. 이름 추출 (노드명 가져오기)
-      let frameName = "Untitled";
-      try {
-        const nodeRes = await fetch(
-          `https://api.figma.com/v1/files/${fileKey}/nodes?ids=${idsParam}`,
-          { headers: { "X-Figma-Token": token.trim() } }
-        );
-        const nodeData = await nodeRes.json();
-        const node = Object.values(nodeData.nodes || {})[0];
-        if (node?.document?.name) frameName = node.document.name;
-      } catch {}
-
-      // 4. SVG 탭으로 이동해서 저장 플로우 이어받기
-      setSvg(svgText);
-      setName(frameName);
-      setTab("svg");
-      setTimeout(() => handlePaste(svgText), 0);
-      toast("Figma에서 가져왔습니다!", "success");
+      const nodeEntry = Object.values(data.nodes || {})[0];
+      if (!nodeEntry?.document) throw new Error("노드를 가져오지 못했습니다.");
+      const doc = nodeEntry.document;
+      const b = doc.absoluteBoundingBox;
+      const w = b?.width || 375;
+      const h = b?.height || 812;
+      toast("Figma 레이어 구조를 가져왔습니다!", "success");
+      onAdd({ figmaData: doc, w, h });
+      onClose();
     } catch (e) {
       setFetchError(e.message);
     } finally {
@@ -2620,9 +2603,13 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
         {showFigmaPanel && (
           <FigmaImportPanel
             onClose={() => setShowFigmaPanel(false)}
-            onAdd={({ svgData, w, h }) => {
+            onAdd={({ svgData, figmaData, w, h }) => {
               const id = Date.now();
-              setItems(prev => [...prev, { id, type:"svg", svgData, w, h, x:16, y:Math.min(16+prev.length*40,400), isMaster:false }]);
+              if (figmaData) {
+                setItems(prev => [...prev, { id, type:"figma", figmaData, w, h, x:16, y:Math.min(16+prev.length*40,400), isMaster:false }]);
+              } else {
+                setItems(prev => [...prev, { id, type:"svg", svgData, w, h, x:16, y:Math.min(16+prev.length*40,400), isMaster:false }]);
+              }
               setSelected(id);
               setShowFigmaPanel(false);
             }}
