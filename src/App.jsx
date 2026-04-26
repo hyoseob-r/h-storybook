@@ -1881,7 +1881,7 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
       const justMap = { start:"flex-start", center:"center", end:"flex-end", "space-between":"space-between" };
       const alignMap = { start:"flex-start", center:"center", end:"flex-end" };
       const wPx = resolvedW || item.w || 240;
-      const hPx = item.hMode==="hug" ? undefined : (resolvedH || item.h || 160);
+      const hPx = resolvedH || item.h || 160;
       const posStyle = parentAL ? {
         position:"relative",
         flexShrink: item.wMode==="hug" ? 0 : (item.wMode==="fill" ? 1 : 0),
@@ -1894,8 +1894,8 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
           ref={el => compRefs.current[item.id] = el}
           style={{
             ...posStyle,
-            width: item.wMode==="fill" ? "100%" : `${wPx}px`,
-            height: hPx ? `${hPx}px` : undefined,
+            width: item.wMode==="fill" ? "100%" : item.wMode==="hug" ? "fit-content" : `${wPx}px`,
+            height: item.hMode==="hug" ? "fit-content" : `${hPx}px`,
             background: item.frameBg || "rgba(0,0,0,0.03)",
             border: `1px solid ${item.frameBorder || "#cccccc"}`,
             borderRadius: `${item.frameRadius||0}px`,
@@ -1990,7 +1990,7 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
             userSelect:"none",
             outline: !isProto ? `${sdp(1.5)}px dashed #2591b5` : "none",
             boxSizing:"border-box",
-          } : resolvedW ? { width:`${resolvedW}px` } : {}),
+          } : item.wMode==="hug" ? { width:"fit-content" } : item.hMode==="hug" ? { height:"fit-content" } : resolvedW ? { width:`${resolvedW}px` } : {}),
         }}
         {...(isProto && sc ? dragScrollHandlers : {})}
         onMouseDown={e => { if (!isProto) { e.stopPropagation(); startDrag(e, item); } }}
