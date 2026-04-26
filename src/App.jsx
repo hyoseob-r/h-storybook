@@ -1010,7 +1010,17 @@ function figmaFill(fills) {
     const stops = f.gradientStops.map(s => `${figmaRGBA(s.color)} ${Math.round(s.position*100)}%`).join(", ");
     return `linear-gradient(${stops})`;
   }
+  if (f.type === "GRADIENT_RADIAL") {
+    const stops = f.gradientStops.map(s => `${figmaRGBA(s.color)} ${Math.round(s.position*100)}%`).join(", ");
+    return `radial-gradient(${stops})`;
+  }
+  if (f.type === "IMAGE") return "#e8e8e8"; // 이미지 fills → 회색 플레이스홀더
   return undefined;
+}
+
+function figmaImageFill(fills) {
+  if (!fills?.length) return null;
+  return fills.find(f => f.visible !== false && f.type === "IMAGE") || null;
 }
 
 function figmaNodeToStyle(node, ox, oy) {
@@ -1022,7 +1032,8 @@ function figmaNodeToStyle(node, ox, oy) {
     width:  b ? b.width  : "auto",
     height: b ? b.height : "auto",
     boxSizing: "border-box",
-    overflow: "hidden",
+    // clipsContent가 명시적으로 true인 노드만 overflow:hidden
+    overflow: node.clipsContent === true ? "hidden" : "visible",
   };
   if (node.opacity !== undefined && node.opacity < 1) s.opacity = node.opacity;
   if (node.cornerRadius) s.borderRadius = node.cornerRadius;
@@ -1062,7 +1073,7 @@ function RenderFigmaNode({ node, ox, oy }) {
         textAlign: (ts.textAlignHorizontal || "LEFT").toLowerCase(),
         color: textColor || "#000",
         whiteSpace: "pre-wrap",
-        fontFamily: "system-ui, sans-serif",
+        fontFamily: "Pretendard, system-ui, sans-serif",
       }}>
         {node.characters}
       </div>
@@ -1073,9 +1084,31 @@ function RenderFigmaNode({ node, ox, oy }) {
     return <div style={{ ...style, borderRadius: "50%" }} />;
   }
 
+  // VECTOR, BOOLEAN_OPERATION, STAR, POLYGON → fill color로 채운 박스 (아이콘 placeholder)
+  if (node.type === "VECTOR" || node.type === "BOOLEAN_OPERATION" || node.type === "STAR" || node.type === "POLYGON") {
+    const fillColor = figmaFill(node.fills) || figmaFill(node.strokes) || "rgba(0,0,0,0.15)";
+    return <div style={{ ...style, background: fillColor, borderRadius: style.borderRadius || 2 }} />;
+  }
+
+  // LINE → 얇은 선
+  if (node.type === "LINE") {
+    const strokeColor = figmaFill(node.strokes) || "#ccc";
+    return <div style={{ ...style, background: strokeColor, height: Math.max(style.height, 1) }} />;
+  }
+
+  // RECTANGLE, FRAME, GROUP, COMPONENT, INSTANCE, COMPONENT_SET → 자식 렌더
+  // 이미지 fill이 있으면 회색 플레이스홀더 오버레이
+  const imgFill = figmaImageFill(node.fills);
+  const children = node.children || [];
+
   return (
     <div style={style}>
-      {(node.children || []).map((child, i) => (
+      {imgFill && children.length === 0 && (
+        <div style={{ position:"absolute", inset:0, background:"#d0d0d0", display:"flex", alignItems:"center", justifyContent:"center" }}>
+          <span style={{ fontSize:"10px", color:"#999" }}>🖼</span>
+        </div>
+      )}
+      {children.map((child, i) => (
         <RenderFigmaNode key={`${child.id||i}`} node={child} ox={ox} oy={oy} />
       ))}
     </div>
