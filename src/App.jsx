@@ -1627,13 +1627,21 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
       }
     };
     const onEnd = () => { if (pinchRef.current) pinchRef.current = null; };
+    const onWheel = (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        setProtoScale(prev => Math.min(3, Math.max(0.4, prev * (1 - e.deltaY * 0.003))));
+      }
+    };
     el.addEventListener("touchstart", onStart, { passive: true });
     el.addEventListener("touchmove",  onMove,  { passive: false });
     el.addEventListener("touchend",   onEnd,   { passive: true });
+    el.addEventListener("wheel",      onWheel, { passive: false });
     return () => {
       el.removeEventListener("touchstart", onStart);
       el.removeEventListener("touchmove",  onMove);
       el.removeEventListener("touchend",   onEnd);
+      el.removeEventListener("wheel",      onWheel);
     };
   }, [isProto, protoScale]);
 
@@ -1935,13 +1943,42 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
     } : {
       position:"absolute", left:`${item.x||0}px`, top:`${item.y||0}px`,
     };
+    // mouse-drag scroll handler for prototype scroll containers
+    const makeDragScroll = (sc) => {
+      if (!sc || !isProto) return {};
+      let startX, startY, scrollLeft, scrollTop, isDragging = false;
+      return {
+        onMouseDown: (e) => {
+          const el = e.currentTarget;
+          isDragging = true;
+          startX = e.clientX; startY = e.clientY;
+          scrollLeft = el.scrollLeft; scrollTop = el.scrollTop;
+          el.style.cursor = "grabbing";
+          e.preventDefault(); e.stopPropagation();
+          const onMove = (ev) => {
+            if (!isDragging) return;
+            if (sc.direction === "horizontal") el.scrollLeft = scrollLeft - (ev.clientX - startX);
+            else el.scrollTop = scrollTop - (ev.clientY - startY);
+          };
+          const onUp = () => {
+            isDragging = false;
+            el.style.cursor = "grab";
+            window.removeEventListener("mousemove", onMove);
+            window.removeEventListener("mouseup", onUp);
+          };
+          window.addEventListener("mousemove", onMove);
+          window.addEventListener("mouseup", onUp);
+        },
+      };
+    };
+    const dragScrollHandlers = makeDragScroll(sc);
     return (
       <div key={item.id}
         ref={el => compRefs.current[item.id] = el}
         className={sc && isProto ? "sim-noscrollbar" : undefined}
         style={{
           ...posStyle,
-          cursor: isProto ? (item.onTap?"pointer":"default") : item.isMaster?"pointer":"grab",
+          cursor: isProto ? (sc ? "grab" : item.onTap ? "pointer" : "default") : item.isMaster?"pointer":"grab",
           ...(sc ? {
             width:`${clipW}px`, height:`${clipH}px`,
             overflowX: sc.direction==="horizontal" ? (isProto?"scroll":"hidden") : "hidden",
@@ -1950,10 +1987,12 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
             scrollbarWidth:"none",
             msOverflowStyle:"none",
             touchAction: isProto ? (sc.direction==="horizontal" ? "pan-x" : "pan-y") : "none",
+            userSelect:"none",
             outline: !isProto ? `${sdp(1.5)}px dashed #2591b5` : "none",
             boxSizing:"border-box",
           } : resolvedW ? { width:`${resolvedW}px` } : {}),
         }}
+        {...(isProto && sc ? dragScrollHandlers : {})}
         onMouseDown={e => { if (!isProto) { e.stopPropagation(); startDrag(e, item); } }}
         onMouseEnter={() => !isProto && setHovered(item.id)}
         onMouseLeave={() => !isProto && setHovered(null)}
