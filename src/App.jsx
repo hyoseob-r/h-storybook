@@ -1213,9 +1213,17 @@ function FigmaImportPanel({ onAdd, onClose }) {
       const rootX = rootB?.x || 0;
       const rootY = rootB?.y || 0;
 
-      // Figma 노드 트리 → items 트리 변환
+      // ── 색상 헬퍼 ──
+      function figmaColorToHex(c, a) {
+        if (!c) return null;
+        const hex = `#${Math.round(c.r*255).toString(16).padStart(2,"0")}${Math.round(c.g*255).toString(16).padStart(2,"0")}${Math.round(c.b*255).toString(16).padStart(2,"0")}`;
+        const alpha = a ?? c.a ?? 1;
+        return alpha < 1 ? `rgba(${Math.round(c.r*255)},${Math.round(c.g*255)},${Math.round(c.b*255)},${alpha.toFixed(2)})` : hex;
+      }
+
+      // ── Figma 노드 트리 → items 트리 변환 ──
       let idCounter = Date.now();
-      function figmaNodeToItem(node) {
+      function figmaNodeToItem(node, parentNode = null) {
         const b = node.absoluteBoundingBox;
         if (!b) return null;
         const x = Math.round(b.x - rootX);
@@ -1225,41 +1233,81 @@ function FigmaImportPanel({ onAdd, onClose }) {
         const id = idCounter++;
         const name = node.name || node.type;
 
+        // ── Constraints 파싱 ──
+        const cH = node.constraints?.horizontal || "LEFT";   // LEFT RIGHT CENTER SCALE STRETCH
+        const cV = node.constraints?.vertical   || "TOP";    // TOP BOTTOM CENTER SCALE STRETCH
+        const constraints = { horizontal: cH, vertical: cV };
+
+        // ── fills → background ──
+        const fills = node.fills?.[0];
+        let frameBg = "transparent";
+        if (fills?.type === "SOLID" && fills.color) {
+          frameBg = figmaColorToHex(fills.color, fills.opacity);
+        } else if (fills?.type === "GRADIENT_LINEAR" && fills.gradientStops) {
+          const stops = fills.gradientStops.map(s => `${figmaColorToHex(s.color)} ${Math.round(s.position*100)}%`).join(", ");
+          frameBg = `linear-gradient(${stops})`;
+        }
+
+        // ── strokes → border ──
+        const stroke = node.strokes?.[0];
+        const frameBorder = (stroke?.type === "SOLID" && stroke.color)
+          ? figmaColorToHex(stroke.color, stroke.opacity)
+          : "transparent";
+
         if (node.type === "TEXT") {
           const fs = node.style?.fontSize || 14;
-          // 가장 가까운 YDS 스타일 매핑
+          const fw = node.style?.fontWeight || 400;
           const styleMap = [
             { name:"meta_sf_title1", size:28 }, { name:"meta_sf_title2", size:22 },
             { name:"meta_sf_title3", size:17 }, { name:"meta_sf_body1",  size:15 },
             { name:"meta_sf_body2",  size:13 }, { name:"meta_sf_caption1", size:11 },
           ];
-          const matched = styleMap.reduce((a,b) => Math.abs(b.size-fs) < Math.abs(a.size-fs) ? b : a);
-          const fills = node.fills?.[0];
-          const color = fills?.color ? `#${Math.round(fills.color.r*255).toString(16).padStart(2,"0")}${Math.round(fills.color.g*255).toString(16).padStart(2,"0")}${Math.round(fills.color.b*255).toString(16).padStart(2,"0")}` : "#333333";
-          return { id, type:"text", x, y, w, h, name, content: node.characters||name, style: matched.name, color };
+          const matched = styleMap.reduce((a,s) => Math.abs(s.size-fs) < Math.abs(a.size-fs) ? s : a);
+          const color = fills?.color ? figmaColorToHex(fills.color, fills.opacity) : "#333333";
+          const textAlign = node.style?.textAlignHorizontal?.toLowerCase() || "left";
+          return { id, type:"text", x, y, w, h, name, content: node.characters||name, style: matched.name, color, textAlign, constraints };
         }
 
-        // FRAME / COMPONENT / GROUP / RECTANGLE 등
-        const fills = node.fills?.[0];
-        let frameBg = "#ffffff";
-        if (fills?.type === "SOLID" && fills.color) {
-          const {r,g,b:bl,a=1} = fills.color;
-          frameBg = a < 1
-            ? `rgba(${Math.round(r*255)},${Math.round(g*255)},${Math.round(bl*255)},${a.toFixed(2)})`
-            : `#${Math.round(r*255).toString(16).padStart(2,"0")}${Math.round(g*255).toString(16).padStart(2,"0")}${Math.round(bl*255).toString(16).padStart(2,"0")}`;
-        } else if (fills?.type === "NONE" || !fills) {
-          frameBg = "transparent";
+        // ── Auto Layout 파싱 ──
+        let autoLayout = null;
+        if (node.layoutMode && node.layoutMode !== "NONE") {
+          const mainAxisMap = { MIN:"flex-start", CENTER:"center", MAX:"flex-end", SPACE_BETWEEN:"space-between" };
+          const crossAxisMap = { MIN:"flex-start", CENTER:"center", MAX:"flex-end", BASELINE:"flex-start" };
+          autoLayout = {
+            enabled: true,
+            direction: node.layoutMode === "HORIZONTAL" ? "horizontal" : "vertical",
+            gap: node.itemSpacing || 0,
+            padT: node.paddingTop    || node.verticalPadding   || 0,
+            padB: node.paddingBottom || node.verticalPadding   || 0,
+            padL: node.paddingLeft   || node.horizontalPadding || 0,
+            padR: node.paddingRight  || node.horizontalPadding || 0,
+            mainAlign:  mainAxisMap[node.primaryAxisAlignItems]   || "flex-start",
+            crossAlign: crossAxisMap[node.counterAxisAlignItems]  || "flex-start",
+            wrap: node.layoutWrap === "WRAP",
+            // 크기 모드
+            wMode: node.primaryAxisSizingMode === "AUTO" ? (node.layoutMode==="HORIZONTAL"?"hug":"fixed")
+                 : node.counterAxisSizingMode === "AUTO" ? (node.layoutMode==="VERTICAL"?"hug":"fixed") : "fixed",
+          };
         }
-        const strokes = node.strokes?.[0];
-        let frameBorder = "transparent";
-        if (strokes?.type === "SOLID" && strokes.color) {
-          const {r,g,b:bl} = strokes.color;
-          frameBorder = `#${Math.round(r*255).toString(16).padStart(2,"0")}${Math.round(g*255).toString(16).padStart(2,"0")}${Math.round(bl*255).toString(16).padStart(2,"0")}`;
-        }
-        const frameRadius = node.cornerRadius || (node.rectangleCornerRadii?.[0]) || 0;
-        const children = (node.children || []).map(figmaNodeToItem).filter(Boolean)
-          .map(child => ({ ...child, x: child.x - x, y: child.y - y })); // 부모 기준 상대좌표
-        return { id, type:"frame", x, y, w, h, name, frameBg, frameBorder, frameRadius: Math.round(frameRadius), children };
+
+        // ── layoutGrow → fill 모드 ──
+        const layoutGrow = node.layoutGrow || 0; // 1 = fill in parent AL
+
+        const frameRadius = node.cornerRadius || node.rectangleCornerRadii?.[0] || 0;
+        const opacity = node.opacity !== undefined ? node.opacity : 1;
+
+        const children = (node.children || [])
+          .map(child => figmaNodeToItem(child, node))
+          .filter(Boolean)
+          .map(child => ({ ...child, x: child.x - x, y: child.y - y }));
+
+        return {
+          id, type:"frame", x, y, w, h, name,
+          frameBg, frameBorder, frameRadius: Math.round(frameRadius),
+          opacity: opacity < 1 ? opacity : undefined,
+          autoLayout, layoutGrow, constraints,
+          children,
+        };
       }
 
       const convertedItems = (doc.children || [doc]).map(figmaNodeToItem).filter(Boolean);
@@ -1990,7 +2038,7 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
     if (item.type === "text") {
       const t = typography.find(t => t.name === item.style) || { size:14, weight:400, lineHeight:19 };
       return (
-        <div style={{ fontSize:`${t.size}px`, fontWeight:t.weight, lineHeight:`${t.lineHeight}px`, color:item.color, fontFamily: platform==="ios"?"system-ui":"Roboto,sans-serif", userSelect:"none", whiteSpace:"pre-wrap" }}>
+        <div style={{ fontSize:`${t.size}px`, fontWeight:t.weight, lineHeight:`${t.lineHeight}px`, color:item.color, fontFamily: platform==="ios"?"system-ui":"Roboto,sans-serif", userSelect:"none", whiteSpace:"pre-wrap", textAlign: item.textAlign||"left", width:"100%" }}>
           {item.content}
         </div>
       );
@@ -2024,35 +2072,70 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
     if (item.type === "frame") {
       const al = item.autoLayout?.enabled ? item.autoLayout : null;
       const flexDir = al?.direction==="horizontal" ? "row" : "column";
-      const justMap = { start:"flex-start", center:"center", end:"flex-end", "space-between":"space-between" };
-      const alignMap = { start:"flex-start", center:"center", end:"flex-end" };
       const wPx = resolvedW || item.w || 240;
       const hPx = resolvedH || item.h || 160;
-      const posStyle = parentAL ? {
-        position:"relative",
-        flexShrink: item.wMode==="hug" ? 0 : (item.wMode==="fill" ? 1 : 0),
-        flex: item.wMode==="fill" ? "1 1 auto" : undefined,
-      } : {
-        position:"absolute", left:`${item.x||0}px`, top:`${item.y||0}px`,
-      };
+
+      // ── Constraints → posStyle ──
+      const con = item.constraints;
+      let posStyle;
+      if (parentAL) {
+        // 부모가 Auto Layout이면 flex 흐름
+        const grow = item.layoutGrow === 1;
+        posStyle = {
+          position: "relative",
+          flex: grow ? "1 1 auto" : "0 0 auto",
+          alignSelf: con?.vertical === "STRETCH" ? "stretch" : undefined,
+        };
+      } else if (con && parentAL === null) {
+        // 부모가 절대 배치 — Constraints 적용
+        const ch = con.horizontal;
+        const cv = con.vertical;
+        posStyle = { position:"absolute" };
+        // 수평
+        if (ch === "RIGHT")        { posStyle.right = 0; }
+        else if (ch === "CENTER")  { posStyle.left="50%"; posStyle.transform=`translateX(-50%)`; }
+        else if (ch === "STRETCH") { posStyle.left=`${item.x}px`; posStyle.right=0; }
+        else                       { posStyle.left=`${item.x||0}px`; }
+        // 수직
+        if (cv === "BOTTOM")       { posStyle.bottom=0; }
+        else if (cv === "CENTER")  {
+          posStyle.top="50%";
+          posStyle.transform = (posStyle.transform||"") + " translateY(-50%)";
+        } else if (cv === "STRETCH") { posStyle.top=`${item.y}px`; posStyle.bottom=0; }
+        else                       { posStyle.top=`${item.y||0}px`; }
+      } else {
+        posStyle = { position:"absolute", left:`${item.x||0}px`, top:`${item.y||0}px` };
+      }
+
+      // ── 크기 ──
+      const widthStyle  = (con?.horizontal==="STRETCH" && !parentAL) ? "auto"
+        : item.wMode==="fill" ? "100%"
+        : item.wMode==="hug"  ? "fit-content"
+        : (item.layoutGrow===1 && parentAL) ? undefined  // flex가 처리
+        : `${wPx}px`;
+      const heightStyle = (con?.vertical==="STRETCH" && !parentAL) ? "auto"
+        : item.hMode==="hug" ? "fit-content"
+        : `${hPx}px`;
+
       return (
         <div key={item.id}
           ref={el => compRefs.current[item.id] = el}
           style={{
             ...posStyle,
-            width: item.wMode==="fill" ? "100%" : item.wMode==="hug" ? "fit-content" : `${wPx}px`,
-            height: item.hMode==="hug" ? "fit-content" : `${hPx}px`,
+            width: widthStyle,
+            height: heightStyle,
             background: item.frameBg || "rgba(0,0,0,0.03)",
-            border: `1px solid ${item.frameBorder || "#cccccc"}`,
+            border: item.frameBorder && item.frameBorder !== "transparent" ? `1px solid ${item.frameBorder}` : "none",
             borderRadius: `${item.frameRadius||0}px`,
+            opacity: item.opacity,
             overflow: "hidden",
             boxSizing: "border-box",
             display: al ? "flex" : "block",
             flexDirection: al ? flexDir : undefined,
             gap: al ? `${al.gap||0}px` : undefined,
             padding: al ? `${al.padT||0}px ${al.padR||0}px ${al.padB||0}px ${al.padL||0}px` : 0,
-            justifyContent: al ? (justMap[al.mainAlign]||"flex-start") : undefined,
-            alignItems: al ? (alignMap[al.crossAlign]||"center") : undefined,
+            justifyContent: al ? (al.mainAlign||"flex-start") : undefined,
+            alignItems: al ? (al.crossAlign||"flex-start") : undefined,
             flexWrap: al?.wrap ? "wrap" : "nowrap",
             cursor: isProto ? (item.onTap?"pointer":"default") : "grab",
           }}
@@ -2082,13 +2165,25 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
     // leaf item
     const clipW = sc?.clipW || resolvedW;
     const clipH = sc?.clipH || resolvedH || item.h;
-    const posStyle = parentAL ? {
-      position:"relative",
-      flexShrink: item.wMode==="hug" ? 0 : (item.wMode==="fill" ? 1 : 0),
-      flex: item.wMode==="fill" ? "1 1 auto" : undefined,
-    } : {
-      position:"absolute", left:`${item.x||0}px`, top:`${item.y||0}px`,
-    };
+    const conL = item.constraints;
+    let posStyle;
+    if (parentAL) {
+      const grow = item.layoutGrow === 1;
+      posStyle = { position:"relative", flex: grow ? "1 1 auto" : "0 0 auto",
+        alignSelf: conL?.vertical==="STRETCH" ? "stretch" : undefined };
+    } else if (conL) {
+      posStyle = { position:"absolute" };
+      if (conL.horizontal==="RIGHT")        posStyle.right = 0;
+      else if (conL.horizontal==="CENTER")  { posStyle.left="50%"; posStyle.transform="translateX(-50%)"; }
+      else if (conL.horizontal==="STRETCH") { posStyle.left=`${item.x}px`; posStyle.right=0; }
+      else                                  posStyle.left=`${item.x||0}px`;
+      if (conL.vertical==="BOTTOM")         posStyle.bottom = 0;
+      else if (conL.vertical==="CENTER")    { posStyle.top="50%"; posStyle.transform=(posStyle.transform||"")+" translateY(-50%)"; }
+      else if (conL.vertical==="STRETCH")   { posStyle.top=`${item.y}px`; posStyle.bottom=0; }
+      else                                  posStyle.top=`${item.y||0}px`;
+    } else {
+      posStyle = { position:"absolute", left:`${item.x||0}px`, top:`${item.y||0}px` };
+    }
     // mouse-drag scroll handler for prototype scroll containers
     const makeDragScroll = (sc) => {
       if (!sc || !isProto) return {};
