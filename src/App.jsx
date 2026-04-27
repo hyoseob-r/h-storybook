@@ -1613,6 +1613,10 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
   const [showAiPanel,     setShowAiPanel]     = useState(false);
   const [aiCommand,       setAiCommand]       = useState("");
   const [aiStatus,        setAiStatus]        = useState("idle"); // idle | waiting | done | error
+  const [aiStartTime,     setAiStartTime]     = useState(null);
+  const [aiElapsed,       setAiElapsed]       = useState(0);
+  const aiPollRef         = useRef(null);
+  const aiTimerRef        = useRef(null);
   const [pickerDrafts,    setPickerDrafts]    = useState([]);
   const [pickerLoading,   setPickerLoading]   = useState(false);
   const [showCode,        setShowCode]        = useState(false);
@@ -1785,32 +1789,50 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
   }, [selected, items]);
 
   // ── AI 명령 브릿지 ───────────────────────────────────────────────────────────
+  const cancelAiCommand = () => {
+    clearInterval(aiPollRef.current);
+    clearInterval(aiTimerRef.current);
+    setAiStatus("idle");
+    setAiStartTime(null);
+    setAiElapsed(0);
+  };
+
   const sendAiCommand = async () => {
     if (!aiCommand.trim()) return;
-    setAiStatus("waiting");
     const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
     if (!isLocal) {
-      setAiStatus("error");
       alert("AI 명령은 로컬 개발 서버(localhost)에서만 동작합니다.\nnpm run dev 로 실행해주세요.");
       return;
     }
+    const start = Date.now();
+    setAiStatus("waiting");
+    setAiStartTime(start);
+    setAiElapsed(0);
+    // 경과 타이머
+    aiTimerRef.current = setInterval(() => setAiElapsed(Math.floor((Date.now() - start) / 1000)), 500);
     // 결과 파일 초기화 후 명령 저장
     await fetch("/api/ai-result", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ cleared: true }) });
-    await fetch("/api/ai-command", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ command: aiCommand.trim(), screen: activeScreen, timestamp: Date.now() }) });
+    await fetch("/api/ai-command", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ command: aiCommand.trim(), screen: activeScreen, timestamp: start }) });
     // 결과 폴링 (최대 2분)
-    const deadline = Date.now() + 120_000;
-    const poll = setInterval(async () => {
-      if (Date.now() > deadline) { clearInterval(poll); setAiStatus("error"); return; }
+    const deadline = start + 120_000;
+    aiPollRef.current = setInterval(async () => {
+      if (Date.now() > deadline) {
+        clearInterval(aiPollRef.current);
+        clearInterval(aiTimerRef.current);
+        setAiStatus("error");
+        return;
+      }
       try {
         const res = await fetch("/api/ai-result");
         const data = await res.json();
         if (data && data.items && !data.cleared) {
-          clearInterval(poll);
+          clearInterval(aiPollRef.current);
+          clearInterval(aiTimerRef.current);
           setScreens(prev => prev.map(s => s.id === activeScreen ? { ...s, items: data.items } : s));
           setItems(data.items);
           setAiStatus("done");
           setAiCommand("");
-          setTimeout(() => setAiStatus("idle"), 2000);
+          setTimeout(() => { setAiStatus("idle"); setAiStartTime(null); setAiElapsed(0); }, 2500);
         }
       } catch {}
     }, 1500);
@@ -2606,9 +2628,23 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
 
         {/* AI 명령 패널 */}
         <div style={{ background: aiStatus==="waiting" ? "#fffbe8" : aiStatus==="done" ? "#f0fff4" : aiStatus==="error" ? "#fff0f0" : "#f5f0ff", border:`1px solid ${aiStatus==="waiting"?"#f0c040":aiStatus==="done"?"#88cc88":aiStatus==="error"?"#ee8888":"#c0a0ff"}`, borderRadius:"10px", padding:"10px" }}>
-          <div style={{ fontSize:"10px", fontWeight:700, color: aiStatus==="waiting"?"#b07000":aiStatus==="done"?"#336633":aiStatus==="error"?"#aa2222":"#5028c8", letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:"7px" }}>
-            {aiStatus==="waiting" ? "⏳ Claude 처리 중..." : aiStatus==="done" ? "✓ 완료" : aiStatus==="error" ? "✗ 오류" : "✦ AI 명령"}
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"7px" }}>
+            <div style={{ fontSize:"10px", fontWeight:700, color: aiStatus==="waiting"?"#b07000":aiStatus==="done"?"#336633":aiStatus==="error"?"#aa2222":"#5028c8", letterSpacing:"0.1em", textTransform:"uppercase" }}>
+              {aiStatus==="waiting" ? "⏳ Claude 처리 중..." : aiStatus==="done" ? "✓ 완료" : aiStatus==="error" ? "✗ 시간 초과" : "✦ AI 명령"}
+            </div>
+            {aiStatus==="waiting" && (
+              <button onClick={cancelAiCommand}
+                style={{ fontSize:"10px", padding:"2px 8px", borderRadius:"5px", background:"#fff0f0", border:"1px solid #ffaaaa", color:"#cc3333", cursor:"pointer", fontWeight:600 }}>
+                ■ 중지
+              </button>
+            )}
           </div>
+          {aiStatus==="waiting" && aiStartTime && (
+            <div style={{ fontSize:"9px", color:"#b07000", marginBottom:"6px", display:"flex", gap:"10px" }}>
+              <span>시작 {new Date(aiStartTime).toLocaleTimeString("ko-KR", { hour:"2-digit", minute:"2-digit", second:"2-digit" })}</span>
+              <span style={{ fontVariantNumeric:"tabular-nums" }}>경과 {aiElapsed}s <span style={{ color:"#d0a040" }}>/ ~30s</span></span>
+            </div>
+          )}
           <textarea
             value={aiCommand}
             onChange={e => setAiCommand(e.target.value)}
@@ -2621,7 +2657,7 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
             style={{ marginTop:"6px", width:"100%", padding:"7px", borderRadius:"6px", background: aiStatus==="waiting"?"#e5e5e5":"#5028c8", border:"none", color:"#fff", fontSize:"11px", fontWeight:700, cursor: aiStatus==="waiting"?"default":"pointer", opacity: !aiCommand.trim()?0.4:1, transition:"all 0.15s" }}>
             {aiStatus==="waiting" ? "처리 중..." : "→ 화면 그리기"}
           </button>
-          {aiStatus!=="waiting" && <div style={{ fontSize:"9px", color:"#aaa", marginTop:"4px", textAlign:"center" }}>로컬(localhost)에서만 동작합니다</div>}
+          {aiStatus==="idle" && <div style={{ fontSize:"9px", color:"#aaa", marginTop:"4px", textAlign:"center" }}>로컬(localhost)에서만 동작 · Cmd+Enter</div>}
         </div>
 
         <div style={{ background:"#ffffff", border:"1px solid #e5e5e5", borderRadius:"10px", padding:"12px" }}>
