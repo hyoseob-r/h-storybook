@@ -1615,7 +1615,7 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
   const [aiStatus,        setAiStatus]        = useState("idle"); // idle | waiting | done | error
   const [aiStartTime,     setAiStartTime]     = useState(null);
   const [aiElapsed,       setAiElapsed]       = useState(0);
-  const [aiProxyUrl,      setAiProxyUrl]      = useState(() => localStorage.getItem("storybook_ai_proxy_url") || null);
+  const [aiProxyUrl,      setAiProxyUrl]      = useState(() => { const v = localStorage.getItem("storybook_ai_proxy_url"); return (v && v !== "connected") ? v : null; });
   const [aiProxyChecking, setAiProxyChecking] = useState(false);
   const aiPollRef         = useRef(null);
   const aiTimerRef        = useRef(null);
@@ -1803,43 +1803,58 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
   const AI_PROXY_KEY = "storybook_ai_proxy_url";
 
   const detectAiProxy = async () => {
-    // 프록시 연결 불필요 — alfred-agent 허브 방식으로 동작
-    setAiProxyUrl("connected");
-    localStorage.setItem(AI_PROXY_KEY, "connected");
+    // ai-worker가 허브에 등록됐는지 확인
+    try {
+      const res = await fetch(`${AI_HUB}/api/get-proxy?github_login=hyoseob-r`, { signal: AbortSignal.timeout(5000) });
+      const data = await res.json();
+      if (data?.proxy_url) {
+        setAiProxyUrl("hub");
+        localStorage.setItem(AI_PROXY_KEY, "hub");
+        return;
+      }
+    } catch {}
+    alert("ai-worker가 실행 중이지 않습니다. Mac에서 ai-worker가 켜져 있는지 확인해주세요.");
   };
 
   const disconnectAiProxy = () => { localStorage.removeItem(AI_PROXY_KEY); setAiProxyUrl(null); };
 
   const sendAiCommand = async () => {
-    if (!aiCommand.trim()) return;
+    if (!aiCommand.trim() || !aiProxyUrl) return;
     const start = Date.now();
     setAiStatus("waiting");
     setAiStartTime(start);
     setAiElapsed(0);
     aiTimerRef.current = setInterval(() => setAiElapsed(Math.floor((Date.now() - start) / 1000)), 500);
 
-    // 1. 결과 초기화 + 명령 전송
-    await fetch(`${AI_HUB}/api/ai-queue`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ type:"result", payload:{ cleared:true, ts: start } }) });
-    await fetch(`${AI_HUB}/api/ai-queue`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ type:"command", payload:{ command: aiCommand.trim(), ts: start } }) });
+    try {
+      // 1. 결과 초기화 후 명령 허브에 전송
+      await fetch(`${AI_HUB}/api/ai-queue`, { method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ type:"result", payload:{ cleared:true, ts: start } }) });
+      await fetch(`${AI_HUB}/api/ai-queue`, { method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ type:"command", payload:{ command: aiCommand.trim(), ts: start } }) });
 
-    // 2. 결과 폴링 (최대 3분) — Claude Code가 처리 후 alfred-agent에 결과 저장
-    const deadline = start + 180_000;
-    aiPollRef.current = setInterval(async () => {
-      if (Date.now() > deadline) {
-        clearInterval(aiPollRef.current); clearInterval(aiTimerRef.current); setAiStatus("error"); return;
-      }
-      try {
-        const res  = await fetch(`${AI_HUB}/api/ai-queue?role=browser`);
-        const data = await res.json();
-        if (data && data.items && !data.cleared) {
-          clearInterval(aiPollRef.current); clearInterval(aiTimerRef.current);
-          setScreens(prev => prev.map(s => s.id === activeScreen ? { ...s, items: data.items } : s));
-          setItems(data.items);
-          setAiStatus("done"); setAiCommand("");
-          setTimeout(() => { setAiStatus("idle"); setAiStartTime(null); setAiElapsed(0); }, 2500);
+      // 2. ai-worker가 처리 후 허브에 올린 결과를 폴링
+      const deadline = start + 180_000;
+      aiPollRef.current = setInterval(async () => {
+        if (Date.now() > deadline) {
+          clearInterval(aiPollRef.current); clearInterval(aiTimerRef.current); setAiStatus("error"); return;
         }
-      } catch {}
-    }, 2000);
+        try {
+          const res  = await fetch(`${AI_HUB}/api/ai-queue?role=browser`);
+          const data = await res.json();
+          if (data?.items && !data.cleared && data._updatedAt > new Date(start).toISOString()) {
+            clearInterval(aiPollRef.current); clearInterval(aiTimerRef.current);
+            setScreens(prev => prev.map(s => s.id === activeScreen ? { ...s, items: data.items } : s));
+            setItems(data.items);
+            setAiStatus("done"); setAiCommand("");
+            setTimeout(() => { setAiStatus("idle"); setAiStartTime(null); setAiElapsed(0); }, 2500);
+          }
+        } catch {}
+      }, 2000);
+    } catch {
+      clearInterval(aiTimerRef.current);
+      setAiStatus("error");
+    }
   };
 
   // ── item helpers ─────────────────────────────────────────────────────────────
