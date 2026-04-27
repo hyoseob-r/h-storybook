@@ -1803,48 +1803,43 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
   const AI_PROXY_KEY = "storybook_ai_proxy_url";
 
   const detectAiProxy = async () => {
-    setAiProxyChecking(true);
-    const tryUrl = async (url) => {
-      try { const r = await fetch(url, { signal: AbortSignal.timeout(2000) }); const d = await r.json(); return d.ok ? url : null; } catch { return null; }
-    };
-    // 1. 로컬 직접
-    const local = await tryUrl("http://localhost:3721");
-    if (local) { localStorage.setItem(AI_PROXY_KEY, local); setAiProxyUrl(local); setAiProxyChecking(false); return; }
-    // 2. alfred-agent에 등록된 URL
-    try {
-      const r = await fetch(`${AI_HUB}/api/get-proxy?github_login=hyoseob-r`, { signal: AbortSignal.timeout(5000) });
-      const d = await r.json();
-      if (d.proxy_url) { const alive = await tryUrl(d.proxy_url); if (alive) { localStorage.setItem(AI_PROXY_KEY, d.proxy_url); setAiProxyUrl(d.proxy_url); setAiProxyChecking(false); return; } }
-    } catch {}
-    setAiProxyChecking(false);
-    alert("프록시를 찾을 수 없습니다.\n터미널에서 실행해주세요:\nnode ~/Desktop/Personal/h_world/storybook/ai-worker.mjs");
+    // 프록시 연결 불필요 — alfred-agent 허브 방식으로 동작
+    setAiProxyUrl("connected");
+    localStorage.setItem(AI_PROXY_KEY, "connected");
   };
 
   const disconnectAiProxy = () => { localStorage.removeItem(AI_PROXY_KEY); setAiProxyUrl(null); };
 
   const sendAiCommand = async () => {
-    if (!aiCommand.trim() || !aiProxyUrl) return;
+    if (!aiCommand.trim()) return;
     const start = Date.now();
     setAiStatus("waiting");
     setAiStartTime(start);
     setAiElapsed(0);
     aiTimerRef.current = setInterval(() => setAiElapsed(Math.floor((Date.now() - start) / 1000)), 500);
-    try {
-      const res = await fetch(`${aiProxyUrl}/api/ai-draw`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ command: aiCommand.trim() }),
-      });
-      const data = await res.json();
-      clearInterval(aiTimerRef.current);
-      if (data.ok && data.items) {
-        setScreens(prev => prev.map(s => s.id === activeScreen ? { ...s, items: data.items } : s));
-        setItems(data.items);
-        setAiStatus("done");
-        setAiCommand("");
-        setTimeout(() => { setAiStatus("idle"); setAiStartTime(null); setAiElapsed(0); }, 2500);
-      } else { setAiStatus("error"); }
-    } catch { clearInterval(aiTimerRef.current); setAiStatus("error"); }
+
+    // 1. 결과 초기화 + 명령 전송
+    await fetch(`${AI_HUB}/api/ai-queue`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ type:"result", payload:{ cleared:true, ts: start } }) });
+    await fetch(`${AI_HUB}/api/ai-queue`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ type:"command", payload:{ command: aiCommand.trim(), ts: start } }) });
+
+    // 2. 결과 폴링 (최대 3분) — Claude Code가 처리 후 alfred-agent에 결과 저장
+    const deadline = start + 180_000;
+    aiPollRef.current = setInterval(async () => {
+      if (Date.now() > deadline) {
+        clearInterval(aiPollRef.current); clearInterval(aiTimerRef.current); setAiStatus("error"); return;
+      }
+      try {
+        const res  = await fetch(`${AI_HUB}/api/ai-queue?role=browser`);
+        const data = await res.json();
+        if (data && data.items && !data.cleared) {
+          clearInterval(aiPollRef.current); clearInterval(aiTimerRef.current);
+          setScreens(prev => prev.map(s => s.id === activeScreen ? { ...s, items: data.items } : s));
+          setItems(data.items);
+          setAiStatus("done"); setAiCommand("");
+          setTimeout(() => { setAiStatus("idle"); setAiStartTime(null); setAiElapsed(0); }, 2500);
+        }
+      } catch {}
+    }, 2000);
   };
 
   // ── item helpers ─────────────────────────────────────────────────────────────
@@ -2645,9 +2640,9 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
                   <span style={{ fontSize:"9px", color:"#059669", fontWeight:600 }}>⚡ 연결됨</span>
                   <button onClick={disconnectAiProxy} style={{ fontSize:"9px", padding:"1px 6px", borderRadius:"4px", background:"transparent", border:"1px solid #fca5a5", color:"#dc2626", cursor:"pointer" }}>해제</button>
                 </div>
-              : <button onClick={detectAiProxy} disabled={aiProxyChecking}
+              : <button onClick={detectAiProxy}
                   style={{ fontSize:"9px", padding:"2px 8px", borderRadius:"5px", background:"#111", border:"none", color:"#fff", cursor:"pointer", fontWeight:600 }}>
-                  {aiProxyChecking ? "감지 중..." : "프록시 연결"}
+                  AI 활성화
                 </button>
             }
           </div>
