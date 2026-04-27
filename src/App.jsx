@@ -1798,6 +1798,23 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
   };
 
   const AI_HUB = "https://alfred-agent-nine.vercel.app";
+  const AI_PROXY_KEY = "storybook_ai_proxy_url";
+
+  const getAiProxyUrl = async () => {
+    // 1. localStorage 캐시
+    const cached = localStorage.getItem(AI_PROXY_KEY);
+    if (cached) {
+      try { const r = await fetch(cached, { signal: AbortSignal.timeout(2000) }); const d = await r.json(); if (d.ok) return cached; } catch {}
+      localStorage.removeItem(AI_PROXY_KEY);
+    }
+    // 2. alfred-agent에서 프록시 URL 조회
+    try {
+      const r = await fetch(`${AI_HUB}/api/get-proxy?github_login=hyoseob-r`, { signal: AbortSignal.timeout(5000) });
+      const d = await r.json();
+      if (d.proxy_url) { localStorage.setItem(AI_PROXY_KEY, d.proxy_url); return d.proxy_url; }
+    } catch {}
+    return null;
+  };
 
   const sendAiCommand = async () => {
     if (!aiCommand.trim()) return;
@@ -1807,35 +1824,34 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
     setAiElapsed(0);
     aiTimerRef.current = setInterval(() => setAiElapsed(Math.floor((Date.now() - start) / 1000)), 500);
 
-    // 결과 초기화 후 명령 저장 (alfred-agent 허브)
-    await fetch(`${AI_HUB}/api/ai-queue`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ type:"result", payload:{ cleared:true } }) });
-    await fetch(`${AI_HUB}/api/ai-queue`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ type:"command", payload:{ command: aiCommand.trim(), timestamp: start } }) });
-
-    // 결과 폴링 (최대 3분)
-    const deadline = start + 180_000;
-    let lastUpdatedAt = null;
-    aiPollRef.current = setInterval(async () => {
-      if (Date.now() > deadline) {
-        clearInterval(aiPollRef.current);
+    try {
+      const proxyUrl = await getAiProxyUrl();
+      if (!proxyUrl) {
         clearInterval(aiTimerRef.current);
         setAiStatus("error");
+        alert("AI Worker가 실행 중이지 않습니다.\n터미널에서 실행해주세요:\nnode ~/Desktop/Personal/h_world/storybook/ai-worker.mjs");
         return;
       }
-      try {
-        const res  = await fetch(`${AI_HUB}/api/ai-queue?role=browser`);
-        const data = await res.json();
-        if (data && data.items && !data.cleared && data._updatedAt !== lastUpdatedAt) {
-          lastUpdatedAt = data._updatedAt;
-          clearInterval(aiPollRef.current);
-          clearInterval(aiTimerRef.current);
-          setScreens(prev => prev.map(s => s.id === activeScreen ? { ...s, items: data.items } : s));
-          setItems(data.items);
-          setAiStatus("done");
-          setAiCommand("");
-          setTimeout(() => { setAiStatus("idle"); setAiStartTime(null); setAiElapsed(0); }, 2500);
-        }
-      } catch {}
-    }, 2000);
+      const res  = await fetch(`${proxyUrl}/api/ai-draw`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ command: aiCommand.trim() }),
+      });
+      const data = await res.json();
+      clearInterval(aiTimerRef.current);
+      if (data.ok && data.items) {
+        setScreens(prev => prev.map(s => s.id === activeScreen ? { ...s, items: data.items } : s));
+        setItems(data.items);
+        setAiStatus("done");
+        setAiCommand("");
+        setTimeout(() => { setAiStatus("idle"); setAiStartTime(null); setAiElapsed(0); }, 2500);
+      } else {
+        setAiStatus("error");
+      }
+    } catch (e) {
+      clearInterval(aiTimerRef.current);
+      setAiStatus("error");
+    }
   };
 
   // ── item helpers ─────────────────────────────────────────────────────────────
