@@ -1209,11 +1209,64 @@ function FigmaImportPanel({ onAdd, onClose }) {
       const nodeEntry = Object.values(data.nodes || {})[0];
       if (!nodeEntry?.document) throw new Error("노드를 가져오지 못했습니다.");
       const doc = nodeEntry.document;
-      const b = doc.absoluteBoundingBox;
-      const w = b?.width || 375;
-      const h = b?.height || 812;
-      toast("Figma 레이어 구조를 가져왔습니다!", "success");
-      onAdd({ figmaData: doc, w, h });
+      const rootB = doc.absoluteBoundingBox;
+      const rootX = rootB?.x || 0;
+      const rootY = rootB?.y || 0;
+
+      // Figma 노드 트리 → items 트리 변환
+      let idCounter = Date.now();
+      function figmaNodeToItem(node) {
+        const b = node.absoluteBoundingBox;
+        if (!b) return null;
+        const x = Math.round(b.x - rootX);
+        const y = Math.round(b.y - rootY);
+        const w = Math.round(b.width);
+        const h = Math.round(b.height);
+        const id = idCounter++;
+        const name = node.name || node.type;
+
+        if (node.type === "TEXT") {
+          const fs = node.style?.fontSize || 14;
+          // 가장 가까운 YDS 스타일 매핑
+          const styleMap = [
+            { name:"meta_sf_title1", size:28 }, { name:"meta_sf_title2", size:22 },
+            { name:"meta_sf_title3", size:17 }, { name:"meta_sf_body1",  size:15 },
+            { name:"meta_sf_body2",  size:13 }, { name:"meta_sf_caption1", size:11 },
+          ];
+          const matched = styleMap.reduce((a,b) => Math.abs(b.size-fs) < Math.abs(a.size-fs) ? b : a);
+          const fills = node.fills?.[0];
+          const color = fills?.color ? `#${Math.round(fills.color.r*255).toString(16).padStart(2,"0")}${Math.round(fills.color.g*255).toString(16).padStart(2,"0")}${Math.round(fills.color.b*255).toString(16).padStart(2,"0")}` : "#333333";
+          return { id, type:"text", x, y, w, h, name, content: node.characters||name, style: matched.name, color };
+        }
+
+        // FRAME / COMPONENT / GROUP / RECTANGLE 등
+        const fills = node.fills?.[0];
+        let frameBg = "#ffffff";
+        if (fills?.type === "SOLID" && fills.color) {
+          const {r,g,b:bl,a=1} = fills.color;
+          frameBg = a < 1
+            ? `rgba(${Math.round(r*255)},${Math.round(g*255)},${Math.round(bl*255)},${a.toFixed(2)})`
+            : `#${Math.round(r*255).toString(16).padStart(2,"0")}${Math.round(g*255).toString(16).padStart(2,"0")}${Math.round(bl*255).toString(16).padStart(2,"0")}`;
+        } else if (fills?.type === "NONE" || !fills) {
+          frameBg = "transparent";
+        }
+        const strokes = node.strokes?.[0];
+        let frameBorder = "transparent";
+        if (strokes?.type === "SOLID" && strokes.color) {
+          const {r,g,b:bl} = strokes.color;
+          frameBorder = `#${Math.round(r*255).toString(16).padStart(2,"0")}${Math.round(g*255).toString(16).padStart(2,"0")}${Math.round(bl*255).toString(16).padStart(2,"0")}`;
+        }
+        const frameRadius = node.cornerRadius || (node.rectangleCornerRadii?.[0]) || 0;
+        const children = (node.children || []).map(figmaNodeToItem).filter(Boolean)
+          .map(child => ({ ...child, x: child.x - x, y: child.y - y })); // 부모 기준 상대좌표
+        return { id, type:"frame", x, y, w, h, name, frameBg, frameBorder, frameRadius: Math.round(frameRadius), children };
+      }
+
+      const convertedItems = (doc.children || [doc]).map(figmaNodeToItem).filter(Boolean);
+      const finalItems = convertedItems.length > 0 ? convertedItems : [figmaNodeToItem(doc)].filter(Boolean);
+
+      toast(`Figma 레이어 ${finalItems.length}개 가져왔습니다!`, "success");
+      onAdd(finalItems);
       onClose();
     } catch (e) {
       setFetchError(e.message);
@@ -1619,6 +1672,7 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
   const [aiProxyChecking, setAiProxyChecking] = useState(false);
   const aiPollRef         = useRef(null);
   const aiTimerRef        = useRef(null);
+  const [collapsedLayers, setCollapsedLayers] = useState(new Set());
   const [pickerDrafts,    setPickerDrafts]    = useState([]);
   const [pickerLoading,   setPickerLoading]   = useState(false);
   const [showCode,        setShowCode]        = useState(false);
@@ -2754,14 +2808,17 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
         {showFigmaPanel && (
           <FigmaImportPanel
             onClose={() => setShowFigmaPanel(false)}
-            onAdd={({ svgData, figmaData, w, h }) => {
-              const id = Date.now();
-              if (figmaData) {
-                setItems(prev => [...prev, { id, type:"figma", figmaData, w, h, x:16, y:Math.min(16+prev.length*40,400), isMaster:false }]);
+            onAdd={(payload) => {
+              // 배열이면 Figma 레이어 트리 변환 결과
+              if (Array.isArray(payload)) {
+                setItems(prev => [...prev, ...payload]);
+                setSelected(payload[0]?.id || null);
               } else {
+                const { svgData, w, h } = payload;
+                const id = Date.now();
                 setItems(prev => [...prev, { id, type:"svg", svgData, w, h, x:16, y:Math.min(16+prev.length*40,400), isMaster:false }]);
+                setSelected(id);
               }
-              setSelected(id);
               setShowFigmaPanel(false);
             }}
           />
@@ -2812,26 +2869,59 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
           </div>
         )}
 
-        {/* Layers */}
-        <div style={{ background:"#ffffff", border:"1px solid #e5e5e5", borderRadius:"10px", padding:"12px", flex:1 }}>
-          <div style={{ fontSize:"10px", color:"#999999", letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:"8px", fontWeight:600 }}>Layers</div>
+        {/* Layers — Figma 스타일 */}
+        <div style={{ background:"#ffffff", border:"1px solid #e5e5e5", borderRadius:"10px", padding:"10px", flex:1, minHeight:0, display:"flex", flexDirection:"column" }}>
+          <div style={{ fontSize:"10px", color:"#999999", letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:"6px", fontWeight:600, flexShrink:0 }}>Layers</div>
           {items.length === 0
             ? <div style={{ fontSize:"10px", color:"#d0d0d0", textAlign:"center", padding:"12px 0" }}>비어있음</div>
-            : <div style={{ display:"flex", flexDirection:"column", gap:"2px" }}>
-                {flattenTree(items).map(({ item, depth }) => {
-                  const icon = item.type==="frame" ? "▣" : item.type==="labelButton" ? "⬚" : item.type==="text" ? "T" : "◈";
-                  const label = item.type==="frame" ? (item.name||"Frame") : item.type==="labelButton" ? item.labelText : item.type==="text" ? item.content : item.type==="svg" ? (item.name||"SVG") : item.type==="figma" ? (item.name||"Figma") : (item.name||item.type);
-                  return (
-                    <div key={item.id} onClick={() => setSelected(item.id)}
-                      style={{ display:"flex", alignItems:"center", paddingLeft:`${8+depth*10}px`, paddingRight:"4px", paddingTop:"4px", paddingBottom:"4px", borderRadius:"5px", background: selected===item.id?"#e5e5e5":"transparent", border: selected===item.id?"1px solid #c0c0c0":"1px solid transparent", cursor:"pointer" }}>
-                      <span style={{ fontSize:"10px", color: item.type==="frame"?"#5028c8": item.isMaster?"#ccaa00": selected===item.id?"#333":"#888", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", flex:1 }}>
-                        {depth>0 ? "└ " : ""}{item.isMaster?"🔒 ":""}{icon} {label}
-                      </span>
-                      <button onClick={e => { e.stopPropagation(); if (!item.isMaster) removeItem(item.id); }}
-                        style={{ background:"none", border:"none", color:"#ccc", cursor: item.isMaster?"default":"pointer", fontSize:"11px", padding:"0 2px", flexShrink:0 }}>×</button>
-                    </div>
-                  );
-                })}
+            : <div style={{ display:"flex", flexDirection:"column", gap:"0px", overflowY:"auto" }}>
+                {(function renderLayerNodes(nodes, depth) {
+                  return nodes.map(item => {
+                    const hasChildren = item.children?.length > 0;
+                    const isCollapsed = collapsedLayers.has(item.id);
+                    const isSelected  = selected === item.id;
+                    const icon = item.type==="frame" ? "▣" : item.type==="labelButton" ? "⬚" : item.type==="text" ? "T" : item.type==="svg" ? "◈" : item.type==="figma" ? "◈" : "▪";
+                    const label = item.type==="text" ? (item.content?.slice(0,20)||(item.name||"Text"))
+                      : item.type==="labelButton" ? (item.labelText||"Button")
+                      : (item.name || item.type);
+                    const typeColor = item.type==="frame" ? "#5028c8" : item.type==="text" ? "#c07000" : "#888";
+                    return [
+                      <div key={item.id}
+                        onClick={() => setSelected(item.id)}
+                        style={{
+                          display:"flex", alignItems:"center", gap:"2px",
+                          paddingLeft:`${4 + depth * 12}px`, paddingRight:"4px",
+                          height:"22px",
+                          borderRadius:"4px",
+                          background: isSelected ? "#e8e3ff" : "transparent",
+                          cursor:"pointer",
+                          userSelect:"none",
+                        }}
+                        onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background="#f5f5f5"; }}
+                        onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background="transparent"; }}
+                      >
+                        {/* 삼각형 토글 */}
+                        <span onClick={e => { e.stopPropagation(); if (hasChildren) setCollapsedLayers(s => { const n=new Set(s); n.has(item.id)?n.delete(item.id):n.add(item.id); return n; }); }}
+                          style={{ width:"12px", fontSize:"8px", color:"#aaa", flexShrink:0, cursor: hasChildren?"pointer":"default", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                          {hasChildren ? (isCollapsed ? "▶" : "▼") : ""}
+                        </span>
+                        {/* 아이콘 */}
+                        <span style={{ fontSize:"9px", color: isSelected?"#5028c8":typeColor, flexShrink:0, width:"12px", textAlign:"center" }}>{icon}</span>
+                        {/* 이름 */}
+                        <span style={{ fontSize:"10px", color: isSelected?"#3010a0":"#333", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", flex:1, lineHeight:"22px" }}>
+                          {label}
+                        </span>
+                        {/* 삭제 */}
+                        <button onClick={e => { e.stopPropagation(); if (!item.isMaster) removeItem(item.id); }}
+                          style={{ background:"none", border:"none", color:"transparent", cursor:"pointer", fontSize:"11px", padding:"0 2px", flexShrink:0 }}
+                          onMouseEnter={e => e.currentTarget.style.color="#cc3333"}
+                          onMouseLeave={e => e.currentTarget.style.color="transparent"}
+                        >×</button>
+                      </div>,
+                      ...(hasChildren && !isCollapsed ? renderLayerNodes(item.children, depth+1) : [])
+                    ];
+                  }).flat();
+                })(items, 0)}
               </div>
           }
         </div>
