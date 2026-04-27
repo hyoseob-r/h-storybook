@@ -1797,24 +1797,23 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
     setAiElapsed(0);
   };
 
+  const AI_HUB = "https://alfred-agent-nine.vercel.app";
+
   const sendAiCommand = async () => {
     if (!aiCommand.trim()) return;
-    const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-    if (!isLocal) {
-      alert("AI 명령은 로컬 개발 서버(localhost)에서만 동작합니다.\nnpm run dev 로 실행해주세요.");
-      return;
-    }
     const start = Date.now();
     setAiStatus("waiting");
     setAiStartTime(start);
     setAiElapsed(0);
-    // 경과 타이머
     aiTimerRef.current = setInterval(() => setAiElapsed(Math.floor((Date.now() - start) / 1000)), 500);
-    // 결과 파일 초기화 후 명령 저장
-    await fetch("/api/ai-result", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ cleared: true }) });
-    await fetch("/api/ai-command", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ command: aiCommand.trim(), screen: activeScreen, timestamp: start }) });
-    // 결과 폴링 (최대 2분)
-    const deadline = start + 120_000;
+
+    // 결과 초기화 후 명령 저장 (alfred-agent 허브)
+    await fetch(`${AI_HUB}/api/ai-queue`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ type:"result", payload:{ cleared:true } }) });
+    await fetch(`${AI_HUB}/api/ai-queue`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ type:"command", payload:{ command: aiCommand.trim(), timestamp: start } }) });
+
+    // 결과 폴링 (최대 3분)
+    const deadline = start + 180_000;
+    let lastUpdatedAt = null;
     aiPollRef.current = setInterval(async () => {
       if (Date.now() > deadline) {
         clearInterval(aiPollRef.current);
@@ -1823,9 +1822,10 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
         return;
       }
       try {
-        const res = await fetch("/api/ai-result");
+        const res  = await fetch(`${AI_HUB}/api/ai-queue?role=browser`);
         const data = await res.json();
-        if (data && data.items && !data.cleared) {
+        if (data && data.items && !data.cleared && data._updatedAt !== lastUpdatedAt) {
+          lastUpdatedAt = data._updatedAt;
           clearInterval(aiPollRef.current);
           clearInterval(aiTimerRef.current);
           setScreens(prev => prev.map(s => s.id === activeScreen ? { ...s, items: data.items } : s));
@@ -1835,7 +1835,7 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
           setTimeout(() => { setAiStatus("idle"); setAiStartTime(null); setAiElapsed(0); }, 2500);
         }
       } catch {}
-    }, 1500);
+    }, 2000);
   };
 
   // ── item helpers ─────────────────────────────────────────────────────────────
@@ -2657,7 +2657,7 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
             style={{ marginTop:"6px", width:"100%", padding:"7px", borderRadius:"6px", background: aiStatus==="waiting"?"#e5e5e5":"#5028c8", border:"none", color:"#fff", fontSize:"11px", fontWeight:700, cursor: aiStatus==="waiting"?"default":"pointer", opacity: !aiCommand.trim()?0.4:1, transition:"all 0.15s" }}>
             {aiStatus==="waiting" ? "처리 중..." : "→ 화면 그리기"}
           </button>
-          {aiStatus==="idle" && <div style={{ fontSize:"9px", color:"#aaa", marginTop:"4px", textAlign:"center" }}>로컬(localhost)에서만 동작 · Cmd+Enter</div>}
+          {aiStatus==="idle" && <div style={{ fontSize:"9px", color:"#aaa", marginTop:"4px", textAlign:"center" }}>Claude Code 터미널이 켜져 있어야 합니다 · Cmd+Enter</div>}
         </div>
 
         <div style={{ background:"#ffffff", border:"1px solid #e5e5e5", borderRadius:"10px", padding:"12px" }}>
