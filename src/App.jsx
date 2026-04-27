@@ -1834,7 +1834,7 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
         body: JSON.stringify({ type:"command", payload:{ command: aiCommand.trim(), ts: start } }) });
 
       // 2. ai-worker가 처리 후 허브에 올린 결과를 폴링
-      const deadline = start + 180_000;
+      const deadline = start + 300_000;
       aiPollRef.current = setInterval(async () => {
         if (Date.now() > deadline) {
           clearInterval(aiPollRef.current); clearInterval(aiTimerRef.current); setAiStatus("error"); return;
