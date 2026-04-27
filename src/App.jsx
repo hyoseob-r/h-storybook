@@ -956,7 +956,7 @@ function PhoneFrame({ platform, device, children, canvasMode, darkMode = false }
                 </div>
               )}
               {/* Screen content */}
-              <div style={{ flex: 1, background: screenBg, position: "relative", overflow: canvasMode ? "hidden" : "auto" }}>
+              <div style={{ flex: 1, background: screenBg, position: "relative", overflow: "auto" }}>
                 {children}
               </div>
               {/* Home indicator */}
