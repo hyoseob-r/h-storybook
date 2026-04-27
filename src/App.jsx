@@ -1615,6 +1615,8 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
   const [aiStatus,        setAiStatus]        = useState("idle"); // idle | waiting | done | error
   const [aiStartTime,     setAiStartTime]     = useState(null);
   const [aiElapsed,       setAiElapsed]       = useState(0);
+  const [aiProxyUrl,      setAiProxyUrl]      = useState(() => localStorage.getItem("storybook_ai_proxy_url") || null);
+  const [aiProxyChecking, setAiProxyChecking] = useState(false);
   const aiPollRef         = useRef(null);
   const aiTimerRef        = useRef(null);
   const [pickerDrafts,    setPickerDrafts]    = useState([]);
@@ -1800,39 +1802,35 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
   const AI_HUB = "https://alfred-agent-nine.vercel.app";
   const AI_PROXY_KEY = "storybook_ai_proxy_url";
 
-  const getAiProxyUrl = async () => {
-    // 1. localStorage 캐시
-    const cached = localStorage.getItem(AI_PROXY_KEY);
-    if (cached) {
-      try { const r = await fetch(cached, { signal: AbortSignal.timeout(2000) }); const d = await r.json(); if (d.ok) return cached; } catch {}
-      localStorage.removeItem(AI_PROXY_KEY);
-    }
-    // 2. alfred-agent에서 프록시 URL 조회
+  const detectAiProxy = async () => {
+    setAiProxyChecking(true);
+    const tryUrl = async (url) => {
+      try { const r = await fetch(url, { signal: AbortSignal.timeout(2000) }); const d = await r.json(); return d.ok ? url : null; } catch { return null; }
+    };
+    // 1. 로컬 직접
+    const local = await tryUrl("http://localhost:3721");
+    if (local) { localStorage.setItem(AI_PROXY_KEY, local); setAiProxyUrl(local); setAiProxyChecking(false); return; }
+    // 2. alfred-agent에 등록된 URL
     try {
       const r = await fetch(`${AI_HUB}/api/get-proxy?github_login=hyoseob-r`, { signal: AbortSignal.timeout(5000) });
       const d = await r.json();
-      if (d.proxy_url) { localStorage.setItem(AI_PROXY_KEY, d.proxy_url); return d.proxy_url; }
+      if (d.proxy_url) { const alive = await tryUrl(d.proxy_url); if (alive) { localStorage.setItem(AI_PROXY_KEY, d.proxy_url); setAiProxyUrl(d.proxy_url); setAiProxyChecking(false); return; } }
     } catch {}
-    return null;
+    setAiProxyChecking(false);
+    alert("프록시를 찾을 수 없습니다.\n터미널에서 실행해주세요:\nnode ~/Desktop/Personal/h_world/storybook/ai-worker.mjs");
   };
 
+  const disconnectAiProxy = () => { localStorage.removeItem(AI_PROXY_KEY); setAiProxyUrl(null); };
+
   const sendAiCommand = async () => {
-    if (!aiCommand.trim()) return;
+    if (!aiCommand.trim() || !aiProxyUrl) return;
     const start = Date.now();
     setAiStatus("waiting");
     setAiStartTime(start);
     setAiElapsed(0);
     aiTimerRef.current = setInterval(() => setAiElapsed(Math.floor((Date.now() - start) / 1000)), 500);
-
     try {
-      const proxyUrl = await getAiProxyUrl();
-      if (!proxyUrl) {
-        clearInterval(aiTimerRef.current);
-        setAiStatus("error");
-        alert("AI Worker가 실행 중이지 않습니다.\n터미널에서 실행해주세요:\nnode ~/Desktop/Personal/h_world/storybook/ai-worker.mjs");
-        return;
-      }
-      const res  = await fetch(`${proxyUrl}/api/ai-draw`, {
+      const res = await fetch(`${aiProxyUrl}/api/ai-draw`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ command: aiCommand.trim() }),
@@ -1845,13 +1843,8 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
         setAiStatus("done");
         setAiCommand("");
         setTimeout(() => { setAiStatus("idle"); setAiStartTime(null); setAiElapsed(0); }, 2500);
-      } else {
-        setAiStatus("error");
-      }
-    } catch (e) {
-      clearInterval(aiTimerRef.current);
-      setAiStatus("error");
-    }
+      } else { setAiStatus("error"); }
+    } catch { clearInterval(aiTimerRef.current); setAiStatus("error"); }
   };
 
   // ── item helpers ─────────────────────────────────────────────────────────────
@@ -2644,36 +2637,44 @@ function SimulatorSection({ pendingDraft, onDraftConsumed }) {
 
         {/* AI 명령 패널 */}
         <div style={{ background: aiStatus==="waiting" ? "#fffbe8" : aiStatus==="done" ? "#f0fff4" : aiStatus==="error" ? "#fff0f0" : "#f5f0ff", border:`1px solid ${aiStatus==="waiting"?"#f0c040":aiStatus==="done"?"#88cc88":aiStatus==="error"?"#ee8888":"#c0a0ff"}`, borderRadius:"10px", padding:"10px" }}>
-          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"7px" }}>
-            <div style={{ fontSize:"10px", fontWeight:700, color: aiStatus==="waiting"?"#b07000":aiStatus==="done"?"#336633":aiStatus==="error"?"#aa2222":"#5028c8", letterSpacing:"0.1em", textTransform:"uppercase" }}>
-              {aiStatus==="waiting" ? "⏳ Claude 처리 중..." : aiStatus==="done" ? "✓ 완료" : aiStatus==="error" ? "✗ 시간 초과" : "✦ AI 명령"}
-            </div>
-            {aiStatus==="waiting" && (
-              <button onClick={cancelAiCommand}
-                style={{ fontSize:"10px", padding:"2px 8px", borderRadius:"5px", background:"#fff0f0", border:"1px solid #ffaaaa", color:"#cc3333", cursor:"pointer", fontWeight:600 }}>
-                ■ 중지
-              </button>
-            )}
+          {/* 프록시 연결 상태 */}
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"8px" }}>
+            <div style={{ fontSize:"10px", fontWeight:700, color:"#5028c8", letterSpacing:"0.1em", textTransform:"uppercase" }}>✦ AI 명령</div>
+            {aiProxyUrl
+              ? <div style={{ display:"flex", alignItems:"center", gap:"5px" }}>
+                  <span style={{ fontSize:"9px", color:"#059669", fontWeight:600 }}>⚡ 연결됨</span>
+                  <button onClick={disconnectAiProxy} style={{ fontSize:"9px", padding:"1px 6px", borderRadius:"4px", background:"transparent", border:"1px solid #fca5a5", color:"#dc2626", cursor:"pointer" }}>해제</button>
+                </div>
+              : <button onClick={detectAiProxy} disabled={aiProxyChecking}
+                  style={{ fontSize:"9px", padding:"2px 8px", borderRadius:"5px", background:"#111", border:"none", color:"#fff", cursor:"pointer", fontWeight:600 }}>
+                  {aiProxyChecking ? "감지 중..." : "프록시 연결"}
+                </button>
+            }
           </div>
-          {aiStatus==="waiting" && aiStartTime && (
-            <div style={{ fontSize:"9px", color:"#b07000", marginBottom:"6px", display:"flex", gap:"10px" }}>
-              <span>시작 {new Date(aiStartTime).toLocaleTimeString("ko-KR", { hour:"2-digit", minute:"2-digit", second:"2-digit" })}</span>
-              <span style={{ fontVariantNumeric:"tabular-nums" }}>경과 {aiElapsed}s <span style={{ color:"#d0a040" }}>/ ~30s</span></span>
+          {/* 처리 상태 */}
+          {aiStatus==="waiting" && (
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"6px" }}>
+              <div style={{ fontSize:"9px", color:"#b07000", display:"flex", gap:"8px" }}>
+                <span>시작 {new Date(aiStartTime).toLocaleTimeString("ko-KR", { hour:"2-digit", minute:"2-digit", second:"2-digit" })}</span>
+                <span style={{ fontVariantNumeric:"tabular-nums" }}>경과 {aiElapsed}s</span>
+              </div>
+              <button onClick={cancelAiCommand} style={{ fontSize:"9px", padding:"1px 8px", borderRadius:"4px", background:"#fff0f0", border:"1px solid #ffaaaa", color:"#cc3333", cursor:"pointer", fontWeight:600 }}>■ 중지</button>
             </div>
           )}
+          {aiStatus==="done" && <div style={{ fontSize:"9px", color:"#059669", marginBottom:"6px", fontWeight:600 }}>✓ 완료</div>}
+          {aiStatus==="error" && <div style={{ fontSize:"9px", color:"#cc3333", marginBottom:"6px", fontWeight:600 }}>✗ 오류 — 다시 시도하세요</div>}
           <textarea
             value={aiCommand}
             onChange={e => setAiCommand(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); sendAiCommand(); } }}
-            placeholder={"화면을 글로 설명해주세요.\n예) 요기요 홈 화면\n메뉴 카테고리 리스트와\n추천 가게 카드 포함\n\nCmd+Enter로 전송"}
-            disabled={aiStatus==="waiting"}
-            style={{ width:"100%", minHeight:"90px", background:"transparent", border:"none", outline:"none", fontSize:"11px", color:"#333", lineHeight:1.6, resize:"none", fontFamily:"inherit", boxSizing:"border-box", padding:0 }}
+            placeholder={aiProxyUrl ? "화면을 글로 설명해주세요.\n예) 요기요 홈 화면\n카테고리 + 추천 가게 카드\n\nCmd+Enter로 전송" : "먼저 프록시를 연결해주세요."}
+            disabled={aiStatus==="waiting" || !aiProxyUrl}
+            style={{ width:"100%", minHeight:"80px", background:"transparent", border:"none", outline:"none", fontSize:"11px", color: aiProxyUrl?"#333":"#aaa", lineHeight:1.6, resize:"none", fontFamily:"inherit", boxSizing:"border-box", padding:0 }}
           />
-          <button onClick={sendAiCommand} disabled={aiStatus==="waiting" || !aiCommand.trim()}
-            style={{ marginTop:"6px", width:"100%", padding:"7px", borderRadius:"6px", background: aiStatus==="waiting"?"#e5e5e5":"#5028c8", border:"none", color:"#fff", fontSize:"11px", fontWeight:700, cursor: aiStatus==="waiting"?"default":"pointer", opacity: !aiCommand.trim()?0.4:1, transition:"all 0.15s" }}>
+          <button onClick={sendAiCommand} disabled={aiStatus==="waiting" || !aiCommand.trim() || !aiProxyUrl}
+            style={{ marginTop:"6px", width:"100%", padding:"7px", borderRadius:"6px", background: (!aiProxyUrl||aiStatus==="waiting")?"#e5e5e5":"#5028c8", border:"none", color: (!aiProxyUrl||aiStatus==="waiting")?"#aaa":"#fff", fontSize:"11px", fontWeight:700, cursor: (!aiProxyUrl||aiStatus==="waiting")?"default":"pointer", transition:"all 0.15s" }}>
             {aiStatus==="waiting" ? "처리 중..." : "→ 화면 그리기"}
           </button>
-          {aiStatus==="idle" && <div style={{ fontSize:"9px", color:"#aaa", marginTop:"4px", textAlign:"center" }}>Claude Code 터미널이 켜져 있어야 합니다 · Cmd+Enter</div>}
         </div>
 
         <div style={{ background:"#ffffff", border:"1px solid #e5e5e5", borderRadius:"10px", padding:"12px" }}>
