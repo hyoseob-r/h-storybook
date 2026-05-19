@@ -4135,7 +4135,163 @@ function FigmaSection() {
 }
 
 
+// ── Section: Figma Live ───────────────────────────────────────────────────────
+function FigmaLiveSection() {
+  const [code, setCode]       = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState(null);
+  const [ts, setTs]           = useState(null);
+  const iframeRef             = useRef(null);
+
+  // Supabase 직접 조회 (supabase.js의 client 재사용)
+  const loadCode = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data, error: sbErr } = await supabase
+        .from("context_notes")
+        .select("content, updated_at")
+        .eq("title", "figma_component_latest")
+        .single();
+      if (sbErr) throw sbErr;
+      setCode(data.content);
+      setTs(data.updated_at);
+    } catch (e) {
+      setError(e.message || String(e));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 페이지 로드 시 또는 #figma-live 해시가 있을 때 자동 로드
+  useEffect(() => {
+    loadCode();
+  }, []);
+
+  // tokens JSON (iframe에 주입)
+  const tokensJson = JSON.stringify({ metaTokens, colors });
+
+  // iframe srcDoc 생성
+  const buildSrcDoc = (userCode) => `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, 'Pretendard', sans-serif; background: #f5f5f5; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
+    #root { width: 100%; }
+    .error-box { background: #fff0f0; border: 1px solid #ffcccc; border-radius: 8px; padding: 16px; color: #cc0000; font-size: 12px; white-space: pre-wrap; font-family: monospace; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script>
+    const __tokens = ${tokensJson.replace(/</g, "\\u003c")};
+    window.metaTokens = __tokens.metaTokens;
+    window.colors = __tokens.colors;
+  </script>
+  <script type="text/babel" data-presets="react">
+    const { useState, useEffect, useRef } = React;
+    const metaTokens = window.metaTokens;
+    const colors = window.colors;
+
+    // ── user component code ──
+    try {
+      ${userCode}
+
+      // Try to mount: look for default export or last-defined component
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      if (typeof App !== 'undefined') {
+        root.render(React.createElement(App));
+      } else if (typeof Component !== 'undefined') {
+        root.render(React.createElement(Component));
+      } else if (typeof Preview !== 'undefined') {
+        root.render(React.createElement(Preview));
+      } else {
+        document.getElementById('root').innerHTML = '<div class="error-box">컴포넌트를 찾을 수 없습니다.\\nApp, Component, 또는 Preview 함수를 export하거나 정의해주세요.</div>';
+      }
+    } catch(e) {
+      document.getElementById('root').innerHTML = '<div class="error-box">렌더링 오류:\\n' + e.message + '</div>';
+    }
+  </script>
+</body>
+</html>`;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+      {/* Header bar */}
+      <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: "13px", fontWeight: 600, color: "#111" }}>Figma Live Preview</div>
+          <div style={{ fontSize: "11px", color: "#aaa", marginTop: "2px" }}>
+            {ts ? `마지막 업데이트: ${new Date(ts).toLocaleString("ko-KR")}` : "alfred-agent에서 생성한 최신 컴포넌트 코드"}
+          </div>
+        </div>
+        <button
+          onClick={loadCode}
+          disabled={loading}
+          style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 14px", background: loading ? "#f0f0f0" : "#111111", color: loading ? "#aaaaaa" : "#ffffff", border: "none", borderRadius: "8px", fontSize: "12px", fontWeight: 600, cursor: loading ? "default" : "pointer", transition: "all 0.15s" }}>
+          {loading
+            ? <><span style={{ display: "inline-block", width: "12px", height: "12px", border: "2px solid #aaa", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />로딩 중...</>
+            : <>↻ 새로고침</>}
+        </button>
+      </div>
+
+      {/* Error state */}
+      {error && (
+        <div style={{ background: "#fff0f0", border: "1px solid #ffcccc", borderRadius: "10px", padding: "16px", color: "#cc0000", fontSize: "12px", fontFamily: "monospace" }}>
+          오류: {error}
+        </div>
+      )}
+
+      {/* Code + Preview split */}
+      {code && !error && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", alignItems: "start" }}>
+          {/* Code panel */}
+          <div style={{ background: "#1a1a2e", borderRadius: "12px", overflow: "hidden" }}>
+            <div style={{ padding: "10px 16px", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ fontSize: "11px", color: "#7070a0", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" }}>JSX</span>
+              <span style={{ fontSize: "10px", color: "#555575" }}>{code.split("\n").length} lines</span>
+            </div>
+            <pre style={{ padding: "16px", fontSize: "11px", lineHeight: "1.7", color: "#c8d0e0", overflowX: "auto", overflowY: "auto", maxHeight: "480px", whiteSpace: "pre", fontFamily: "'JetBrains Mono', 'Fira Code', monospace" }}>
+              {code}
+            </pre>
+          </div>
+
+          {/* Preview panel */}
+          <div style={{ background: "#ffffff", borderRadius: "12px", overflow: "hidden", border: "1px solid #e5e5e5" }}>
+            <div style={{ padding: "10px 16px", borderBottom: "1px solid #e5e5e5", display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#4cdd80", display: "inline-block" }} />
+              <span style={{ fontSize: "11px", color: "#aaaaaa", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" }}>Live Preview</span>
+            </div>
+            <iframe
+              ref={iframeRef}
+              srcDoc={buildSrcDoc(code)}
+              sandbox="allow-scripts"
+              style={{ width: "100%", height: "480px", border: "none", display: "block" }}
+              title="Figma Live Preview"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!code && !loading && !error && (
+        <div style={{ background: "#f8f8f8", borderRadius: "12px", padding: "48px", textAlign: "center", color: "#aaaaaa" }}>
+          <div style={{ fontSize: "32px", marginBottom: "12px" }}>🎨</div>
+          <div style={{ fontSize: "13px", fontWeight: 600, marginBottom: "6px", color: "#888888" }}>컴포넌트 없음</div>
+          <div style={{ fontSize: "11px" }}>alfred-agent에서 Figma 컴포넌트를 생성하면 여기에 표시됩니다</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const NAV = [
+  { id: "figma-live",   label: "Figma Live",    icon: "▶" },
   { id: "meta",        label: "Meta Tokens",   icon: "◉" },
   { id: "colors",      label: "Colors",        icon: "◈" },
   { id: "typography",  label: "Typography",    icon: "T" },
@@ -4250,6 +4406,7 @@ export default function App() {
   }, [active]); // 탭 전환할 때마다 갱신
 
   const renderContent = () => {
+    if (active === "figma-live") return <FigmaLiveSection />;
     if (active === "meta")       return <MetaTokensSection />;
     if (active === "colors")     return <ColorsSection />;
     if (active === "typography") return <TypographySection />;
@@ -4264,8 +4421,8 @@ export default function App() {
     if (active === "figma")      return <FigmaSection />;
   };
 
-  const titles    = { meta: "Meta Tokens", colors: "Color Tokens", typography: "Typography", spacing: "Spacing & Radius", elevation: "Elevation / Shadow", button: "Button", label: "Label", icons: "Icons", simulator: "Simulator", glassnav: "Liquid Glass Nav", drafts: "Drafts", figma: "Category" };
-  const subtitles = { meta: "YDS 2.0 Primitive Layer — Meta → Semantic → Component", colors: "YDS 2.0 Customer Token", typography: "Roboto 기반 타입 스케일", spacing: "스페이싱 및 보더 라디우스", elevation: "YDS 2.0 Elevation — Level 1 · 2 (normal & inverse)", button: "버튼 컴포넌트 — 멀티 플랫폼 코드", label: "라벨 컴포넌트 — 멀티 플랫폼 코드", icons: "YDS 2.0 System Icon — Figma 원본 기반", simulator: "iOS / Android 실시간 화면 시뮬레이션", glassnav: "OS 버전별 Glass Nav Bar — 호환성 + 코드 생성", drafts: "Figma에서 가져온 컴포넌트 — 관리 및 시뮬레이터 연동", figma: "Figma에서 추출한 카테고리 컴포넌트 — 리뉴얼-2026" };
+  const titles    = { "figma-live": "Figma Live", meta: "Meta Tokens", colors: "Color Tokens", typography: "Typography", spacing: "Spacing & Radius", elevation: "Elevation / Shadow", button: "Button", label: "Label", icons: "Icons", simulator: "Simulator", glassnav: "Liquid Glass Nav", drafts: "Drafts", figma: "Category" };
+  const subtitles = { "figma-live": "alfred-agent 생성 컴포넌트 — Supabase 실시간 렌더링", meta: "YDS 2.0 Primitive Layer — Meta → Semantic → Component", colors: "YDS 2.0 Customer Token", typography: "Roboto 기반 타입 스케일", spacing: "스페이싱 및 보더 라디우스", elevation: "YDS 2.0 Elevation — Level 1 · 2 (normal & inverse)", button: "버튼 컴포넌트 — 멀티 플랫폼 코드", label: "라벨 컴포넌트 — 멀티 플랫폼 코드", icons: "YDS 2.0 System Icon — Figma 원본 기반", simulator: "iOS / Android 실시간 화면 시뮬레이션", glassnav: "OS 버전별 Glass Nav Bar — 호환성 + 코드 생성", drafts: "Figma에서 가져온 컴포넌트 — 관리 및 시뮬레이터 연동", figma: "Figma에서 추출한 카테고리 컴포넌트 — 리뉴얼-2026" };
 
   return (
     <ToastProvider>
@@ -4280,36 +4437,44 @@ export default function App() {
           </div>
           <div style={{ fontSize: "10px", color: "#aaaaaa" }}>YDS 2.0 Design System</div>
         </div>
-        <div style={{ fontSize: "9px", color: "#bbbbbb", letterSpacing: "0.15em", textTransform: "uppercase", padding: "0 16px", marginBottom: "6px", fontWeight: 600 }}>Tokens</div>
-        {NAV.slice(0, 5).map(n => (
+        {/* Figma Live — 최상단 고정 */}
+        <div style={{ fontSize: "9px", color: "#bbbbbb", letterSpacing: "0.15em", textTransform: "uppercase", padding: "0 16px", marginBottom: "6px", fontWeight: 600 }}>Figma</div>
+        {NAV.slice(0, 1).map(n => (
+          <button key={n.id} onClick={() => setActive(n.id)}
+            style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#fef3f8" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #FA0050" : "2px solid transparent", color: active === n.id ? "#FA0050" : "#888888", fontSize: "12px", fontWeight: active === n.id ? 700 : 400, cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
+            <span style={{ fontSize: "13px", opacity: 0.8 }}>{n.icon}</span>{n.label}
+          </button>
+        ))}
+        <div style={{ fontSize: "9px", color: "#bbbbbb", letterSpacing: "0.15em", textTransform: "uppercase", padding: "16px 16px 6px", fontWeight: 600 }}>Tokens</div>
+        {NAV.slice(1, 6).map(n => (
           <button key={n.id} onClick={() => setActive(n.id)}
             style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#e5e5e5" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #111111" : "2px solid transparent", color: active === n.id ? "#111111" : "#888888", fontSize: "12px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
             <span style={{ fontSize: "13px", opacity: 0.7 }}>{n.icon}</span>{n.label}
           </button>
         ))}
         <div style={{ fontSize: "9px", color: "#bbbbbb", letterSpacing: "0.15em", textTransform: "uppercase", padding: "16px 16px 6px", fontWeight: 600 }}>Components</div>
-        {NAV.slice(5, 8).map(n => (
+        {NAV.slice(6, 9).map(n => (
           <button key={n.id} onClick={() => setActive(n.id)}
             style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#e5e5e5" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #111111" : "2px solid transparent", color: active === n.id ? "#111111" : "#888888", fontSize: "12px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
             <span style={{ fontSize: "13px", opacity: 0.7 }}>{n.icon}</span>{n.label}
           </button>
         ))}
         <div style={{ fontSize: "9px", color: "#bbbbbb", letterSpacing: "0.15em", textTransform: "uppercase", padding: "16px 16px 6px", fontWeight: 600 }}>Simulate</div>
-        {NAV.slice(8, 9).map(n => (
-          <button key={n.id} onClick={() => setActive(n.id)}
-            style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#e5e5e5" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #111111" : "2px solid transparent", color: active === n.id ? "#111111" : "#888888", fontSize: "12px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
-            <span style={{ fontSize: "13px", opacity: 0.7 }}>{n.icon}</span>{n.label}
-          </button>
-        ))}
-        <div style={{ fontSize: "9px", color: "#bbbbbb", letterSpacing: "0.15em", textTransform: "uppercase", padding: "16px 16px 6px", fontWeight: 600 }}>Labs</div>
         {NAV.slice(9, 10).map(n => (
           <button key={n.id} onClick={() => setActive(n.id)}
             style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#e5e5e5" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #111111" : "2px solid transparent", color: active === n.id ? "#111111" : "#888888", fontSize: "12px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
             <span style={{ fontSize: "13px", opacity: 0.7 }}>{n.icon}</span>{n.label}
           </button>
         ))}
+        <div style={{ fontSize: "9px", color: "#bbbbbb", letterSpacing: "0.15em", textTransform: "uppercase", padding: "16px 16px 6px", fontWeight: 600 }}>Labs</div>
+        {NAV.slice(10, 11).map(n => (
+          <button key={n.id} onClick={() => setActive(n.id)}
+            style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#e5e5e5" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #111111" : "2px solid transparent", color: active === n.id ? "#111111" : "#888888", fontSize: "12px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
+            <span style={{ fontSize: "13px", opacity: 0.7 }}>{n.icon}</span>{n.label}
+          </button>
+        ))}
         <div style={{ fontSize: "9px", color: "#bbbbbb", letterSpacing: "0.15em", textTransform: "uppercase", padding: "16px 16px 6px", fontWeight: 600 }}>Library</div>
-        {NAV.slice(10).map(n => (
+        {NAV.slice(11).map(n => (
           <button key={n.id} onClick={() => setActive(n.id)}
             style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#e5e5e5" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #5028c8" : "2px solid transparent", color: active === n.id ? "#5028c8" : "#888888", fontSize: "12px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
             <span style={{ fontSize: "13px", opacity: 0.7 }}>{n.icon}</span>{n.label}
