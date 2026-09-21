@@ -38,7 +38,7 @@ export function NaviItemNew({ icon, filledIcon, label, selected = false, onClick
       background: selected ? "rgba(0,0,0,0.04)" : "transparent",
     }}>
       <div style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <YdsIcon name={iconName} size={24} color="#333" />
+        <YdsIcon name={iconName} size={28} color="#333" />
       </div>
       <span style={{ fontSize: 10, fontWeight: 400, color: "#000", lineHeight: "14px", fontFamily: "Pretendard, Roboto, sans-serif" }}>
         {label}
