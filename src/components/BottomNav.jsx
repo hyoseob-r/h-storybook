@@ -15,17 +15,18 @@ const NAV_ITEMS = [
 ];
 
 // YDS System Icons 매핑 — 인라인 SVG 사용 금지, 반드시 YdsIcon 사용
+// 바텀네비 전용 28x28 아이콘 — nav_ prefix
 const ICON_MAP = {
-  house: "house",
-  house_filled: "house_filled",
-  benefit: "benefit",
-  benefit_filled: "benefit_filled",
-  receipt: "receipt",
-  receipt_filled: "receipt_filled",
-  heart: "heart",
-  heart_filled: "heart_filled",
-  mymenu: "mymenu",
-  mymenu_filled: "mymenu_filled",
+  house: "nav_house",
+  house_filled: "nav_house_filled",
+  benefit: "nav_benefit",
+  benefit_filled: "nav_benefit_filled",
+  receipt: "nav_receipt",
+  receipt_filled: "nav_receipt_filled",
+  heart: "nav_heart",
+  heart_filled: "nav_heart_filled",
+  mymenu: "nav_mymenu",
+  mymenu_filled: "nav_mymenu_filled",
 };
 
 // ── NaviItemNew ──────────────────────────────────────────────────────────────
