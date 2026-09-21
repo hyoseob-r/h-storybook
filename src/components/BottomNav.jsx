@@ -19,13 +19,13 @@ const ICON_MAP = {
   house: "house",
   house_filled: "house_filled",
   benefit: "benefit",
-  benefit_filled: "benefit", // filled 버전 없으면 동일 아이콘 사용
+  benefit_filled: "benefit_filled",
   receipt: "receipt",
-  receipt_filled: "receipt", // filled 버전 별도 추가 필요
+  receipt_filled: "receipt_filled",
   heart: "heart",
   heart_filled: "heart_filled",
   mymenu: "mymenu",
-  mymenu_filled: "mymenu", // mymenu_filled 추가 필요
+  mymenu_filled: "mymenu_filled",
 };
 
 // ── NaviItemNew ──────────────────────────────────────────────────────────────
