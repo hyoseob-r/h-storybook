@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { metaTokens } from "../tokens";
 import { YdsIcon } from "../icons.jsx";
+import { NumericStepperDefault } from "./NumericStepper.jsx";
 
 // ─── YDS 2.0 StickyCTA Component ────────────────────────────────────────────
 // Figma: 📌 Customer-Component > StickyCTA
@@ -36,26 +37,6 @@ export function PriceButton({
   );
 }
 
-// ── NumericStepperInline (SticyCTA용 내장 스테퍼) ─────────────────────────────
-function NumericStepperInline({ value = 1, onChange }) {
-  return (
-    <div style={{
-      display: "flex", alignItems: "center", justifyContent: "center",
-      width: 104, height: 48, borderRadius: metaTokens.radius.meta_r3,
-      border: "1px solid #E5E5E5", background: "#fff",
-    }}>
-      <button onClick={() => value > 1 && onChange?.(value - 1)}
-        style={{ flex: 1, border: "none", background: "transparent", cursor: "pointer", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <YdsIcon name="remove_s" size={24} color={value <= 1 ? "#ccc" : "#333"} />
-      </button>
-      <span style={{ width: 32, textAlign: "center", fontSize: 16, fontWeight: 700, color: "#333", fontFamily: "Pretendard, Roboto, sans-serif" }}>{value}</span>
-      <button onClick={() => onChange?.(value + 1)}
-        style={{ flex: 1, border: "none", background: "transparent", cursor: "pointer", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <YdsIcon name="add_s" size={24} color="#333" />
-      </button>
-    </div>
-  );
-}
 
 // ── StickyCTA ────────────────────────────────────────────────────────────────
 export function StickyCTA({
@@ -113,7 +94,7 @@ export function StickyCTA({
 
       {/* ButtonDocked */}
       <div style={{ background: "#fff", padding: "0 16px 16px", display: "flex", gap: 8, alignItems: "center" }}>
-        {showNumericStepper && <NumericStepperInline value={quantity} onChange={onQuantityChange} />}
+        {showNumericStepper && <NumericStepperDefault value={quantity} onChange={onQuantityChange} />}
         <PriceButton label={buttonLabel} strikePrice={strikePrice} countBadge={countBadge} onClick={onButtonClick} />
       </div>
     </div>
