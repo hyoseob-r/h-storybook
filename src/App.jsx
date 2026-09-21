@@ -4144,24 +4144,32 @@ function FigmaLiveSection() {
   );
 }
 
-const NAV = [
-  { id: "figma-live",   label: "Figma Live",    icon: "▶" },
-  { id: "meta",        label: "Meta Tokens",   icon: "◉" },
-  { id: "colors",      label: "Colors",        icon: "◈" },
-  { id: "typography",  label: "Typography",    icon: "T" },
-  { id: "spacing",     label: "Spacing",       icon: "↔" },
-  { id: "elevation",   label: "Elevation",     icon: "◻" },
-  { id: "button",      label: "Button",        icon: "⬚" },
-  { id: "badge",       label: "Badge",         icon: "⊡" },
-  { id: "rating",      label: "Rating",        icon: "★" },
-  { id: "stepper",     label: "NumericStepper", icon: "±" },
-  { id: "stickycta",   label: "StickyCTA",     icon: "▤" },
-  { id: "bottomnav",   label: "BottomNav",     icon: "▣" },
-  { id: "icons",       label: "Icons",         icon: "◎" },
-  { id: "simulator",   label: "Simulator",     icon: "📱" },
-  { id: "glassnav",    label: "Liquid Glass",  icon: "✦" },
-  { id: "drafts",      label: "Drafts",        icon: "◈" },
-  { id: "figma",       label: "Category",      icon: "✦" },
+const NAV_SECTIONS = [
+  { label: "Figma", items: [
+    { id: "figma-live", label: "Figma Live", icon: "▶" },
+  ]},
+  { label: "Tokens", items: [
+    { id: "meta",       label: "Meta Tokens", icon: "◉" },
+    { id: "colors",     label: "Colors",      icon: "◈" },
+    { id: "typography", label: "Typography",  icon: "T" },
+    { id: "spacing",    label: "Spacing",     icon: "↔" },
+    { id: "elevation",  label: "Elevation",   icon: "◻" },
+    { id: "icons",      label: "Icons",       icon: "◎" },
+  ]},
+  { label: "Components", items: [
+    { id: "button",    label: "Button",         icon: "⬚" },
+    { id: "badge",     label: "Badge",          icon: "⊡" },
+    { id: "rating",    label: "Rating",         icon: "★" },
+    { id: "stepper",   label: "NumericStepper", icon: "±" },
+    { id: "stickycta", label: "StickyCTA",      icon: "▤" },
+    { id: "bottomnav", label: "BottomNav",      icon: "▣" },
+    { id: "glassnav",  label: "Liquid Glass",   icon: "✦" },
+  ]},
+  { label: "Tools", items: [
+    { id: "simulator", label: "Simulator", icon: "📱" },
+    { id: "drafts",    label: "Drafts",    icon: "◈" },
+    { id: "figma",     label: "Category",  icon: "✦" },
+  ]},
 ];
 
 // ── Toast system ─────────────────────────────────────────────────────────────
@@ -4299,51 +4307,23 @@ export default function App() {
           </div>
           <div style={{ fontSize: "10px", color: "#aaaaaa" }}>YDS 2.0 Design System</div>
         </div>
-        {/* Figma Live — 최상단 고정 */}
-        <div style={{ fontSize: "9px", color: "#bbbbbb", letterSpacing: "0.15em", textTransform: "uppercase", padding: "0 16px", marginBottom: "6px", fontWeight: 600 }}>Figma</div>
-        {NAV.slice(0, 1).map(n => (
-          <button key={n.id} onClick={() => setActive(n.id)}
-            style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#fef3f8" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #FA0050" : "2px solid transparent", color: active === n.id ? "#FA0050" : "#888888", fontSize: "12px", fontWeight: active === n.id ? 700 : 400, cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
-            <span style={{ fontSize: "13px", opacity: 0.8 }}>{n.icon}</span>{n.label}
-          </button>
-        ))}
-        <div style={{ fontSize: "9px", color: "#bbbbbb", letterSpacing: "0.15em", textTransform: "uppercase", padding: "16px 16px 6px", fontWeight: 600 }}>Tokens</div>
-        {NAV.slice(1, 6).map(n => (
-          <button key={n.id} onClick={() => setActive(n.id)}
-            style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#e5e5e5" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #111111" : "2px solid transparent", color: active === n.id ? "#111111" : "#888888", fontSize: "12px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
-            <span style={{ fontSize: "13px", opacity: 0.7 }}>{n.icon}</span>{n.label}
-          </button>
-        ))}
-        <div style={{ fontSize: "9px", color: "#bbbbbb", letterSpacing: "0.15em", textTransform: "uppercase", padding: "16px 16px 6px", fontWeight: 600 }}>Components</div>
-        {NAV.slice(6, 9).map(n => (
-          <button key={n.id} onClick={() => setActive(n.id)}
-            style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#e5e5e5" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #111111" : "2px solid transparent", color: active === n.id ? "#111111" : "#888888", fontSize: "12px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
-            <span style={{ fontSize: "13px", opacity: 0.7 }}>{n.icon}</span>{n.label}
-          </button>
-        ))}
-        <div style={{ fontSize: "9px", color: "#bbbbbb", letterSpacing: "0.15em", textTransform: "uppercase", padding: "16px 16px 6px", fontWeight: 600 }}>Simulate</div>
-        {NAV.slice(9, 10).map(n => (
-          <button key={n.id} onClick={() => setActive(n.id)}
-            style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#e5e5e5" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #111111" : "2px solid transparent", color: active === n.id ? "#111111" : "#888888", fontSize: "12px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
-            <span style={{ fontSize: "13px", opacity: 0.7 }}>{n.icon}</span>{n.label}
-          </button>
-        ))}
-        <div style={{ fontSize: "9px", color: "#bbbbbb", letterSpacing: "0.15em", textTransform: "uppercase", padding: "16px 16px 6px", fontWeight: 600 }}>Labs</div>
-        {NAV.slice(10, 11).map(n => (
-          <button key={n.id} onClick={() => setActive(n.id)}
-            style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#e5e5e5" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #111111" : "2px solid transparent", color: active === n.id ? "#111111" : "#888888", fontSize: "12px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
-            <span style={{ fontSize: "13px", opacity: 0.7 }}>{n.icon}</span>{n.label}
-          </button>
-        ))}
-        <div style={{ fontSize: "9px", color: "#bbbbbb", letterSpacing: "0.15em", textTransform: "uppercase", padding: "16px 16px 6px", fontWeight: 600 }}>Library</div>
-        {NAV.slice(11).map(n => (
-          <button key={n.id} onClick={() => setActive(n.id)}
-            style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: active === n.id ? "#e5e5e5" : "transparent", border: "none", borderLeft: active === n.id ? "2px solid #5028c8" : "2px solid transparent", color: active === n.id ? "#5028c8" : "#888888", fontSize: "12px", cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
-            <span style={{ fontSize: "13px", opacity: 0.7 }}>{n.icon}</span>{n.label}
-            {n.id === "drafts" && componentCount > 0 && (
-              <span style={{ marginLeft:"auto", fontSize:"9px", background:"#5028c8", color:"#fff", borderRadius:"10px", padding:"1px 6px" }}>{componentCount}</span>
-            )}
-          </button>
+        {NAV_SECTIONS.map((sec, si) => (
+          <div key={sec.label}>
+            <div style={{ fontSize: "9px", color: "#bbbbbb", letterSpacing: "0.15em", textTransform: "uppercase", padding: si === 0 ? "0 16px 6px" : "16px 16px 6px", fontWeight: 600 }}>{sec.label}</div>
+            {sec.items.map(n => {
+              const isFigma = sec.label === "Figma";
+              const on = active === n.id;
+              return (
+                <button key={n.id} onClick={() => setActive(n.id)}
+                  style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 16px", background: on ? (isFigma ? "#fef3f8" : "#e5e5e5") : "transparent", border: "none", borderLeft: on ? `2px solid ${isFigma ? "#FA0050" : "#111"}` : "2px solid transparent", color: on ? (isFigma ? "#FA0050" : "#111") : "#888", fontSize: "12px", fontWeight: on && isFigma ? 700 : 400, cursor: "pointer", textAlign: "left", transition: "all 0.15s", width: "100%" }}>
+                  <span style={{ fontSize: "13px", opacity: 0.7 }}>{n.icon}</span>{n.label}
+                  {n.id === "drafts" && componentCount > 0 && (
+                    <span style={{ marginLeft:"auto", fontSize:"9px", background:"#5028c8", color:"#fff", borderRadius:"10px", padding:"1px 6px" }}>{componentCount}</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         ))}
         <div style={{ flex: 1 }} />
         <div style={{ padding: "12px 16px", borderTop: "1px solid #e5e5e5", fontSize: "9px", color: "#d0d0d0" }}>
