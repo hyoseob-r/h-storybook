@@ -7,8 +7,8 @@ import { YdsIcon } from "../icons.jsx";
 // 스타일: 흰색 bg + gray100 보더 + outlined 스타일 (이전 filled 스타일에서 변경됨)
 
 const BADGE_SIZES = {
-  small: { height: 18, fontSize: 10, lineHeight: 14, iconSize: 12, px: 4, gap: 2, radius: metaTokens.radius.meta_r1 },
-  medium: { height: 22, fontSize: 12, lineHeight: 16, iconSize: 16, px: 6, gap: 2, radius: metaTokens.radius.meta_r1 },
+  small: { height: 18, fontSize: 10, lineHeight: 14, iconSize: 12, px: 4, labelPx: 2, gap: 2, radius: metaTokens.radius.meta_r1 },
+  medium: { height: 22, fontSize: 12, lineHeight: 16, iconSize: 16, px: 4, labelPx: 2, gap: 2, radius: metaTokens.radius.meta_r1 },
 };
 
 const BADGE_COLORS = {
@@ -40,7 +40,7 @@ export function SingleBadge({
       fontFamily: "Pretendard, Roboto, sans-serif",
     }}>
       {showLeftIcon && <YdsIcon name={leftIconName} size={s.iconSize} color={c.iconColor} />}
-      <span style={{ fontSize: s.fontSize, fontWeight: 700, lineHeight: `${s.lineHeight}px`, color: c.text }}>{text}</span>
+      <span style={{ fontSize: s.fontSize, fontWeight: 700, lineHeight: `${s.lineHeight}px`, color: c.text, padding: `0 ${s.labelPx}px` }}>{text}</span>
       {showRightIcon && <YdsIcon name={rightIconName} size={s.iconSize} color={c.iconColor} />}
     </span>
   );
@@ -81,7 +81,7 @@ export function OffersBadge({
       fontFamily: "Pretendard, Roboto, sans-serif",
     }}>
       {showLeftIcon && <YdsIcon name={leftIconName} size={s.iconSize} color="#fff" />}
-      <span style={{ fontSize: s.fontSize, fontWeight: 700, lineHeight: `${s.lineHeight}px`, color: "#fff" }}>{text}</span>
+      <span style={{ fontSize: s.fontSize, fontWeight: 700, lineHeight: `${s.lineHeight}px`, color: "#fff", padding: `0 ${s.labelPx}px` }}>{text}</span>
       {showRightIcon && <YdsIcon name={rightIconName} size={s.iconSize} color="#fff" />}
     </span>
   );
