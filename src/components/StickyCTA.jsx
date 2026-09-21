@@ -1,41 +1,11 @@
 import { useState } from "react";
 import { metaTokens } from "../tokens";
-import { YdsIcon } from "../icons.jsx";
 import { NumericStepperDefault } from "./NumericStepper.jsx";
+import { PriceButton } from "./Button.jsx";
 
 // ─── YDS 2.0 StickyCTA Component ────────────────────────────────────────────
 // Figma: 📌 Customer-Component > StickyCTA
 // Anatomy: Bar + Title + Body + Caption(opt) + Gage(opt) + ButtonDocked(NumericStepper + PriceButton)
-
-// ── PriceButton ──────────────────────────────────────────────────────────────
-export function PriceButton({
-  label = "버튼",
-  strikePrice = null,
-  countBadge = null,
-  disabled = false,
-  onClick,
-}) {
-  return (
-    <button onClick={onClick} disabled={disabled} style={{
-      flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 2,
-      height: 48, borderRadius: metaTokens.radius.meta_r3, border: "none",
-      background: disabled ? "#ccc" : "#FA0050", color: "#fff", cursor: disabled ? "default" : "pointer",
-      padding: "0 16px", fontFamily: "Pretendard, Roboto, sans-serif", position: "relative",
-    }}>
-      {strikePrice && (
-        <span style={{ fontSize: 12, textDecoration: "line-through", opacity: 0.8, marginRight: 2 }}>{strikePrice}원</span>
-      )}
-      <span style={{ fontSize: 16, fontWeight: 700 }}>{label}</span>
-      {countBadge != null && (
-        <span style={{
-          minWidth: 20, height: 20, borderRadius: 360, background: "#fff", color: "#FA0050",
-          fontSize: 14, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center",
-          padding: "0 4px", border: "1px solid #FA0050", marginLeft: 4,
-        }}>{countBadge}</span>
-      )}
-    </button>
-  );
-}
 
 
 // ── StickyCTA ────────────────────────────────────────────────────────────────

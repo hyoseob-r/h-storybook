@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { colors, typography, spacing, radius, elevation, states, metaTokens } from "./tokens";
 import { YdsIcon, YDS_ICONS, ICON_NAMES } from "./icons.jsx";
 import { fetchComponents, saveComponent, deleteComponent, renameComponent } from "./supabase.js";
+import { Button } from "./components/Button.jsx";
 import BadgeSection from "./components/Badge.jsx";
 import RatingSection from "./components/Rating.jsx";
 import NumericStepperSection from "./components/NumericStepper.jsx";
@@ -694,20 +695,16 @@ function ButtonSection() {
       <div style={{ padding: "40px", background: "#ffffff", border: "1px solid #e5e5e5", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", gap: "16px", flexWrap: "wrap" }}>
         {/* enabled */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
-          <button style={{ height: `${h}px`, padding: `0 ${ph}px`, background: previewBg, border: previewBorder, borderRadius: `${r}px`, color: previewFg, fontSize: `${fs}px`, fontWeight: 700, cursor: "pointer", fontFamily: "Roboto, sans-serif", display: "flex", alignItems: "center", gap: "5px" }}>
-            {config === "labelWithIcon" && iconPos === "left" && iconEl}
-            버튼
-            {config === "labelWithIcon" && iconPos === "right" && iconEl}
-          </button>
+          <Button label="버튼" shapeStyle={shape} colorStyle={color} size={size}
+            leftIcon={config === "labelWithIcon" && iconPos === "left" ? iconName : null}
+            rightIcon={config === "labelWithIcon" && iconPos === "right" ? iconName : null} />
           <span style={{ fontSize: "9px", color: "#bbbbbb", letterSpacing: "0.1em" }}>ENABLED</span>
         </div>
         {/* disabled */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
-          <button disabled style={{ height: `${h}px`, padding: `0 ${ph}px`, background: previewBg, border: previewBorder, borderRadius: `${r}px`, color: previewFg, fontSize: `${fs}px`, fontWeight: 700, cursor: "not-allowed", fontFamily: "Roboto, sans-serif", opacity: 0.35, display: "flex", alignItems: "center", gap: "5px" }}>
-            {config === "labelWithIcon" && iconPos === "left" && iconEl}
-            버튼
-            {config === "labelWithIcon" && iconPos === "right" && iconEl}
-          </button>
+          <Button label="버튼" shapeStyle={shape} colorStyle={color} size={size} disabled
+            leftIcon={config === "labelWithIcon" && iconPos === "left" ? iconName : null}
+            rightIcon={config === "labelWithIcon" && iconPos === "right" ? iconName : null} />
           <span style={{ fontSize: "9px", color: "#bbbbbb", letterSpacing: "0.1em" }}>DISABLED</span>
         </div>
       </div>
