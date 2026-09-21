@@ -8,7 +8,7 @@ import { YdsIcon } from "../icons.jsx";
 // Variants: size (small/medium), shapeStyle (elevated/outlined), readOnly, section (start/middle/end)
 
 const STEPPER_SIZES = {
-  small: { height: 36, iconSize: 20, fontSize: 14, width: 96, compactSize: 36, valueWidth: 32 },
+  small: { height: 36, iconSize: 24, fontSize: 14, width: 96, compactSize: 36, valueWidth: 32 },
   medium: { height: 48, iconSize: 24, fontSize: 16, width: 104, compactSize: 48, valueWidth: 32 },
 };
 
