@@ -5,6 +5,8 @@ import { fetchComponents, saveComponent, deleteComponent, renameComponent } from
 import BadgeSection from "./components/Badge.jsx";
 import RatingSection from "./components/Rating.jsx";
 import NumericStepperSection from "./components/NumericStepper.jsx";
+import BottomNavSection from "./components/BottomNav.jsx";
+import StickyCTASection from "./components/StickyCTA.jsx";
 
 // ── Code generators ──────────────────────────────────────────────────────────
 
@@ -4305,6 +4307,8 @@ const NAV = [
   { id: "badge",       label: "Badge",         icon: "⊡" },
   { id: "rating",      label: "Rating",        icon: "★" },
   { id: "stepper",     label: "NumericStepper", icon: "±" },
+  { id: "stickycta",   label: "StickyCTA",     icon: "▤" },
+  { id: "bottomnav",   label: "BottomNav",     icon: "▣" },
   { id: "icons",       label: "Icons",         icon: "◎" },
   { id: "simulator",   label: "Simulator",     icon: "📱" },
   { id: "glassnav",    label: "Liquid Glass",  icon: "✦" },
@@ -4426,12 +4430,14 @@ export default function App() {
     if (active === "badge")      return <BadgeSection />;
     if (active === "rating")     return <RatingSection />;
     if (active === "stepper")    return <NumericStepperSection />;
+    if (active === "bottomnav")  return <BottomNavSection />;
+    if (active === "stickycta")  return <StickyCTASection />;
     if (active === "drafts")     return <DraftsSection onUseInSimulator={draft => { setPendingDraft(draft); setActive("simulator"); }} />;
     if (active === "figma")      return <FigmaSection />;
   };
 
   const titles    = { "figma-live": "Figma Live", meta: "Meta Tokens", colors: "Color Tokens", typography: "Typography", spacing: "Spacing & Radius", elevation: "Elevation / Shadow", button: "Button", label: "Label", badge: "Badge", rating: "Rating", stepper: "NumericStepper", icons: "Icons", simulator: "Simulator", glassnav: "Liquid Glass Nav", drafts: "Drafts", figma: "Category" };
-  const subtitles = { "figma-live": "alfred-agent 생성 컴포넌트 — Supabase 실시간 렌더링", meta: "YDS 2.0 Primitive Layer — Meta → Semantic → Component", colors: "YDS 2.0 Customer Token", typography: "Roboto 기반 타입 스케일", spacing: "스페이싱 및 보더 라디우스", elevation: "YDS 2.0 Elevation — Level 1 · 2 (normal & inverse)", button: "버튼 컴포넌트 — 멀티 플랫폼 코드", label: "라벨 컴포넌트 — 멀티 플랫폼 코드", badge: "배지 컴포넌트 — single/group/offers/noti/logo/icon", rating: "별점 컴포넌트 — compact (starIcon + grade + total)", stepper: "수량 조절 — compact/default, elevated/outlined", icons: "YDS 2.0 System Icon — Figma 원본 기반", simulator: "iOS / Android 실시간 화면 시뮬레이션", glassnav: "OS 버전별 Glass Nav Bar — 호환성 + 코드 생성", drafts: "Figma에서 가져온 컴포넌트 — 관리 및 시뮬레이터 연동", figma: "Figma에서 추출한 카테고리 컴포넌트 — 리뉴얼-2026" };
+  const subtitles = { "figma-live": "alfred-agent 생성 컴포넌트 — Supabase 실시간 렌더링", meta: "YDS 2.0 Primitive Layer — Meta → Semantic → Component", colors: "YDS 2.0 Customer Token", typography: "Roboto 기반 타입 스케일", spacing: "스페이싱 및 보더 라디우스", elevation: "YDS 2.0 Elevation — Level 1 · 2 (normal & inverse)", button: "버튼 컴포넌트 — 멀티 플랫폼 코드", label: "라벨 컴포넌트 — 멀티 플랫폼 코드", badge: "배지 컴포넌트 — single/group/offers/noti/logo/icon", rating: "별점 컴포넌트 — compact (starIcon + grade + total)", stepper: "수량 조절 — compact/default, elevated/outlined", stickycta: "하단 고정 CTA — PriceButton + NumericStepper", bottomnav: "하단 네비게이션 — pill glass nav + floating bars", icons: "YDS 2.0 System Icon — Figma 원본 기반", simulator: "iOS / Android 실시간 화면 시뮬레이션", glassnav: "OS 버전별 Glass Nav Bar — 호환성 + 코드 생성", drafts: "Figma에서 가져온 컴포넌트 — 관리 및 시뮬레이터 연동", figma: "Figma에서 추출한 카테고리 컴포넌트 — 리뉴얼-2026" };
 
   return (
     <ToastProvider>
