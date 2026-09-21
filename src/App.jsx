@@ -83,92 +83,6 @@ function genButtonCode(platform, variant, size) {
   return "";
 }
 
-function genLabelCode(platform, color, size) {
-  const textSize = size === "large" ? 14 : size === "medium" ? 12 : 10;
-  const hex = color === "primary" ? "#FA0050" : color === "secondary" ? "#2591B5" : "#333333";
-  const bgHex = color === "primary" ? "#FFF5F8" : color === "secondary" ? "#F0F7FA" : "#F6F6F6";
-
-  if (platform === "xml") return `<TextView
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="라벨"
-    android:textColor="${hex}"
-    android:textSize="${textSize}sp"
-    android:fontFamily="@font/roboto_bold"
-    android:background="@drawable/bg_label_${color}"
-    android:paddingStart="8dp"
-    android:paddingEnd="8dp"
-    android:paddingTop="2dp"
-    android:paddingBottom="2dp" />
-
-<!-- bg_label_${color}.xml -->
-<shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="${bgHex}" />
-    <corners android:radius="10dp" />
-</shape>`;
-
-  if (platform === "compose") return `Surface(
-    color = Color(0xFF${bgHex.replace("#", "")}),
-    shape = RoundedCornerShape(10.dp)
-) {
-    Text(
-        text = "라벨",
-        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-        color = Color(0xFF${hex.replace("#", "")}),
-        fontSize = ${textSize}.sp,
-        fontWeight = FontWeight.Bold
-    )
-}`;
-
-  if (platform === "swiftui") return `Text("라벨")
-    .padding(.horizontal, 8)
-    .padding(.vertical, 2)
-    .background(Color(hex: "${bgHex.replace("#","")}"))
-    .foregroundColor(Color(hex: "${hex.replace("#","")}"))
-    .cornerRadius(10)
-    .font(.system(size: ${textSize}, weight: .bold))`;
-
-  if (platform === "flutter") return `Container(
-  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-  decoration: BoxDecoration(
-    color: Color(0xFF${bgHex.replace("#", "")}),
-    borderRadius: BorderRadius.circular(10),
-  ),
-  child: Text(
-    '라벨',
-    style: TextStyle(
-      color: Color(0xFF${hex.replace("#", "")}),
-      fontSize: ${textSize},
-      fontWeight: FontWeight.bold,
-    ),
-  ),
-)`;
-
-  if (platform === "css") return `.label {
-  padding: 2px 8px;
-  background-color: ${bgHex};
-  color: ${hex};
-  border-radius: 10px;
-  font-size: ${textSize}px;
-  font-weight: bold;
-  display: inline-block;
-}`;
-
-  if (platform === "react") return `<span
-  style={{
-    padding: '2px 8px',
-    backgroundColor: '${bgHex}',
-    color: '${hex}',
-    borderRadius: 10,
-    fontSize: ${textSize},
-    fontWeight: 'bold',
-  }}
->
-  라벨
-</span>`;
-  return "";
-}
-
 // ── UI Components ─────────────────────────────────────────────────────────────
 
 function CopyButton({ text }) {
@@ -810,71 +724,6 @@ function ButtonSection() {
       <pre style={{ background: "#ffffff", border: "1px solid #e5e5e5", borderRadius: "0 8px 8px 8px", padding: "16px", fontSize: "12px", color: "#555555", fontFamily: "monospace", overflowX: "auto", lineHeight: 1.65, margin: 0 }}>
         {code}
       </pre>
-    </div>
-  );
-}
-
-// ── Section: Label Component ──────────────────────────────────────────────────
-
-function LabelSection() {
-  const [color, setColor] = useState("primary");
-  const [size, setSize] = useState("medium");
-
-  const colors2 = ["primary", "secondary", "neutral"];
-  const sizes = ["large", "medium", "small"];
-
-  const bgMap = { primary: "#fff5f8", secondary: "#f0f7fa", neutral: "#f6f6f6" };
-  const fgMap = { primary: "#fa0050", secondary: "#2591b5", neutral: "#333333" };
-  const fontMap = { large: "14px", medium: "12px", small: "10px" };
-
-  const platforms = [
-    { id: "xml",     label: "Android XML",    code: genLabelCode("xml", color, size) },
-    { id: "compose", label: "Jetpack Compose", code: genLabelCode("compose", color, size) },
-    { id: "swiftui", label: "SwiftUI",         code: genLabelCode("swiftui", color, size) },
-    { id: "flutter", label: "Flutter",         code: genLabelCode("flutter", color, size) },
-    { id: "css",     label: "CSS",             code: genLabelCode("css", color, size) },
-    { id: "react",   label: "React",           code: genLabelCode("react", color, size) },
-  ];
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-      {/* Controls */}
-      <div style={{ display: "flex", gap: "24px", flexWrap: "wrap" }}>
-        <div>
-          <div style={{ fontSize: "10px", color: "#999999", marginBottom: "8px", letterSpacing: "0.1em", textTransform: "uppercase" }}>Color</div>
-          <div style={{ display: "flex", gap: "4px" }}>
-            {colors2.map(c => (
-              <button key={c} onClick={() => setColor(c)}
-                style={{ padding: "5px 12px", borderRadius: "6px", background: color === c ? "#f0f0f0" : "transparent", border: color === c ? "1px solid #c0c0c0" : "1px solid #e5e5e5", color: color === c ? "#333333" : "#999999", fontSize: "11px", cursor: "pointer", textTransform: "capitalize" }}>
-                {c}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div>
-          <div style={{ fontSize: "10px", color: "#999999", marginBottom: "8px", letterSpacing: "0.1em", textTransform: "uppercase" }}>Size</div>
-          <div style={{ display: "flex", gap: "4px" }}>
-            {sizes.map(s => (
-              <button key={s} onClick={() => setSize(s)}
-                style={{ padding: "5px 12px", borderRadius: "6px", background: size === s ? "#f0f0f0" : "transparent", border: size === s ? "1px solid #c0c0c0" : "1px solid #e5e5e5", color: size === s ? "#333333" : "#999999", fontSize: "11px", cursor: "pointer", textTransform: "capitalize" }}>
-                {s}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Preview */}
-      <div style={{ padding: "40px", background: "#ffffff", border: "1px solid #e5e5e5", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", flexWrap: "wrap" }}>
-        {["라벨", "NEW", "인기", "이벤트"].map(text => (
-          <span key={text} style={{ padding: "2px 8px", background: bgMap[color], borderRadius: "10px", color: fgMap[color], fontSize: fontMap[size], fontWeight: 700, fontFamily: "Roboto, sans-serif" }}>
-            {text}
-          </span>
-        ))}
-      </div>
-
-      {/* Code */}
-      <PlatformTabs tabs={platforms} />
     </div>
   );
 }
@@ -4303,7 +4152,6 @@ const NAV = [
   { id: "spacing",     label: "Spacing",       icon: "↔" },
   { id: "elevation",   label: "Elevation",     icon: "◻" },
   { id: "button",      label: "Button",        icon: "⬚" },
-  { id: "label",       label: "Label",         icon: "◷" },
   { id: "badge",       label: "Badge",         icon: "⊡" },
   { id: "rating",      label: "Rating",        icon: "★" },
   { id: "stepper",     label: "NumericStepper", icon: "±" },
@@ -4423,7 +4271,6 @@ export default function App() {
     if (active === "spacing")    return <SpacingSection />;
     if (active === "elevation")  return <ElevationSection />;
     if (active === "button")     return <ButtonSection />;
-    if (active === "label")      return <LabelSection />;
     if (active === "icons")      return <IconsSection />;
     if (active === "simulator")  return <SimulatorSection pendingDraft={pendingDraft} onDraftConsumed={() => setPendingDraft(null)} />;
     if (active === "glassnav")   return <GlassNavSection />;
@@ -4436,8 +4283,8 @@ export default function App() {
     if (active === "figma")      return <FigmaSection />;
   };
 
-  const titles    = { "figma-live": "Figma Live", meta: "Meta Tokens", colors: "Color Tokens", typography: "Typography", spacing: "Spacing & Radius", elevation: "Elevation / Shadow", button: "Button", label: "Label", badge: "Badge", rating: "Rating", stepper: "NumericStepper", icons: "Icons", simulator: "Simulator", glassnav: "Liquid Glass Nav", drafts: "Drafts", figma: "Category" };
-  const subtitles = { "figma-live": "alfred-agent 생성 컴포넌트 — Supabase 실시간 렌더링", meta: "YDS 2.0 Primitive Layer — Meta → Semantic → Component", colors: "YDS 2.0 Customer Token", typography: "Roboto 기반 타입 스케일", spacing: "스페이싱 및 보더 라디우스", elevation: "YDS 2.0 Elevation — Level 1 · 2 (normal & inverse)", button: "버튼 컴포넌트 — 멀티 플랫폼 코드", label: "라벨 컴포넌트 — 멀티 플랫폼 코드", badge: "배지 컴포넌트 — single/group/offers/noti/logo/icon", rating: "별점 컴포넌트 — compact (starIcon + grade + total)", stepper: "수량 조절 — compact/default, elevated/outlined", stickycta: "하단 고정 CTA — PriceButton + NumericStepper", bottomnav: "하단 네비게이션 — pill glass nav + floating bars", icons: "YDS 2.0 System Icon — Figma 원본 기반", simulator: "iOS / Android 실시간 화면 시뮬레이션", glassnav: "OS 버전별 Glass Nav Bar — 호환성 + 코드 생성", drafts: "Figma에서 가져온 컴포넌트 — 관리 및 시뮬레이터 연동", figma: "Figma에서 추출한 카테고리 컴포넌트 — 리뉴얼-2026" };
+  const titles    = { "figma-live": "Figma Live", meta: "Meta Tokens", colors: "Color Tokens", typography: "Typography", spacing: "Spacing & Radius", elevation: "Elevation / Shadow", button: "Button", badge: "Badge", rating: "Rating", stepper: "NumericStepper", icons: "Icons", simulator: "Simulator", glassnav: "Liquid Glass Nav", drafts: "Drafts", figma: "Category" };
+  const subtitles = { "figma-live": "alfred-agent 생성 컴포넌트 — Supabase 실시간 렌더링", meta: "YDS 2.0 Primitive Layer — Meta → Semantic → Component", colors: "YDS 2.0 Customer Token", typography: "Roboto 기반 타입 스케일", spacing: "스페이싱 및 보더 라디우스", elevation: "YDS 2.0 Elevation — Level 1 · 2 (normal & inverse)", button: "버튼 컴포넌트 — 멀티 플랫폼 코드", badge: "배지 컴포넌트 — single/group/offers/noti/logo/icon", rating: "별점 컴포넌트 — compact (starIcon + grade + total)", stepper: "수량 조절 — compact/default, elevated/outlined", stickycta: "하단 고정 CTA — PriceButton + NumericStepper", bottomnav: "하단 네비게이션 — pill glass nav + floating bars", icons: "YDS 2.0 System Icon — Figma 원본 기반", simulator: "iOS / Android 실시간 화면 시뮬레이션", glassnav: "OS 버전별 Glass Nav Bar — 호환성 + 코드 생성", drafts: "Figma에서 가져온 컴포넌트 — 관리 및 시뮬레이터 연동", figma: "Figma에서 추출한 카테고리 컴포넌트 — 리뉴얼-2026" };
 
   return (
     <ToastProvider>
