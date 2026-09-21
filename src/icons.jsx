@@ -136,7 +136,6 @@ export function YdsIcon({ name, size = 24, color = "#333333", style }) {
       width={size}
       height={size}
       viewBox={icon.vb}
-      fill="none"
       xmlns="http://www.w3.org/2000/svg"
       style={{ display:"block", flexShrink:0, ...style }}
     >
