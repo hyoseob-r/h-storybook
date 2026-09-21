@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { metaTokens } from "../tokens";
+import { YdsIcon } from "../icons.jsx";
 
 // ─── YDS 2.0 NumericStepper Component ────────────────────────────────────────
 // Figma: 📌 Customer-Component > NumericStepper
@@ -11,20 +12,12 @@ const STEPPER_SIZES = {
   medium: { height: 48, iconSize: 24, fontSize: 16, width: 104, compactSize: 48, valueWidth: 32 },
 };
 
-function MinusIcon({ size = 24, color = "#333", disabled = false }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <path d="M5 12h14" stroke={disabled ? "#ccc" : color} strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
+function MinusIcon({ size = 24, disabled = false }) {
+  return <YdsIcon name="remove_s" size={size} color={disabled ? "#ccc" : "#333"} />;
 }
 
-function PlusIcon({ size = 24, color = "#333", disabled = false }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <path d="M12 5v14M5 12h14" stroke={disabled ? "#ccc" : color} strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
+function PlusIcon({ size = 24, disabled = false }) {
+  return <YdsIcon name="add_s" size={size} color={disabled ? "#ccc" : "#333"} />;
 }
 
 // ── Default NumericStepper ───────────────────────────────────────────────────

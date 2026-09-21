@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { YdsIcon } from "../icons.jsx";
 
 // ─── YDS 2.0 Rating Component ───────────────────────────────────────────────
 // Figma: 📌 Customer-Component > Rating
@@ -9,12 +10,8 @@ const RATING_SIZES = {
   medium: { starSize: 16, fontSize: 14, lineHeight: 19, gap: 4 },
 };
 
-function StarIcon({ size = 16, filled = true, color = "#FFCB2E" }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? color : "none"} stroke={color} strokeWidth="2">
-      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-    </svg>
-  );
+function StarIcon({ size = 16 }) {
+  return <YdsIcon name="benefit" size={size} color="#FFCB2E" />;
 }
 
 export function RatingCompact({ grade = 4.8, total = 1234, size = "small" }) {

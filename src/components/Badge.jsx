@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { colors, metaTokens } from "../tokens";
+import { YdsIcon } from "../icons.jsx";
 
 // ─── YDS 2.0 Badge Component ────────────────────────────────────────────────
 // Figma: 📌 Customer-Component > Badge
@@ -143,11 +144,7 @@ export function IconBadge({ icon = null, size = 24, bg = "#F2F2F2" }) {
 }
 
 function DefaultIcon({ size = 12, color = "#666" }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <circle cx="12" cy="12" r="10" stroke={color} strokeWidth="2" />
-    </svg>
-  );
+  return <YdsIcon name="check_s" size={size} color={color} />;
 }
 
 // ── Badge Section (Storybook 표시용) ─────────────────────────────────────────

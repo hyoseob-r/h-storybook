@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { metaTokens } from "../tokens";
+import { YdsIcon } from "../icons.jsx";
 
 // ─── YDS 2.0 StickyCTA Component ────────────────────────────────────────────
 // Figma: 📌 Customer-Component > StickyCTA
@@ -45,12 +46,12 @@ function NumericStepperInline({ value = 1, onChange }) {
     }}>
       <button onClick={() => value > 1 && onChange?.(value - 1)}
         style={{ flex: 1, border: "none", background: "transparent", cursor: "pointer", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 12h14" stroke={value <= 1 ? "#ccc" : "#333"} strokeWidth="2" strokeLinecap="round"/></svg>
+        <YdsIcon name="remove_s" size={24} color={value <= 1 ? "#ccc" : "#333"} />
       </button>
       <span style={{ width: 32, textAlign: "center", fontSize: 16, fontWeight: 700, color: "#333", fontFamily: "Pretendard, Roboto, sans-serif" }}>{value}</span>
       <button onClick={() => onChange?.(value + 1)}
         style={{ flex: 1, border: "none", background: "transparent", cursor: "pointer", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#333" strokeWidth="2" strokeLinecap="round"/></svg>
+        <YdsIcon name="add_s" size={24} color="#333" />
       </button>
     </div>
   );

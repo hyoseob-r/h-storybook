@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { metaTokens } from "../tokens";
+import { YdsIcon } from "../icons.jsx";
 
 // ─── YDS 2.0 BottomNav Component (리뉴얼-2026) ──────────────────────────────
 // Figma: 리뉴얼-2026 > NaviItemNew / NavNew / BottomNavNew
@@ -13,69 +14,23 @@ const NAV_ITEMS = [
   { id: "my",       label: "마이요기요", icon: "mymenu",   filledIcon: "mymenu_filled" },
 ];
 
-// Simple icon SVGs (inline for self-containment)
-const ICONS = {
-  house: (
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-      <path d="M4.5 13L14 4.5L23.5 13V22.5C23.5 23.33 22.83 24 22 24H6C5.17 24 4.5 23.33 4.5 22.5V13Z" stroke="#333" strokeWidth="1.8" strokeLinejoin="round"/>
-      <path d="M10.5 24V16H17.5V24" stroke="#333" strokeWidth="1.8" strokeLinejoin="round"/>
-    </svg>
-  ),
-  house_filled: (
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-      <path d="M4.5 13L14 4.5L23.5 13V22.5C23.5 23.33 22.83 24 22 24H6C5.17 24 4.5 23.33 4.5 22.5V13Z" fill="#333" stroke="#333" strokeWidth="1.8" strokeLinejoin="round"/>
-      <path d="M10.5 24V16H17.5V24" fill="white" stroke="white" strokeWidth="1.8" strokeLinejoin="round"/>
-    </svg>
-  ),
-  benefit: (
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-      <path d="M14 4L17 10L24 11L19 16L20 23L14 20L8 23L9 16L4 11L11 10L14 4Z" stroke="#333" strokeWidth="1.8" strokeLinejoin="round"/>
-    </svg>
-  ),
-  benefit_filled: (
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-      <path d="M14 4L17 10L24 11L19 16L20 23L14 20L8 23L9 16L4 11L11 10L14 4Z" fill="#333" stroke="#333" strokeWidth="1.8" strokeLinejoin="round"/>
-    </svg>
-  ),
-  receipt: (
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-      <path d="M7 4H21V24L18 22L15 24L12 22L9 24L7 22V4Z" stroke="#333" strokeWidth="1.8" strokeLinejoin="round"/>
-      <path d="M11 10H17M11 14H15" stroke="#333" strokeWidth="1.8" strokeLinecap="round"/>
-    </svg>
-  ),
-  receipt_filled: (
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-      <path d="M7 4H21V24L18 22L15 24L12 22L9 24L7 22V4Z" fill="#333" stroke="#333" strokeWidth="1.8" strokeLinejoin="round"/>
-      <path d="M11 10H17M11 14H15" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
-    </svg>
-  ),
-  heart: (
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-      <path d="M14 24S4 18 4 11C4 7.5 7 5 10 5C12 5 13.5 6 14 7C14.5 6 16 5 18 5C21 5 24 7.5 24 11C24 18 14 24 14 24Z" stroke="#333" strokeWidth="1.8"/>
-    </svg>
-  ),
-  heart_filled: (
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-      <path d="M14 24S4 18 4 11C4 7.5 7 5 10 5C12 5 13.5 6 14 7C14.5 6 16 5 18 5C21 5 24 7.5 24 11C24 18 14 24 14 24Z" fill="#333" stroke="#333" strokeWidth="1.8"/>
-    </svg>
-  ),
-  mymenu: (
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-      <circle cx="14" cy="10" r="4" stroke="#333" strokeWidth="1.8"/>
-      <path d="M7 22C7 18.5 10 16 14 16C18 16 21 18.5 21 22" stroke="#333" strokeWidth="1.8" strokeLinecap="round"/>
-    </svg>
-  ),
-  mymenu_filled: (
-    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-      <circle cx="14" cy="10" r="4" fill="#333"/>
-      <path d="M7 22C7 18.5 10 16 14 16C18 16 21 18.5 21 22" stroke="#333" strokeWidth="3" strokeLinecap="round"/>
-    </svg>
-  ),
+// YDS System Icons 매핑 — 인라인 SVG 사용 금지, 반드시 YdsIcon 사용
+const ICON_MAP = {
+  house: "house",
+  house_filled: "house_filled",
+  benefit: "benefit",
+  benefit_filled: "benefit", // filled 버전 없으면 동일 아이콘 사용
+  receipt: "receipt",
+  receipt_filled: "receipt", // filled 버전 별도 추가 필요
+  heart: "heart",
+  heart_filled: "heart_filled",
+  mymenu: "mymenu",
+  mymenu_filled: "mymenu", // mymenu_filled 추가 필요
 };
 
 // ── NaviItemNew ──────────────────────────────────────────────────────────────
 export function NaviItemNew({ icon, filledIcon, label, selected = false, onClick }) {
-  const iconSvg = selected ? ICONS[filledIcon] : ICONS[icon];
+  const iconName = selected ? ICON_MAP[filledIcon] || filledIcon : ICON_MAP[icon] || icon;
   return (
     <button onClick={onClick} style={{
       flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
@@ -83,7 +38,7 @@ export function NaviItemNew({ icon, filledIcon, label, selected = false, onClick
       background: selected ? "rgba(0,0,0,0.04)" : "transparent",
     }}>
       <div style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        {iconSvg}
+        <YdsIcon name={iconName} size={24} color="#333" />
       </div>
       <span style={{ fontSize: 10, fontWeight: 400, color: "#000", lineHeight: "14px", fontFamily: "Pretendard, Roboto, sans-serif" }}>
         {label}
@@ -137,7 +92,7 @@ export function YoTimedealBar({ discount = "1만원", minutes = "15", countdown 
       </div>
       <div style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
         <span style={{ fontSize: 18, fontWeight: 700, color: "#FA0050", letterSpacing: 4, fontFamily: "Pretendard, Roboto, sans-serif" }}>{countdown}</span>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#333" strokeWidth="2" strokeLinecap="round"/></svg>
+        <YdsIcon name="chevron_right_s" size={20} color="#333" />
       </div>
     </FloatingPill>
   );
