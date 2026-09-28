@@ -1,12 +1,15 @@
 import { useState } from "react";
+import { getAllLogos, SHOP_LOGOS } from "../shopLogos";
+
+const shopLogoItems = getAllLogos();
 
 const ASSET_CATEGORIES = [
   {
     id: "shop-logo",
     label: "가게 대표 썸네일 로고",
-    desc: "ShopListCard, SwimlaneCard 등에 사용되는 일반 가게 로고",
-    status: "ready", // ready | empty | partial
-    items: [],
+    desc: "ShopListCard, SwimlaneCard 등에 사용되는 일반 가게 로고 (44x44)",
+    status: "ready",
+    items: shopLogoItems,
   },
   {
     id: "tab-logo",
@@ -53,6 +56,14 @@ const STATUS_BADGE = {
 
 export default function AssetsSection() {
   const [selected, setSelected] = useState(null);
+  const [copied, setCopied] = useState(null);
+
+  const copyImport = (item) => {
+    const code = `import { getShopLogo } from "../shopLogos";\n// url: getShopLogo("${item.id}")  →  ${item.name}`;
+    navigator.clipboard.writeText(code);
+    setCopied(item.id);
+    setTimeout(() => setCopied(null), 1500);
+  };
 
   return (
     <div style={{ padding: "24px 32px", maxWidth: 900 }}>
@@ -67,7 +78,6 @@ export default function AssetsSection() {
           const isOpen = selected === cat.id;
           return (
             <div key={cat.id} style={{ background: "#fff", border: "1px solid #e5e5e5", borderRadius: 12, overflow: "hidden" }}>
-              {/* Header */}
               <button
                 onClick={() => setSelected(isOpen ? null : cat.id)}
                 style={{ width: "100%", padding: "16px 20px", background: "transparent", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 12, textAlign: "left" }}
@@ -82,7 +92,6 @@ export default function AssetsSection() {
                 <span style={{ fontSize: 12, color: "#ccc", transition: "transform 0.2s", transform: isOpen ? "rotate(90deg)" : "rotate(0deg)" }}>▸</span>
               </button>
 
-              {/* Content */}
               {isOpen && (
                 <div style={{ padding: "0 20px 20px", borderTop: "1px solid #f0f0f0" }}>
                   <div style={{ fontSize: 12, color: "#888", marginTop: 12, marginBottom: 16, lineHeight: 1.6 }}>{cat.desc}</div>
@@ -94,10 +103,15 @@ export default function AssetsSection() {
                       <div style={{ fontSize: 11, color: "#ddd", marginTop: 4 }}>이미지 URL 또는 파일을 등록해주세요</div>
                     </div>
                   ) : (
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))", gap: 8 }}>
-                      {cat.items.map((item, i) => (
-                        <div key={i} style={{ aspectRatio: "1", borderRadius: 8, overflow: "hidden", border: "1px solid #e5e5e5", background: "#f5f5f5" }}>
-                          <img src={item.url} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(72px, 1fr))", gap: 6 }}>
+                      {cat.items.map((item) => (
+                        <div key={item.id} onClick={() => copyImport(item)}
+                          style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: 6, borderRadius: 8, cursor: "pointer", background: copied === item.id ? "#e8f5e8" : "transparent", border: copied === item.id ? "1px solid #88cc88" : "1px solid transparent", transition: "all 0.15s" }}
+                          title={`${item.name} — 클릭하면 import 코드 복사`}>
+                          <img src={item.url} alt={item.name} style={{ width: 44, height: 44, borderRadius: 8, objectFit: "cover", border: "1px solid #e5e5e5" }} />
+                          <span style={{ fontSize: 9, color: copied === item.id ? "#338833" : "#999", textAlign: "center", lineHeight: 1.3, maxWidth: 64, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {copied === item.id ? "복사됨" : item.name}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -109,11 +123,19 @@ export default function AssetsSection() {
         })}
       </div>
 
+      {/* 사용법 */}
+      <div style={{ marginTop: 24, padding: 16, background: "#f0f7ff", border: "1px solid #c5e2fb", borderRadius: 10, fontSize: 11, color: "#336", lineHeight: 1.8 }}>
+        <strong>사용법</strong><br/>
+        <code style={{ background: "#e8f0ff", padding: "1px 6px", borderRadius: 4 }}>{"import { getShopLogo, getRandomLogos } from \"../shopLogos\";"}</code><br/>
+        <code style={{ background: "#e8f0ff", padding: "1px 6px", borderRadius: 4 }}>{"getShopLogo(\"bbq\")  →  /assets/shop-logos/bbq_44x44.png"}</code><br/>
+        <code style={{ background: "#e8f0ff", padding: "1px 6px", borderRadius: 4 }}>{"getRandomLogos(5)  →  랜덤 5개 로고 (미리보기용)"}</code>
+      </div>
+
       {/* 요약 */}
-      <div style={{ marginTop: 24, padding: 16, background: "#f8f8f8", borderRadius: 10, fontSize: 11, color: "#999", lineHeight: 1.8 }}>
+      <div style={{ marginTop: 12, padding: 16, background: "#f8f8f8", borderRadius: 10, fontSize: 11, color: "#999", lineHeight: 1.8 }}>
         <strong style={{ color: "#555" }}>에셋 현황</strong><br/>
         아이콘: ✅ 122개 (icons.jsx) · 디자인 토큰: ✅ 완비 (tokens.js)<br/>
-        가게 로고: ⏳ 등록 대기 · 탭 로고: 미등록 · 바텀시트 로고: 미등록<br/>
+        가게 로고: ✅ {SHOP_LOGOS.length}개 (shopLogos.js) · 탭 로고: 미등록 · 바텀시트 로고: 미등록<br/>
         푸드 카테고리: 일부 있음 · 퀵커머스: 별도 제작 · 프로모션: 미등록
       </div>
     </div>
