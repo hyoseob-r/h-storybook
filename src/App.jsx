@@ -13,6 +13,7 @@ import SwimlaneCardSection from "./components/SwimlaneCard.jsx";
 import ShortcutCardSection from "./components/ShortcutCard.jsx";
 import BrandnewBannerSection from "./components/BrandnewBanner.jsx";
 import DiscountBrandSwimlaneSection from "./components/DiscountBrandSwimlane.jsx";
+import FigmaCodeGenSection from "./components/FigmaCodeGen.jsx";
 
 // ── Code generators ──────────────────────────────────────────────────────────
 
@@ -4148,6 +4149,7 @@ function FigmaLiveSection() {
 
 const NAV_SECTIONS = [
   { label: "Figma", items: [
+    { id: "figma-code", label: "Figma → Code", icon: "⚡" },
     { id: "figma-live", label: "Figma Live", icon: "▶" },
   ]},
   { label: "Tokens", items: [
@@ -4279,6 +4281,7 @@ export default function App() {
   }, [active]); // 탭 전환할 때마다 갱신
 
   const renderContent = () => {
+    if (active === "figma-code") return <FigmaCodeGenSection />;
     if (active === "figma-live") return <FigmaLiveSection />;
     if (active === "meta")       return <MetaTokensSection />;
     if (active === "colors")     return <ColorsSection />;
@@ -4303,8 +4306,8 @@ export default function App() {
     if (active === "figma")      return <FigmaSection />;
   };
 
-  const titles    = { "figma-live": "Figma Live", meta: "Meta Tokens", colors: "Color Tokens", typography: "Typography", spacing: "Spacing & Radius", elevation: "Elevation / Shadow", button: "Button", badge: "Badge", rating: "Rating", stepper: "NumericStepper", icons: "Icons", simulator: "Simulator", glassnav: "Liquid Glass Nav", shoplist: "ShopList Card", swimlane: "Swimlane Card", shortcut: "Shortcut Card", brandnew: "BrandnewBanner", discountbrand: "할인 브랜드 스윔레인", drafts: "Drafts", figma: "Category" };
-  const subtitles = { "figma-live": "alfred-agent 생성 컴포넌트 — Supabase 실시간 렌더링", meta: "YDS 2.0 Primitive Layer — Meta → Semantic → Component", colors: "YDS 2.0 Customer Token", typography: "Roboto 기반 타입 스케일", spacing: "스페이싱 및 보더 라디우스", elevation: "YDS 2.0 Elevation — Level 1 · 2 (normal & inverse)", button: "버튼 컴포넌트 — 멀티 플랫폼 코드", badge: "배지 컴포넌트 — single/group/offers/noti/logo/icon", rating: "별점 컴포넌트 — compact (starIcon + grade + total)", stepper: "수량 조절 — compact/default, elevated/outlined", stickycta: "하단 고정 CTA — PriceButton + NumericStepper", bottomnav: "하단 네비게이션 — pill glass nav + floating bars", icons: "YDS 2.0 System Icon — Figma 원본 기반", simulator: "iOS / Android 실시간 화면 시뮬레이션", glassnav: "OS 버전별 Glass Nav Bar — 호환성 + 코드 생성", shoplist: "가게 리스트 카드 — 로고 + 정보 + 혜택 배지", swimlane: "가로 스크롤 카드 — 썸네일 + 가게 정보", shortcut: "홈 상단 숏컷 — 아이콘 + 라벨 빠른 진입점", brandnew: "프로모션 배너 — 선착순 특가 / 멤버십 / 무한적립", discountbrand: "내 주변 할인중인 브랜드 — 3페이지 × 3아이템 스윔레인", drafts: "Figma에서 가져온 컴포넌트 — 관리 및 시뮬레이터 연동", figma: "Figma에서 추출한 카테고리 컴포넌트 — 리뉴얼-2026" };
+  const titles    = { "figma-code": "Figma → Code", "figma-live": "Figma Live", meta: "Meta Tokens", colors: "Color Tokens", typography: "Typography", spacing: "Spacing & Radius", elevation: "Elevation / Shadow", button: "Button", badge: "Badge", rating: "Rating", stepper: "NumericStepper", icons: "Icons", simulator: "Simulator", glassnav: "Liquid Glass Nav", shoplist: "ShopList Card", swimlane: "Swimlane Card", shortcut: "Shortcut Card", brandnew: "BrandnewBanner", discountbrand: "할인 브랜드 스윔레인", drafts: "Drafts", figma: "Category" };
+  const subtitles = { "figma-code": "Figma URL → YDS 2.0 React 컴포넌트 자동 생성", "figma-live": "alfred-agent 생성 컴포넌트 — Supabase 실시간 렌더링", meta: "YDS 2.0 Primitive Layer — Meta → Semantic → Component", colors: "YDS 2.0 Customer Token", typography: "Roboto 기반 타입 스케일", spacing: "스페이싱 및 보더 라디우스", elevation: "YDS 2.0 Elevation — Level 1 · 2 (normal & inverse)", button: "버튼 컴포넌트 — 멀티 플랫폼 코드", badge: "배지 컴포넌트 — single/group/offers/noti/logo/icon", rating: "별점 컴포넌트 — compact (starIcon + grade + total)", stepper: "수량 조절 — compact/default, elevated/outlined", stickycta: "하단 고정 CTA — PriceButton + NumericStepper", bottomnav: "하단 네비게이션 — pill glass nav + floating bars", icons: "YDS 2.0 System Icon — Figma 원본 기반", simulator: "iOS / Android 실시간 화면 시뮬레이션", glassnav: "OS 버전별 Glass Nav Bar — 호환성 + 코드 생성", shoplist: "가게 리스트 카드 — 로고 + 정보 + 혜택 배지", swimlane: "가로 스크롤 카드 — 썸네일 + 가게 정보", shortcut: "홈 상단 숏컷 — 아이콘 + 라벨 빠른 진입점", brandnew: "프로모션 배너 — 선착순 특가 / 멤버십 / 무한적립", discountbrand: "내 주변 할인중인 브랜드 — 3페이지 × 3아이템 스윔레인", drafts: "Figma에서 가져온 컴포넌트 — 관리 및 시뮬레이터 연동", figma: "Figma에서 추출한 카테고리 컴포넌트 — 리뉴얼-2026" };
 
   return (
     <ToastProvider>
