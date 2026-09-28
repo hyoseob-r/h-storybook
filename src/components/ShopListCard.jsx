@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { metaTokens } from "../tokens";
 import { YdsIcon } from "../icons.jsx";
-import { SingleBadge, GroupBadge, OffersBadge, LogoBadge } from "./Badge.jsx";
+import { SingleBadge, GroupBadge, LogoBadge } from "./Badge.jsx";
 import { RatingCompact } from "./Rating.jsx";
 import { getShopLogo } from "../shopLogos";
 
@@ -45,7 +45,6 @@ export function ShopListCard({
   distance = "1.2km",
   benefitType = "ypx_free_delivery",
   subscriptionType = "none",
-  offerText = null,
   isAd = false,
 }) {
   const benefits = BENEFIT_PRESETS[benefitType] || [];
@@ -101,12 +100,6 @@ export function ShopListCard({
           </div>
         )}
 
-        {/* Offer badge */}
-        {offerText && (
-          <div style={{ marginTop: 2 }}>
-            <OffersBadge text={offerText} size="small" showLeftIcon leftIconName="coupon" />
-          </div>
-        )}
       </div>
     </div>
   );
@@ -156,7 +149,6 @@ export default function ShopListCardSection() {
           rating={4.5} reviewCount={892}
           deliveryTime="30~45분" deliveryFee="1,000원~3,000원" distance="1.5km"
           benefitType={benefitType} subscriptionType={subType}
-          offerText="1,000원 할인"
         />
         <ShopListCard
           shopName="피자헛 역삼점 맛있는 피자 전문점"

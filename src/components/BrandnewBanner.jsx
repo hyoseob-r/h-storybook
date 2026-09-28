@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { metaTokens } from "../tokens";
 import { YdsIcon } from "../icons.jsx";
-import { SingleBadge, OffersBadge } from "./Badge.jsx";
+import { SingleBadge } from "./Badge.jsx";
 
 // ─── YDS 2.0 BrandnewBanner Component (리뉴얼-2026) ────────────────────────
 // Figma: 리뉴얼-2026 > BrandnewBanner

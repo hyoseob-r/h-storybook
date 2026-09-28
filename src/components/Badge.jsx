@@ -63,30 +63,6 @@ export function GroupBadge({
   );
 }
 
-// ── OffersBadge ──────────────────────────────────────────────────────────────
-export function OffersBadge({
-  text = "할인",
-  size = "small",
-  showLeftIcon = false,
-  showRightIcon = false,
-  leftIconName = "coupon",
-  rightIconName = "chevron_right_s",
-}) {
-  const s = BADGE_SIZES[size];
-  return (
-    <span style={{
-      display: "inline-flex", alignItems: "center", justifyContent: "center", gap: s.gap,
-      height: s.height, padding: `0 ${s.px}px`, borderRadius: s.radius,
-      background: "#FA0050", border: "none", overflow: "hidden", whiteSpace: "nowrap",
-      fontFamily: "Pretendard, Roboto, sans-serif",
-    }}>
-      {showLeftIcon && <YdsIcon name={leftIconName} size={s.iconSize} color="#fff" />}
-      <span style={{ fontSize: s.fontSize, fontWeight: 700, lineHeight: `${s.lineHeight}px`, color: "#fff", padding: `0 ${s.labelPx}px` }}>{text}</span>
-      {showRightIcon && <YdsIcon name={rightIconName} size={s.iconSize} color="#fff" />}
-    </span>
-  );
-}
-
 // ── NotiBadge ────────────────────────────────────────────────────────────────
 export function NotiBadge({ shapeStyle = "dot", value = null }) {
   if (shapeStyle === "dot") {
@@ -181,15 +157,6 @@ export default function BadgeSection() {
         <div style={{ display: "flex", gap: 8, flexDirection: "column" }}>
           <GroupBadge items={[{ text: "무료배달", showLeftIcon: true, leftIconName: "check_s" }, { text: "최대 5% 적립" }]} colorStyle={selectedColor} size={selectedSize} />
           <GroupBadge items={[{ text: "배지1" }, { text: "배지2" }, { text: "배지3" }]} colorStyle={selectedColor} size={selectedSize} />
-        </div>
-      </div>
-
-      {/* offersBadge */}
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: "#333", marginBottom: 8 }}>offersBadge</div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <OffersBadge text="1,000원 할인" size={selectedSize} />
-          <OffersBadge text="최대 50% 할인" size={selectedSize} showLeftIcon leftIconName="coupon" />
         </div>
       </div>
 

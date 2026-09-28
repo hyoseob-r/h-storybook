@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { metaTokens } from "../tokens";
 import { YdsIcon } from "../icons.jsx";
-import { SingleBadge, GroupBadge, OffersBadge, LogoBadge } from "./Badge.jsx";
+import { SingleBadge, GroupBadge, LogoBadge } from "./Badge.jsx";
 import { RatingCompact } from "./Rating.jsx";
 import { getShopLogo } from "../shopLogos";
 
@@ -39,12 +39,6 @@ export function SwimlaneCard({
         ) : (
           <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <span style={{ fontSize: 32, color: "#ddd" }}>🍽</span>
-          </div>
-        )}
-        {/* Offer overlay */}
-        {offerText && (
-          <div style={{ position: "absolute", bottom: 6, left: 6 }}>
-            <OffersBadge text={offerText} size="small" />
           </div>
         )}
         {/* AD label */}
