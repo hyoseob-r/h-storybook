@@ -62,6 +62,8 @@ export function SwimlaneCard({
         }}>
           <YdsIcon name="heart" size={20} color="rgba(255,255,255,0.8)" />
         </button>
+        {/* Inline border (a_black50) */}
+        <span style={{ position: "absolute", inset: 0, borderRadius: "inherit", border: `1px solid ${metaTokens.colors.alpha.a_black50}`, pointerEvents: "none" }} />
       </div>
 
       {/* Info */}

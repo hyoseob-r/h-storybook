@@ -153,6 +153,10 @@ export const metaTokens = {
       gray800:  "#333333", gray800_i: "#F2F2F2",
       meta_black: "#000000",
     },
+    // Alpha (border/stroke용 — Figma 네이밍 그대로)
+    alpha: {
+      a_black50: "rgba(0,0,0,0.08)", // #000000 8% — 로고/썸네일 border 표준
+    },
   },
   // ── Shadow / Elevation primitives ─────────────────────────────────────────
   // Shadow color: #193040 (rgb 25,48,64) — two-layer shadow system

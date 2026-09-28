@@ -113,10 +113,11 @@ export function LogoBadge({ src, size = 88, alt = "logo" }) {
     <span style={{
       display: "inline-flex", width: size, height: size, borderRadius: metaTokens.radius.meta_r3,
       overflow: "hidden", background: "#f6f6f6", alignItems: "center", justifyContent: "center",
-      border: "1px solid rgba(0,0,0,0.08)",
+      position: "relative",
     }}>
       {src ? <img src={src} alt={alt} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> :
         <span style={{ fontSize: size * 0.25, color: "#ccc", fontFamily: "Pretendard, sans-serif" }}>Logo</span>}
+      <span style={{ position: "absolute", inset: 0, borderRadius: "inherit", border: `1px solid ${metaTokens.colors.alpha.a_black50}`, pointerEvents: "none" }} />
     </span>
   );
 }

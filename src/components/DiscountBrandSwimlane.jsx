@@ -26,7 +26,7 @@ export function BrandCard({
       <div style={{
         width: 48, height: 48, borderRadius: metaTokens.radius.meta_r4,
         overflow: "hidden", background: "#f6f6f6", flexShrink: 0,
-        border: "1px solid rgba(0,0,0,0.08)",
+        position: "relative",
         display: "flex", alignItems: "center", justifyContent: "center",
       }}>
         {logoSrc ? (
@@ -34,6 +34,7 @@ export function BrandCard({
         ) : (
           <span style={{ fontSize: 12, color: "#ccc" }}>Logo</span>
         )}
+        <span style={{ position: "absolute", inset: 0, borderRadius: "inherit", border: `1px solid ${metaTokens.colors.alpha.a_black50}`, pointerEvents: "none" }} />
       </div>
 
       {/* Info */}
