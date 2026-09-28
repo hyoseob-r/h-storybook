@@ -2,6 +2,7 @@ import { useState } from "react";
 import { metaTokens } from "../tokens";
 import { YdsIcon } from "../icons.jsx";
 import { SingleBadge, LogoBadge } from "./Badge.jsx";
+import { getShopLogo } from "../shopLogos";
 
 // ─── YDS 2.0 DiscountBrandSwimlane Component (리뉴얼-2026) ─────────────────
 // Figma: 리뉴얼-2026 > 할인 브랜드 스윔레인
@@ -115,15 +116,15 @@ export function DiscountBrandSwimlane({
 
 // ── Section (Storybook) ─────────────────────────────────────────────────────
 const SAMPLE_BRANDS = [
-  { shopName: "교촌치킨", benefit: "최대 3,000원 할인", badge: "요기패스X" },
-  { shopName: "BBQ", benefit: "2,000원 즉시할인" },
-  { shopName: "BHC", benefit: "무료배달 + 적립 5%", badge: "요기패스X" },
-  { shopName: "피자헛", benefit: "라지 피자 50% 할인" },
-  { shopName: "도미노피자", benefit: "1+1 이벤트" },
-  { shopName: "서브웨이", benefit: "3,000원 할인쿠폰", badge: "신규" },
-  { shopName: "맘스터치", benefit: "무료배달" },
-  { shopName: "맥도날드", benefit: "배달비 0원" },
-  { shopName: "버거킹", benefit: "세트메뉴 20% 할인" },
+  { shopName: "교촌치킨", logoSrc: getShopLogo("kyochon"), benefit: "최대 3,000원 할인", badge: "요기패스X" },
+  { shopName: "BBQ", logoSrc: getShopLogo("bbq"), benefit: "2,000원 즉시할인" },
+  { shopName: "BHC", logoSrc: getShopLogo("bhc"), benefit: "무료배달 + 적립 5%", badge: "요기패스X" },
+  { shopName: "피자헛", logoSrc: getShopLogo("pizzahut"), benefit: "라지 피자 50% 할인" },
+  { shopName: "도미노피자", logoSrc: getShopLogo("domino"), benefit: "1+1 이벤트" },
+  { shopName: "서브웨이", logoSrc: getShopLogo("subway"), benefit: "3,000원 할인쿠폰", badge: "신규" },
+  { shopName: "맘스터치", logoSrc: getShopLogo("moms"), benefit: "무료배달" },
+  { shopName: "맥도날드", logoSrc: getShopLogo("mcdonalds"), benefit: "배달비 0원" },
+  { shopName: "버거킹", logoSrc: getShopLogo("no"), benefit: "세트메뉴 20% 할인" },
 ];
 
 export default function DiscountBrandSwimlaneSection() {
@@ -141,9 +142,9 @@ export default function DiscountBrandSwimlaneSection() {
       <div style={{ marginBottom: 32 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: "#333", marginBottom: 12 }}>BrandCard variants</div>
         <div style={{ width: 375, background: "#fff", borderRadius: 12, padding: "8px 16px" }}>
-          <BrandCard shopName="교촌치킨" benefit="최대 3,000원 할인" badge="요기패스X" />
-          <BrandCard shopName="BBQ 치킨" benefit="2,000원 즉시할인" />
-          <BrandCard shopName="피자헛" benefit="라지 피자 50%" badge="신규" />
+          <BrandCard shopName="교촌치킨" logoSrc={getShopLogo("kyochon")} benefit="최대 3,000원 할인" badge="요기패스X" />
+          <BrandCard shopName="BBQ 치킨" logoSrc={getShopLogo("bbq")} benefit="2,000원 즉시할인" />
+          <BrandCard shopName="피자헛" logoSrc={getShopLogo("pizzahut")} benefit="라지 피자 50%" badge="신규" />
         </div>
       </div>
 
