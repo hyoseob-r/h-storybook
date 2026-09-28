@@ -3,6 +3,7 @@ import { metaTokens } from "../tokens";
 import { YdsIcon } from "../icons.jsx";
 import { SingleBadge, GroupBadge, OffersBadge, LogoBadge } from "./Badge.jsx";
 import { RatingCompact } from "./Rating.jsx";
+import { getShopLogo } from "../shopLogos";
 
 // ─── YDS 2.0 ShopListCard Component (리뉴얼-2026) ──────────────────────────
 // Figma: 리뉴얼-2026 > ShopList Card
@@ -144,12 +145,14 @@ export default function ShopListCardSection() {
       <div style={{ width: 375, background: "#fff", borderRadius: 12, padding: "0 16px" }}>
         <ShopListCard
           shopName="서브웨이 서초점"
+          logoSrc={getShopLogo("subway")}
           rating={4.8} reviewCount={1523}
           deliveryTime="25~40분" deliveryFee="0원~2,000원" distance="0.8km"
           benefitType={benefitType} subscriptionType={subType}
         />
         <ShopListCard
           shopName="맘스터치 강남역점"
+          logoSrc={getShopLogo("moms")}
           rating={4.5} reviewCount={892}
           deliveryTime="30~45분" deliveryFee="1,000원~3,000원" distance="1.5km"
           benefitType={benefitType} subscriptionType={subType}
@@ -157,6 +160,7 @@ export default function ShopListCardSection() {
         />
         <ShopListCard
           shopName="피자헛 역삼점 맛있는 피자 전문점"
+          logoSrc={getShopLogo("pizzahut")}
           rating={4.2} reviewCount={456}
           deliveryTime="35~50분" deliveryFee="0원" distance="2.1km"
           benefitType={benefitType} subscriptionType={subType}
