@@ -77,7 +77,7 @@ export function SwimlaneCard({
 
         {benefits.length > 0 && (
           <div style={{ marginTop: 2 }}>
-            <GroupBadge items={benefits} colorStyle="primary" size="small" />
+            <GroupBadge items={benefits} colorStyle="secondary" size="small" />
           </div>
         )}
       </div>

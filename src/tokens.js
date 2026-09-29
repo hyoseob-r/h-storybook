@@ -5,6 +5,14 @@
 // Source: figma.com/design/onuxIpHZS7uphPt4rIYXz7/YDS-2.0-Meta-Token
 // ─────────────────────────────────────────────────────────────────────────────
 export const metaTokens = {
+  // ── Font Family ─────────────────────────────────────────────────────────────
+  // 기본: Pretendard (UI 전체)
+  // 크리에이티브 전용: YOGIYO Sans (배너, 프로모션 등 제한적 사용)
+  fontFamily: {
+    base: "'Pretendard', 'Roboto', sans-serif",
+    yogiyoSans: "'YOGIYO Sans', 'Pretendard', sans-serif",
+  },
+
   // ── Typography primitives ──────────────────────────────────────────────────
   // Typeface: SD Neo (iOS) / SF Pro Display (iOS) / Noto Sans (Android) / Roboto (Android)
   // meta_sf_{size}_{r=Regular | b=Bold}
@@ -35,6 +43,19 @@ export const metaTokens = {
     meta_sf_32_b: { size: 32, weight: 700, lineHeight: 43 },
     meta_sf_56_r: { size: 56, weight: 400, lineHeight: 76 },
     meta_sf_56_b: { size: 56, weight: 700, lineHeight: 76 },
+
+    // YOGIYO Sans — 크리에이티브 영역 전용 (배너, 프로모션, 마케팅 그래픽)
+    // Regular(400), Bold(700) 2개 웨이트만 존재
+    yogiyo_sans_16_r: { size: 16, weight: 400, lineHeight: 22, fontFamily: "'YOGIYO Sans'" },
+    yogiyo_sans_16_b: { size: 16, weight: 700, lineHeight: 22, fontFamily: "'YOGIYO Sans'" },
+    yogiyo_sans_20_r: { size: 20, weight: 400, lineHeight: 27, fontFamily: "'YOGIYO Sans'" },
+    yogiyo_sans_20_b: { size: 20, weight: 700, lineHeight: 27, fontFamily: "'YOGIYO Sans'" },
+    yogiyo_sans_24_r: { size: 24, weight: 400, lineHeight: 32, fontFamily: "'YOGIYO Sans'" },
+    yogiyo_sans_24_b: { size: 24, weight: 700, lineHeight: 32, fontFamily: "'YOGIYO Sans'" },
+    yogiyo_sans_32_r: { size: 32, weight: 400, lineHeight: 43, fontFamily: "'YOGIYO Sans'" },
+    yogiyo_sans_32_b: { size: 32, weight: 700, lineHeight: 43, fontFamily: "'YOGIYO Sans'" },
+    yogiyo_sans_56_r: { size: 56, weight: 400, lineHeight: 76, fontFamily: "'YOGIYO Sans'" },
+    yogiyo_sans_56_b: { size: 56, weight: 700, lineHeight: 76, fontFamily: "'YOGIYO Sans'" },
   },
   // ── Radius primitives ──────────────────────────────────────────────────────
   // rfull=360 (not 9999) — confirmed from Figma YDS 2.0 Meta Token doc

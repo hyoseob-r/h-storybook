@@ -76,7 +76,7 @@ export function BrandnewBanner({
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
           <div style={{ display: "flex", gap: 4 }}>
             {v.badges.map((b, i) => (
-              <SingleBadge key={i} text={b.text} colorStyle="primary" size="small"
+              <SingleBadge key={i} text={b.text} colorStyle="secondary" size="small"
                 showLeftIcon={b.showLeftIcon} leftIconName={b.leftIconName} />
             ))}
           </div>

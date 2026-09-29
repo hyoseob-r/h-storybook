@@ -5,7 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>h's Storybook</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css"/>
-    <style>*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; } body { background: #060612; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }</style>
+    <style>
+      @font-face { font-family: 'YOGIYO Sans'; font-weight: 400; src: url('/assets/fonts/YOGIYOSans-Regular.woff2') format('woff2'), url('/assets/fonts/YOGIYOSans-Regular.woff') format('woff'); }
+      @font-face { font-family: 'YOGIYO Sans'; font-weight: 700; src: url('/assets/fonts/YOGIYOSans-Bold.woff2') format('woff2'), url('/assets/fonts/YOGIYOSans-Bold.woff') format('woff'); }
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      body { background: #060612; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif; }
+    </style>
   </head>
   <body>
     <div id="root"></div>

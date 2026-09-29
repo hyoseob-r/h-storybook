@@ -44,7 +44,7 @@ export function BrandCard({
             fontSize: 12, fontWeight: 400, color: "#333",
             overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
           }}>{shopName}</span>
-          {badge && <SingleBadge text={badge} colorStyle="primary" size="small" />}
+          {badge && <SingleBadge text={badge} colorStyle="secondary" size="small" />}
         </div>
         <div style={{ fontSize: 14, fontWeight: 700, color: "#333", marginTop: 2 }}>{benefit}</div>
       </div>
