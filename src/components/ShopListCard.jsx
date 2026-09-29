@@ -61,8 +61,10 @@ function MenuThumbnailRow({ shopId, onTransition }) {
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
-    const overscroll = el.scrollLeft + el.clientWidth - el.scrollWidth;
-    const progress = Math.min(1, Math.max(0, overscroll / 60));
+    // 스크롤 끝까지 갔을 때의 남은 거리 (0 = 완전히 끝)
+    const remaining = el.scrollWidth - el.scrollLeft - el.clientWidth;
+    // 60px 이내로 접근하면 점점 커짐, 0이면 최대
+    const progress = Math.min(1, Math.max(0, 1 - remaining / 60));
     setBtnScale(progress);
   }, []);
 
