@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { metaTokens } from "../tokens";
 import { YdsIcon } from "../icons.jsx";
 import { SingleBadge, GroupBadge, LogoBadge } from "./Badge.jsx";
@@ -51,37 +51,79 @@ const DEFAULT_BOTTOM_BADGES = [
   { text: "위생안심", colorStyle: "gray" },
 ];
 
-// ── 메뉴 썸네일 가로 스크롤 ─────────────────────────────────────────────────
-function MenuThumbnailRow({ shopId }) {
+// ── 메뉴 썸네일 가로 스크롤 + auto_transition 버튼 ──────────────────────────
+// 스크롤 끝에 도달하면 > 버튼이 28→48px로 커짐 (당겨서 새로고침 UX)
+function MenuThumbnailRow({ shopId, onTransition }) {
   const menus = getMenusByShop(shopId);
+  const scrollRef = useRef(null);
+  const [btnScale, setBtnScale] = useState(0);
+
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const overscroll = el.scrollLeft + el.clientWidth - el.scrollWidth;
+    const progress = Math.min(1, Math.max(0, overscroll / 60));
+    setBtnScale(progress);
+  }, []);
+
   if (!menus || menus.length === 0) return null;
 
+  const btnSize = 28 + btnScale * 20; // 28→48
+  const btnRadius = 10 + btnScale * 6; // 10→16
+  const iconSize = 16 + btnScale * 16; // 16→32
+  const btnBorder = 1.3 + btnScale * 1.3; // 1.3→2.6
+
   return (
-    <div style={{
-      display: "flex", gap: 2, overflowX: "auto",
-      width: "100%", scrollbarWidth: "none",
-      WebkitOverflowScrolling: "touch",
-    }}>
-      {menus.map((menu) => (
-        <div key={menu.id} style={{
-          position: "relative", flexShrink: 0,
-          width: 148, height: 118,
-          borderRadius: 12, overflow: "hidden",
-          border: "1px solid rgba(0,0,0,0.08)",
-        }}>
-          <img src={menu.url} alt={menu.label || menu.id}
-            style={{ ...imageStyle(148, 118, 0), display: "block" }} />
-          <div style={{
-            position: "absolute", bottom: 0, left: 0, right: 0,
-            padding: "8px 8px 10px",
-            background: "linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.4) 25%, rgba(0,0,0,0.6) 100%)",
+    <div style={{ display: "flex", alignItems: "center", gap: 0, position: "relative" }}>
+      <div
+        ref={scrollRef}
+        onScroll={handleScroll}
+        style={{
+          display: "flex", gap: 8, overflowX: "auto",
+          flex: 1, scrollbarWidth: "none",
+          WebkitOverflowScrolling: "touch",
+          paddingRight: 56,
+        }}
+      >
+        {menus.map((menu) => (
+          <div key={menu.id} style={{
+            position: "relative", flexShrink: 0,
+            width: 148, height: 148,
+            borderRadius: 12, overflow: "hidden",
+            border: "1px solid rgba(0,0,0,0.04)",
           }}>
-            <div style={{ fontSize: 12, color: "#fff", lineHeight: "16px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {menu.label || `메뉴 ${menu.seq}`}
+            <img src={menu.url} alt={menu.label || menu.id}
+              style={{ ...imageStyle(148, 148, 0), display: "block" }} />
+            <div style={{
+              position: "absolute", top: 0, left: 0, right: 0,
+              padding: "8px 8px 12px",
+              background: "linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.35) 59%, transparent 100%)",
+            }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#fff", lineHeight: "16px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {menu.label || `메뉴 ${menu.seq}`}
+              </div>
+              <div style={{ fontSize: 12, fontWeight: 400, color: "#fff", lineHeight: "16px" }}>
+                11,000원
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
+
+      {/* auto_transition 버튼 — 스크롤 끝에서 scale up */}
+      <div style={{
+        position: "absolute", right: 0, top: "50%", transform: "translateY(-50%)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        width: btnSize, height: btnSize,
+        borderRadius: btnRadius,
+        background: "#f6f6f6",
+        border: `${btnBorder}px solid #e5e5e5`,
+        cursor: "pointer",
+        transition: "all 0.15s ease-out",
+        zIndex: 2,
+      }} onClick={onTransition}>
+        <YdsIcon name="chevron_right_s" size={iconSize} color="#999" />
+      </div>
     </div>
   );
 }
@@ -135,7 +177,7 @@ export function ShopListCard({
       <div style={{ display: "flex", gap: 6, padding: "0 16px", alignItems: "flex-start" }}>
         {/* Logo — 36px (신규) */}
         <div style={{ flexShrink: 0, position: "relative" }}>
-          <LogoBadge src={logoSrc} size={36} />
+          <LogoBadge src={logoSrc} size={44} />
           {isAd && (
             <span style={{
               position: "absolute", top: -4, right: -4,
@@ -151,7 +193,7 @@ export function ShopListCard({
             {/* 가게명 + 별점 */}
             <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
               <span style={{
-                fontSize: 16, fontWeight: 700, color: "#333",
+                fontSize: 18, fontWeight: 700, color: "#333", lineHeight: "24px",
                 overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
               }}>{shopName}</span>
               <RatingCompact grade={rating} total={reviewCount} size="small" />
@@ -170,7 +212,7 @@ export function ShopListCard({
             </div>
 
             {/* 배달시간 · 거리 · 최소주문 */}
-            <div style={{ fontSize: 12, color: "#333", display: "flex", gap: 4, alignItems: "center" }}>
+            <div style={{ fontSize: 12, color: "#666", display: "flex", gap: 4, alignItems: "center" }}>
               <span>{deliveryTime}</span>
               <span style={{ width: 3, height: 3, borderRadius: 1.5, background: "#ccc", display: "inline-block" }} />
               <span>{distance}</span>
