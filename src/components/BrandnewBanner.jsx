@@ -117,6 +117,33 @@ export function BrandnewBanner({
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// 이미지 인디케이터 (더보기 + 페이징)
+// ═══════════════════════════════════════════════════════════════════════════════
+// full: "1/10 더보기 >"  |  short: "1/10"
+function ImageIndicator({ current = 1, total = 10, variant = "full", onClick }) {
+  return (
+    <button onClick={onClick} style={{
+      display: "inline-flex", alignItems: "center", justifyContent: "center",
+      padding: "4px 4px", borderRadius: 16,
+      background: "rgba(0,0,0,0.6)",
+      border: "none", cursor: onClick ? "pointer" : "default",
+      fontFamily: "Pretendard, Roboto, sans-serif",
+    }}>
+      <span style={{ display: "flex", alignItems: "center", padding: "0 4px" }}>
+        <span style={{ fontSize: 10, fontWeight: 700, lineHeight: "14px", color: "#fff" }}>{current}</span>
+        <span style={{ fontSize: 10, fontWeight: 400, lineHeight: "14px", color: "#fff" }}>/{total}</span>
+      </span>
+      {variant === "full" && (
+        <span style={{ display: "flex", alignItems: "center" }}>
+          <span style={{ fontSize: 10, fontWeight: 700, lineHeight: "14px", color: "#fff" }}>더보기</span>
+          <YdsIcon name="chevron_right_s" size={14} color="#fff" />
+        </span>
+      )}
+    </button>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // TYPE 2: 이미지 배경 배너 (brandnew banner)
 // ═══════════════════════════════════════════════════════════════════════════════
 // 케이스: 텍스트 O/X, 텍스트 색상 반전 (black/white), 서브텍스트 O/X
@@ -130,6 +157,10 @@ export function BrandnewImageBanner({
   textInvert = true,
   height = 200,
   borderRadius = 16,
+  currentImage = 1,
+  totalImages = 10,
+  indicatorVariant = "full",
+  onMoreClick,
   onClick,
 }) {
   const textColor = textInvert ? "#fff" : "#333";
@@ -153,6 +184,16 @@ export function BrandnewImageBanner({
           objectFit: "cover", objectPosition: "center",
         }} />
       )}
+
+      {/* Indicator — 우하단 */}
+      <div style={{ position: "absolute", bottom: 12, right: 12, zIndex: 2 }}>
+        <ImageIndicator
+          current={currentImage}
+          total={totalImages}
+          variant={indicatorVariant}
+          onClick={onMoreClick}
+        />
+      </div>
 
       {/* Text overlay */}
       {showTitle && (
@@ -192,7 +233,7 @@ export function BrandnewCarousel({ banners = [], type = "color" }) {
   return (
     <div style={{ position: "relative", fontFamily: "Pretendard, Roboto, sans-serif" }}>
       {type === "image" ? (
-        <BrandnewImageBanner {...b} />
+        <BrandnewImageBanner {...b} currentImage={current + 1} totalImages={banners.length} />
       ) : (
         <BrandnewBanner {...b} imageCount={banners.length} currentImage={current + 1} />
       )}
@@ -238,15 +279,27 @@ export default function BrandnewBannerSection() {
               fontSize: 10, cursor: "pointer" }}>{showSub ? "ON" : "OFF"}</button>
         </div>
 
-        {/* 서브 텍스트 O */}
+        {/* full indicator */}
         <div style={{ width: 375, marginBottom: 16 }}>
-          <div style={{ fontSize: 11, color: "#999", marginBottom: 6 }}>텍스트 O · 서브텍스트 {showSub ? "O" : "X"} · {textInvert ? "white" : "black"}</div>
+          <div style={{ fontSize: 11, color: "#999", marginBottom: 6 }}>텍스트 O · 서브텍스트 {showSub ? "O" : "X"} · {textInvert ? "white" : "black"} · indicator: full</div>
           <BrandnewImageBanner
             bgColor="#1a1a2e"
             title={"매일 하루종일 특가\n+최대 5% 적립까지!"}
             subtitle="멈추지 않는 선착순 할인!"
             textInvert={textInvert}
             showSubtitle={showSub}
+            indicatorVariant="full"
+          />
+        </div>
+
+        {/* short indicator */}
+        <div style={{ width: 375, marginBottom: 16 }}>
+          <div style={{ fontSize: 11, color: "#999", marginBottom: 6 }}>텍스트 O · 서브텍스트 X · indicator: short</div>
+          <BrandnewImageBanner
+            bgColor="#1a1a2e"
+            title={"매일 하루종일 특가\n+최대 5% 적립까지!"}
+            showSubtitle={false}
+            indicatorVariant="short"
           />
         </div>
 
