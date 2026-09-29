@@ -4,103 +4,211 @@ import { YdsIcon } from "../icons.jsx";
 import { SingleBadge, GroupBadge, LogoBadge } from "./Badge.jsx";
 import { RatingCompact } from "./Rating.jsx";
 import { getShopLogo } from "../shopLogos";
+import { getMenusByShop, getShopImage, imageStyle } from "../shopImages";
 
-// ─── YDS 2.0 ShopListCard Component (리뉴얼-2026) ──────────────────────────
-// Figma: 리뉴얼-2026 > ShopList Card
-// 가게 리스트 카드 — 로고 + 가게 정보 + 혜택 배지
+// ─── YDS 2.0 ShopListCard Component (리뉴얼-2026 v2) ──────────────────────
+// Figma: 리뉴얼-2026 > shoplist_p04
+// 구조: 메뉴 썸네일 → 빨간 혜택배너 → 가게정보(36px 로고) → 하단 뱃지 lane
 
-const BENEFIT_PRESETS = {
-  none: [],
-  ypx_free_delivery: [
-    { text: "무료배달", showLeftIcon: true, leftIconName: "benefit" },
-    { text: "즉시할인", showLeftIcon: true, leftIconName: "coupon" },
-    { text: "최대 5% 적립", showLeftIcon: true, leftIconName: "point" },
-  ],
-  store_free_delivery: [
-    { text: "가게무배", showLeftIcon: true, leftIconName: "benefit" },
-    { text: "즉시할인", showLeftIcon: true, leftIconName: "coupon" },
-    { text: "최대 3% 적립", showLeftIcon: true, leftIconName: "point" },
-  ],
-  single_discount: [{ text: "즉시할인", showLeftIcon: true, leftIconName: "coupon" }],
-  single_cashback: [{ text: "최대 5% 적립", showLeftIcon: true, leftIconName: "point" }],
-  single_ypx_free: [{ text: "무료배달", showLeftIcon: true, leftIconName: "benefit" }],
-  single_store_free: [{ text: "가게무배", showLeftIcon: true, leftIconName: "benefit" }],
+// ── 빨간 혜택 배너 (Red Benefit Banner) ─────────────────────────────────────
+const BENEFIT_BANNER_PRESETS = {
+  none: null,
+  ypx_free_delivery: { items: ["무료배달", "즉시할인", "최대 15% 적립"] },
+  store_free_delivery: { items: ["무료배달", "즉시할인", "최대 3% 적립"] },
+  single_discount: { items: ["즉시할인"] },
+  single_cashback: { items: ["최대 5% 적립"] },
+  single_ypx_free: { items: ["무료배달"] },
+  single_store_free: { items: ["가게무배"] },
 };
+
+function RedBenefitBanner({ items = [] }) {
+  if (items.length === 0) return null;
+  return (
+    <div style={{
+      display: "flex", gap: 2, alignItems: "center", justifyContent: "center",
+      height: 20, padding: "4px 6px",
+      background: "#FA0050", borderRadius: 12,
+      overflow: "hidden", width: "100%", maxWidth: 300,
+    }}>
+      {items.map((text, i) => (
+        <span key={i} style={{ display: "flex", alignItems: "center", gap: 2 }}>
+          {i > 0 && <span style={{ fontSize: 11, fontWeight: 700, color: "#fff" }}>+</span>}
+          <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", whiteSpace: "nowrap" }}>{text}</span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+// ── 하단 뱃지 (Badge Wrap) ──────────────────────────────────────────────────
+// Figma 기준: 혜택 관련 → secondary(파란색), 정보성 → gray
+const DEFAULT_BOTTOM_BADGES = [
+  { text: "배달앱 최저가", colorStyle: "gray", showLeftIcon: true, leftIconName: "point" },
+  { text: "스페셜적립", colorStyle: "gray", showLeftIcon: true, leftIconName: "point" },
+  { text: "1,000원 추가할인", colorStyle: "secondary" },
+  { text: "카카오페이 쿠폰", colorStyle: "secondary" },
+  { text: "위생안심", colorStyle: "gray" },
+];
+
+// ── 메뉴 썸네일 가로 스크롤 ─────────────────────────────────────────────────
+function MenuThumbnailRow({ shopId }) {
+  const menus = getMenusByShop(shopId);
+  if (!menus || menus.length === 0) return null;
+
+  return (
+    <div style={{
+      display: "flex", gap: 2, overflow: "hidden",
+      width: "100%",
+    }}>
+      {menus.slice(0, 3).map((menu) => (
+        <div key={menu.id} style={{
+          position: "relative", flexShrink: 0,
+          width: 148, height: 118,
+          borderRadius: 12, overflow: "hidden",
+          border: "1px solid rgba(0,0,0,0.08)",
+        }}>
+          <img src={menu.url} alt={menu.label || menu.id}
+            style={{ ...imageStyle(148, 118, 0), display: "block" }} />
+          <div style={{
+            position: "absolute", bottom: 0, left: 0, right: 0,
+            padding: "8px 8px 10px",
+            background: "linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.4) 25%, rgba(0,0,0,0.6) 100%)",
+          }}>
+            <div style={{ fontSize: 12, color: "#fff", lineHeight: "16px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {menu.label || `메뉴 ${menu.seq}`}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 const SUBSCRIPTION_LABELS = {
   none: null,
   ypx_sub: { text: "요기패스X", colorStyle: "primary" },
   ypx_nonsub: { text: "요기패스X 가입하면", colorStyle: "dimmed" },
-  nonsub_ypx: { text: "요기패스X", colorStyle: "primary" },
-  nonsub_nonypx: null,
 };
 
 export function ShopListCard({
   shopName = "맛있는 분식집",
   logoSrc = null,
+  shopId = null,
   rating = 4.8,
   reviewCount = 1234,
   deliveryTime = "30~45분",
-  deliveryFee = "0원~3,000원",
+  deliveryFee = "1,900~2,900원",
   distance = "1.2km",
+  minOrder = "12,000원",
   benefitType = "ypx_free_delivery",
   subscriptionType = "none",
+  bottomBadges = null,
+  showMenuThumbnails = true,
   isAd = false,
 }) {
-  const benefits = BENEFIT_PRESETS[benefitType] || [];
+  const banner = BENEFIT_BANNER_PRESETS[benefitType];
+  const badges = bottomBadges || DEFAULT_BOTTOM_BADGES;
   const subLabel = SUBSCRIPTION_LABELS[subscriptionType];
 
   return (
     <div style={{
-      display: "flex", gap: 12, padding: "16px 0",
+      display: "flex", flexDirection: "column", gap: 6,
+      padding: "16px 0",
       borderBottom: "1px solid #F2F2F2",
       fontFamily: "Pretendard, Roboto, sans-serif",
     }}>
-      {/* Logo */}
-      <div style={{ flexShrink: 0, position: "relative" }}>
-        <LogoBadge src={logoSrc} size={88} />
-        {isAd && (
-          <span style={{
-            position: "absolute", bottom: 4, left: 4,
-            fontSize: 9, color: "#999", background: "rgba(255,255,255,0.85)",
-            padding: "1px 4px", borderRadius: 3,
-          }}>AD</span>
-        )}
-      </div>
+      {/* 메뉴 썸네일 + 빨간 혜택 배너 */}
+      {showMenuThumbnails && shopId && (
+        <div style={{ padding: "0 16px", display: "flex", flexDirection: "column", alignItems: "start" }}>
+          <MenuThumbnailRow shopId={shopId} />
+          {banner && (
+            <div style={{ marginTop: -10, paddingLeft: 4, position: "relative", zIndex: 1, width: "100%" }}>
+              <RedBenefitBanner items={banner.items} />
+            </div>
+          )}
+        </div>
+      )}
 
-      {/* Info */}
-      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }}>
-        {/* Shop name */}
-        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          <span style={{
-            fontSize: 16, fontWeight: 700, color: "#333",
-            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-          }}>{shopName}</span>
-          {subLabel && <SingleBadge text={subLabel.text} colorStyle={subLabel.colorStyle} size="small" />}
+      {/* 가게 정보 */}
+      <div style={{ display: "flex", gap: 6, padding: "0 16px", alignItems: "flex-start" }}>
+        {/* Logo — 36px (신규) */}
+        <div style={{ flexShrink: 0, position: "relative" }}>
+          <LogoBadge src={logoSrc} size={36} />
+          {isAd && (
+            <span style={{
+              position: "absolute", top: -4, right: -4,
+              fontSize: 9, color: "#fff", background: "rgba(0,0,0,0.12)",
+              padding: "2px 5px", borderRadius: 100, lineHeight: 1,
+            }}>AD</span>
+          )}
         </div>
 
-        {/* Rating + delivery info */}
-        <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#999" }}>
-          <RatingCompact grade={rating} total={reviewCount} size="small" />
-          <span style={{ width: 2, height: 2, borderRadius: 1, background: "#ccc", display: "inline-block" }} />
-          <span>{distance}</span>
-        </div>
+        {/* Info */}
+        <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            {/* 가게명 + 별점 */}
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <span style={{
+                fontSize: 16, fontWeight: 700, color: "#333",
+                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+              }}>{shopName}</span>
+              <RatingCompact grade={rating} total={reviewCount} size="small" />
+              {isAd && (
+                <span style={{
+                  fontSize: 9, color: "#fff", background: "rgba(0,0,0,0.12)",
+                  padding: "3px 5px 2px", borderRadius: 100, lineHeight: 1, flexShrink: 0,
+                }}>AD</span>
+              )}
+            </div>
 
-        {/* Delivery meta */}
-        <div style={{ fontSize: 12, color: "#666", display: "flex", gap: 4, alignItems: "center" }}>
-          <span>{deliveryTime}</span>
-          <span style={{ width: 2, height: 2, borderRadius: 1, background: "#ccc", display: "inline-block" }} />
-          <span>배달비 {deliveryFee}</span>
-        </div>
+            {/* 배달비 */}
+            <div style={{ fontSize: 12, color: "#333", display: "flex", gap: 2 }}>
+              <span>배달비</span>
+              <span>{deliveryFee}</span>
+            </div>
 
-        {/* Benefits */}
-        {benefits.length > 0 && (
-          <div style={{ marginTop: 2 }}>
-            <GroupBadge items={benefits} colorStyle="primary" size="small" />
+            {/* 배달시간 · 거리 · 최소주문 */}
+            <div style={{ fontSize: 12, color: "#333", display: "flex", gap: 4, alignItems: "center" }}>
+              <span>{deliveryTime}</span>
+              <span style={{ width: 3, height: 3, borderRadius: 1.5, background: "#ccc", display: "inline-block" }} />
+              <span>{distance}</span>
+              {minOrder && (
+                <>
+                  <span style={{ width: 3, height: 3, borderRadius: 1.5, background: "#ccc", display: "inline-block" }} />
+                  <span>최소주문 {minOrder}</span>
+                </>
+              )}
+            </div>
           </div>
-        )}
 
+          {/* 하단 뱃지 lane — 혜택뱃지는 secondary(파란색) */}
+          {badges.length > 0 && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+              {badges.map((badge, i) => (
+                <SingleBadge
+                  key={i}
+                  text={badge.text}
+                  colorStyle={badge.colorStyle || "secondary"}
+                  size="small"
+                  showLeftIcon={badge.showLeftIcon}
+                  leftIconName={badge.leftIconName}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* 메뉴 썸네일 없을 때 — 기존 스타일 (로고 큰 버전) fallback */}
+      {!showMenuThumbnails && banner && (
+        <div style={{ padding: "0 16px" }}>
+          <GroupBadge
+            items={banner.items.map(text => ({ text, colorStyle: "secondary" }))}
+            colorStyle="secondary"
+            size="small"
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -109,6 +217,7 @@ export function ShopListCard({
 export default function ShopListCardSection() {
   const [benefitType, setBenefitType] = useState("ypx_free_delivery");
   const [subType, setSubType] = useState("none");
+  const [showThumbnails, setShowThumbnails] = useState(true);
 
   return (
     <div style={{ padding: "24px 0" }}>
@@ -124,6 +233,13 @@ export default function ShopListCardSection() {
           ))}
         </div>
         <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+          <span style={{ fontSize: 11, color: "#999", marginRight: 4 }}>Thumbnails:</span>
+          <button onClick={() => setShowThumbnails(!showThumbnails)}
+            style={{ padding: "4px 10px", borderRadius: 20, border: `1.5px solid ${showThumbnails ? "#0C74E4" : "#e0e0e0"}`,
+              background: showThumbnails ? "#0C74E4" : "#fff", color: showThumbnails ? "#fff" : "#666",
+              fontSize: 10, cursor: "pointer" }}>{showThumbnails ? "ON" : "OFF"}</button>
+        </div>
+        <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
           <span style={{ fontSize: 11, color: "#999", marginRight: 4 }}>Subscription:</span>
           {["none", "ypx_sub", "ypx_nonsub"].map(t => (
             <button key={t} onClick={() => setSubType(t)}
@@ -135,27 +251,46 @@ export default function ShopListCardSection() {
       </div>
 
       {/* Demo cards */}
-      <div style={{ width: 375, background: "#fff", borderRadius: 12, padding: "0 16px" }}>
+      <div style={{ width: 465, background: "#fff", borderRadius: 12, padding: "0" }}>
         <ShopListCard
-          shopName="서브웨이 서초점"
-          logoSrc={getShopLogo("subway")}
-          rating={4.8} reviewCount={1523}
-          deliveryTime="25~40분" deliveryFee="0원~2,000원" distance="0.8km"
+          shopName="본도시락-역삼역"
+          shopId="hansik_1"
+          logoSrc={getShopLogo("bon")}
+          rating={4.8} reviewCount={1567}
+          deliveryTime="30~45분" deliveryFee="1,900~2,900원" distance="372m" minOrder="12,000원"
           benefitType={benefitType} subscriptionType={subType}
+          showMenuThumbnails={showThumbnails}
+          bottomBadges={[
+            { text: "배달앱 최저가", colorStyle: "gray", showLeftIcon: true, leftIconName: "point" },
+            { text: "스페셜적립", colorStyle: "gray", showLeftIcon: true, leftIconName: "point" },
+            { text: "한식 할인 1위", colorStyle: "gray", showLeftIcon: true, leftIconName: "coupon" },
+            { text: "1,000원 추가할인", colorStyle: "secondary" },
+            { text: "카카오페이 n% 쿠폰", colorStyle: "secondary" },
+            { text: "위생안심", colorStyle: "gray" },
+            { text: "신규", colorStyle: "gray" },
+          ]}
         />
         <ShopListCard
-          shopName="맘스터치 강남역점"
-          logoSrc={getShopLogo("moms")}
+          shopName="서브웨이 서초점"
+          shopId="sandwitch_1"
+          logoSrc={getShopLogo("subway")}
           rating={4.5} reviewCount={892}
-          deliveryTime="30~45분" deliveryFee="1,000원~3,000원" distance="1.5km"
+          deliveryTime="25~40분" deliveryFee="0원~2,000원" distance="0.8km" minOrder="10,000원"
           benefitType={benefitType} subscriptionType={subType}
+          showMenuThumbnails={showThumbnails}
+          bottomBadges={[
+            { text: "즉시할인", colorStyle: "secondary" },
+            { text: "최대 5% 적립", colorStyle: "secondary" },
+          ]}
         />
         <ShopListCard
           shopName="피자헛 역삼점 맛있는 피자 전문점"
+          shopId="pizza_1"
           logoSrc={getShopLogo("pizzahut")}
           rating={4.2} reviewCount={456}
-          deliveryTime="35~50분" deliveryFee="0원" distance="2.1km"
+          deliveryTime="35~50분" deliveryFee="0원" distance="2.1km" minOrder="15,000원"
           benefitType={benefitType} subscriptionType={subType}
+          showMenuThumbnails={showThumbnails}
           isAd
         />
       </div>
