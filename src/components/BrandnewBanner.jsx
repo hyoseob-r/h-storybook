@@ -15,7 +15,7 @@ const BANNER_VARIANTS = {
     accentColor: "#FA0050",
     emoji: "👑",
     badges: [
-      { text: "배달앱최저가", showLeftIcon: true, leftIconName: "check_s" },
+      { text: "배달앱최저가", showLeftIcon: true, leftIconName: "benefit" },
     ],
   },
   b: {
@@ -25,7 +25,7 @@ const BANNER_VARIANTS = {
     accentColor: "#00B886",
     emoji: "💚",
     badges: [
-      { text: "스페셜적립", showLeftIcon: true, leftIconName: "check_s" },
+      { text: "스페셜적립", showLeftIcon: true, leftIconName: "point" },
     ],
   },
   c: {

@@ -25,7 +25,7 @@ export function SingleBadge({
   size = "small",
   showLeftIcon = false,
   showRightIcon = false,
-  leftIconName = "check_s",
+  leftIconName = "benefit",
   rightIconName = "task",
 }) {
   const s = BADGE_SIZES[size];
@@ -144,8 +144,8 @@ export default function BadgeSection() {
         <div style={{ fontSize: 13, fontWeight: 700, color: "#333", marginBottom: 8 }}>singleBadge</div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
           <SingleBadge text="배지" colorStyle={selectedColor} size={selectedSize} />
-          <SingleBadge text="배달앱 최저가" colorStyle={selectedColor} size={selectedSize} showLeftIcon leftIconName="check_s" />
-          <SingleBadge text="스페셜 적립" colorStyle={selectedColor} size={selectedSize} showLeftIcon leftIconName="check_s" />
+          <SingleBadge text="배달앱 최저가" colorStyle={selectedColor} size={selectedSize} showLeftIcon leftIconName="benefit" />
+          <SingleBadge text="스페셜 적립" colorStyle={selectedColor} size={selectedSize} showLeftIcon leftIconName="point" />
           <SingleBadge text="Right Icon" colorStyle={selectedColor} size={selectedSize} showRightIcon rightIconName="task" />
           <SingleBadge text="Both" colorStyle={selectedColor} size={selectedSize} showLeftIcon showRightIcon />
         </div>
@@ -155,7 +155,7 @@ export default function BadgeSection() {
       <div style={{ marginBottom: 24 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: "#333", marginBottom: 8 }}>groupBadge</div>
         <div style={{ display: "flex", gap: 8, flexDirection: "column" }}>
-          <GroupBadge items={[{ text: "무료배달", showLeftIcon: true, leftIconName: "check_s" }, { text: "최대 5% 적립" }]} colorStyle={selectedColor} size={selectedSize} />
+          <GroupBadge items={[{ text: "무료배달", showLeftIcon: true, leftIconName: "benefit" }, { text: "최대 5% 적립", showLeftIcon: true, leftIconName: "point" }]} colorStyle={selectedColor} size={selectedSize} />
           <GroupBadge items={[{ text: "배지1" }, { text: "배지2" }, { text: "배지3" }]} colorStyle={selectedColor} size={selectedSize} />
         </div>
       </div>

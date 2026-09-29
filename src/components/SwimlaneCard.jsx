@@ -119,7 +119,7 @@ export default function SwimlaneCardSection() {
   const sampleShops = [
     { shopName: "서브웨이 서초점", logoSrc: getShopLogo("subway"), rating: 4.8, reviewCount: 1523, deliveryTime: "25~40분", deliveryFee: "0원", offerText: "1,000원 할인" },
     { shopName: "맘스터치 강남역점", logoSrc: getShopLogo("moms"), rating: 4.5, reviewCount: 892, deliveryTime: "30~45분", deliveryFee: "1,000원" },
-    { shopName: "피자헛 역삼점", logoSrc: getShopLogo("pizzahut"), rating: 4.2, reviewCount: 456, deliveryTime: "35~50분", deliveryFee: "0원", benefits: [{ text: "무료배달", showLeftIcon: true, leftIconName: "check_s" }] },
+    { shopName: "피자헛 역삼점", logoSrc: getShopLogo("pizzahut"), rating: 4.2, reviewCount: 456, deliveryTime: "35~50분", deliveryFee: "0원", benefits: [{ text: "무료배달", showLeftIcon: true, leftIconName: "benefit" }] },
     { shopName: "교촌치킨 서초점", logoSrc: getShopLogo("kyochon"), rating: 4.6, reviewCount: 2103, deliveryTime: "40~55분", deliveryFee: "2,000원" },
     { shopName: "BHC 강남점", logoSrc: getShopLogo("bhc"), rating: 4.4, reviewCount: 731, deliveryTime: "35~50분", deliveryFee: "1,500원", isAd: true },
     { shopName: "굽네치킨 역삼점", logoSrc: getShopLogo("goobne"), rating: 4.3, reviewCount: 512, deliveryTime: "30~45분", deliveryFee: "0원" },
@@ -139,8 +139,8 @@ export default function SwimlaneCardSection() {
         <SwimlaneRow title="골라먹는 재미 🎉" showMore={false}>
           {sampleShops.slice(0, 4).map((s, i) => (
             <SwimlaneCard key={i} {...s} offerText={null} benefits={[
-              { text: "즉시할인", showLeftIcon: true, leftIconName: "check_s" },
-              { text: "최대 5% 적립" },
+              { text: "즉시할인", showLeftIcon: true, leftIconName: "coupon" },
+              { text: "최대 5% 적립", showLeftIcon: true, leftIconName: "point" },
             ]} />
           ))}
         </SwimlaneRow>

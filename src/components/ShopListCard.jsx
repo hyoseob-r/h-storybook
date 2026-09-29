@@ -12,19 +12,19 @@ import { getShopLogo } from "../shopLogos";
 const BENEFIT_PRESETS = {
   none: [],
   ypx_free_delivery: [
-    { text: "무료배달", showLeftIcon: true, leftIconName: "check_s" },
-    { text: "즉시할인", showLeftIcon: true, leftIconName: "check_s" },
-    { text: "최대 5% 적립" },
+    { text: "무료배달", showLeftIcon: true, leftIconName: "benefit" },
+    { text: "즉시할인", showLeftIcon: true, leftIconName: "coupon" },
+    { text: "최대 5% 적립", showLeftIcon: true, leftIconName: "point" },
   ],
   store_free_delivery: [
-    { text: "가게무배", showLeftIcon: true, leftIconName: "check_s" },
-    { text: "즉시할인", showLeftIcon: true, leftIconName: "check_s" },
-    { text: "최대 3% 적립" },
+    { text: "가게무배", showLeftIcon: true, leftIconName: "benefit" },
+    { text: "즉시할인", showLeftIcon: true, leftIconName: "coupon" },
+    { text: "최대 3% 적립", showLeftIcon: true, leftIconName: "point" },
   ],
-  single_discount: [{ text: "즉시할인", showLeftIcon: true, leftIconName: "check_s" }],
-  single_cashback: [{ text: "최대 5% 적립" }],
-  single_ypx_free: [{ text: "무료배달", showLeftIcon: true, leftIconName: "check_s" }],
-  single_store_free: [{ text: "가게무배", showLeftIcon: true, leftIconName: "check_s" }],
+  single_discount: [{ text: "즉시할인", showLeftIcon: true, leftIconName: "coupon" }],
+  single_cashback: [{ text: "최대 5% 적립", showLeftIcon: true, leftIconName: "point" }],
+  single_ypx_free: [{ text: "무료배달", showLeftIcon: true, leftIconName: "benefit" }],
+  single_store_free: [{ text: "가게무배", showLeftIcon: true, leftIconName: "benefit" }],
 };
 
 const SUBSCRIPTION_LABELS = {
