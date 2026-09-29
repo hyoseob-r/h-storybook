@@ -5,28 +5,38 @@ import { SingleBadge, LogoBadge } from "./Badge.jsx";
 import { getShopLogo } from "../shopLogos";
 
 // ─── YDS 2.0 DiscountBrandSwimlane Component (리뉴얼-2026) ─────────────────
-// Figma: 리뉴얼-2026 > 할인 브랜드 스윔레인
+// Figma: 리뉴얼-2026 > multi_swimlane_2
 // SectionHeader + 3페이지 × 3아이템, 가로 스크롤, 인디케이터 dots
+// 뱃지: 배달앱최저가(ic_lowest, primary), 스페셜적립(ic_specialpoint, primary),
+//       메뉴할인(ic_bpr, gray), 추천(gray, 아이콘 없음)
+// ※ "요기패스X" 뱃지는 이 영역에서 사용 불가
+
+const BRAND_BADGE_PRESETS = {
+  lowest:       { text: "배달앱 최저가", colorStyle: "primary", showLeftIcon: true, leftIconName: "ic_lowest" },
+  specialpoint: { text: "스페셜적립", colorStyle: "primary", showLeftIcon: true, leftIconName: "ic_specialpoint" },
+  menu_discount:{ text: "메뉴할인", colorStyle: "gray", showLeftIcon: true, leftIconName: "ic_bpr" },
+  recommend:    { text: "추천", colorStyle: "gray", showLeftIcon: false },
+};
 
 export function BrandCard({
   logoSrc = null,
   shopName = "교촌치킨",
-  badge = null,
+  badges = [],
   benefit = "최대 3,000원 할인",
   onClick,
 }) {
   return (
     <button onClick={onClick} style={{
-      display: "flex", alignItems: "center", gap: 10,
-      padding: "8px 0", background: "none", border: "none",
+      display: "flex", alignItems: "center", gap: 8,
+      padding: "12px 0", background: "none", border: "none",
       cursor: "pointer", width: "100%", textAlign: "left",
       fontFamily: "Pretendard, Roboto, sans-serif",
     }}>
       {/* Logo */}
       <div style={{
-        width: 48, height: 48, borderRadius: metaTokens.radius.meta_r4,
-        overflow: "hidden", background: "#f6f6f6", flexShrink: 0,
-        position: "relative",
+        width: 48, height: 48, borderRadius: metaTokens.radius.meta_r5,
+        overflow: "hidden", background: "#fff", flexShrink: 0,
+        position: "relative", padding: 4,
         display: "flex", alignItems: "center", justifyContent: "center",
       }}>
         {logoSrc ? (
@@ -38,15 +48,28 @@ export function BrandCard({
       </div>
 
       {/* Info */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 4, height: 18 }}>
           <span style={{
             fontSize: 12, fontWeight: 400, color: "#333",
             overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
           }}>{shopName}</span>
-          {badge && <SingleBadge text={badge} colorStyle="secondary" size="small" />}
+          {badges.map((badgeKey, i) => {
+            const preset = BRAND_BADGE_PRESETS[badgeKey];
+            if (!preset) return null;
+            return (
+              <SingleBadge
+                key={i}
+                text={preset.text}
+                colorStyle={preset.colorStyle}
+                size="small"
+                showLeftIcon={preset.showLeftIcon}
+                leftIconName={preset.leftIconName}
+              />
+            );
+          })}
         </div>
-        <div style={{ fontSize: 14, fontWeight: 700, color: "#333", marginTop: 2 }}>{benefit}</div>
+        <div style={{ fontSize: 14, fontWeight: 700, color: "#333" }}>{benefit}</div>
       </div>
     </button>
   );
@@ -117,15 +140,15 @@ export function DiscountBrandSwimlane({
 
 // ── Section (Storybook) ─────────────────────────────────────────────────────
 const SAMPLE_BRANDS = [
-  { shopName: "교촌치킨", logoSrc: getShopLogo("kyochon"), benefit: "최대 3,000원 할인", badge: "요기패스X" },
+  { shopName: "교촌치킨", logoSrc: getShopLogo("kyochon"), benefit: "최대 3,000원 할인", badges: ["lowest"] },
   { shopName: "BBQ", logoSrc: getShopLogo("bbq"), benefit: "2,000원 즉시할인" },
-  { shopName: "BHC", logoSrc: getShopLogo("bhc"), benefit: "무료배달 + 적립 5%", badge: "요기패스X" },
-  { shopName: "피자헛", logoSrc: getShopLogo("pizzahut"), benefit: "라지 피자 50% 할인" },
-  { shopName: "도미노피자", logoSrc: getShopLogo("domino"), benefit: "1+1 이벤트" },
-  { shopName: "서브웨이", logoSrc: getShopLogo("subway"), benefit: "3,000원 할인쿠폰", badge: "신규" },
-  { shopName: "맘스터치", logoSrc: getShopLogo("moms"), benefit: "무료배달" },
+  { shopName: "BHC", logoSrc: getShopLogo("bhc"), benefit: "무료배달 + 적립 5%", badges: ["specialpoint"] },
+  { shopName: "피자헛", logoSrc: getShopLogo("pizzahut"), benefit: "라지 피자 50% 할인", badges: ["menu_discount"] },
+  { shopName: "도미노피자", logoSrc: getShopLogo("domino"), benefit: "1+1 이벤트", badges: ["recommend"] },
+  { shopName: "서브웨이", logoSrc: getShopLogo("subway"), benefit: "최대 5,000원 할인 + 최대 15% 적립", badges: ["lowest", "specialpoint"] },
+  { shopName: "맘스터치", logoSrc: getShopLogo("moms"), benefit: "무료배달", badges: ["menu_discount"] },
   { shopName: "맥도날드", logoSrc: getShopLogo("mcdonalds"), benefit: "배달비 0원" },
-  { shopName: "버거킹", logoSrc: getShopLogo("no"), benefit: "세트메뉴 20% 할인" },
+  { shopName: "청년피자", logoSrc: getShopLogo("youngman"), benefit: "최대 5,000원 할인 + 최대 15% 적립", badges: ["lowest", "specialpoint", "menu_discount"] },
 ];
 
 export default function DiscountBrandSwimlaneSection() {
@@ -143,9 +166,9 @@ export default function DiscountBrandSwimlaneSection() {
       <div style={{ marginBottom: 32 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: "#333", marginBottom: 12 }}>BrandCard variants</div>
         <div style={{ width: 375, background: "#fff", borderRadius: 12, padding: "8px 16px" }}>
-          <BrandCard shopName="교촌치킨" logoSrc={getShopLogo("kyochon")} benefit="최대 3,000원 할인" badge="요기패스X" />
-          <BrandCard shopName="BBQ 치킨" logoSrc={getShopLogo("bbq")} benefit="2,000원 즉시할인" />
-          <BrandCard shopName="피자헛" logoSrc={getShopLogo("pizzahut")} benefit="라지 피자 50%" badge="신규" />
+          <BrandCard shopName="교촌치킨" logoSrc={getShopLogo("kyochon")} benefit="최대 3,000원 할인" badges={["lowest"]} />
+          <BrandCard shopName="BBQ 치킨" logoSrc={getShopLogo("bbq")} benefit="2,000원 즉시할인" badges={["specialpoint"]} />
+          <BrandCard shopName="청년피자" logoSrc={getShopLogo("youngman")} benefit="최대 5,000원 할인 + 최대 15% 적립" badges={["lowest", "specialpoint", "menu_discount"]} />
         </div>
       </div>
 
@@ -154,7 +177,7 @@ export default function DiscountBrandSwimlaneSection() {
         <div style={{ fontSize: 13, fontWeight: 700, color: "#333", marginBottom: 12 }}>Without auto transition</div>
         <div style={{ width: 375, background: "#fff", borderRadius: 12, padding: 16 }}>
           <DiscountBrandSwimlane
-            title="지금 핫한 브랜드 🔥"
+            title="지금 핫한 브랜드"
             brands={SAMPLE_BRANDS.slice(0, 6)}
             autoTransition={false}
           />
