@@ -3,11 +3,11 @@ import { metaTokens } from "../tokens";
 import { YdsIcon } from "../icons.jsx";
 
 // ─── YDS 2.0 BrandnewBanner Component (리뉴얼-2026) ────────────────────────
-// Figma: 리뉴얼-2026 > BrandnewBanner
-// 10가지 컬러 테마 + 고정뱃지(filled dark) + 커스텀뱃지(light bg + dark text)
+// 2가지 타입:
+// 1) 컬러 테마 배너 — 파스텔 bg + 고정/커스텀뱃지 + KV 영역
+// 2) 이미지 배너 — 풀 배경이미지 + 텍스트 오버레이 (black/white 반전)
 
 // ── 컬러 테마 (10종) ────────────────────────────────────────────────────────
-// 배너bg / 고정뱃지(filled) / 커스텀뱃지bg / 커스텀뱃지text — 1:1:1:1 매핑
 const BANNER_THEMES = [
   { id: "red",    bannerBg: "#FFBCBC", badgeColor: "#D03021", customBadgeBg: "#FFE3E3", customBadgeText: "#D03021" },
   { id: "orange", bannerBg: "#FFC47D", badgeColor: "#E26917", customBadgeBg: "#FFEEDE", customBadgeText: "#E26917" },
@@ -26,7 +26,6 @@ function getTheme(themeId) {
 }
 
 // ── 고정 뱃지 (Filled dark bg + white text) ─────────────────────────────────
-// 배달앱 최저가, 스페셜적립 — 배너/키비주얼 동일 컬러
 function FixedBadge({ text, iconName, theme }) {
   return (
     <span style={{
@@ -53,12 +52,14 @@ function CustomBadge({ text, theme }) {
   );
 }
 
-// ── 고정 뱃지 프리셋 ────────────────────────────────────────────────────────
 const FIXED_BADGE_PRESETS = {
   lowest:       { text: "배달앱 최저가", iconName: "ic_lowest" },
   specialpoint: { text: "스페셜적립", iconName: "ic_specialpoint" },
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// TYPE 1: 컬러 테마 배너
+// ═══════════════════════════════════════════════════════════════════════════════
 export function BrandnewBanner({
   themeId = "blue",
   title = "선착순 특가",
@@ -67,7 +68,6 @@ export function BrandnewBanner({
   customBadges = [],
   imageCount = 10,
   currentImage = 1,
-  card = false,
   onClick,
 }) {
   const theme = getTheme(themeId);
@@ -80,10 +80,8 @@ export function BrandnewBanner({
       fontFamily: "Pretendard, Roboto, sans-serif",
       cursor: onClick ? "pointer" : "default",
       overflow: "hidden",
-      position: "relative",
     }} onClick={onClick}>
       <div style={{ padding: 16 }}>
-        {/* Top row: badges + indicator */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
           <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
             {fixedBadges.map((key, i) => {
@@ -95,21 +93,15 @@ export function BrandnewBanner({
               <CustomBadge key={`c-${i}`} text={text} theme={theme} />
             ))}
           </div>
-          <span style={{
-            fontSize: 11, color: theme.badgeColor, opacity: 0.7,
-            flexShrink: 0, marginLeft: 8,
-          }}>
+          <span style={{ fontSize: 11, color: theme.badgeColor, opacity: 0.7, flexShrink: 0, marginLeft: 8 }}>
             {currentImage}/{imageCount} 더보기 ›
           </span>
         </div>
-
-        {/* Main content */}
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 20, fontWeight: 700, color: "#333", lineHeight: "26px" }}>{title}</div>
-            <div style={{ fontSize: 14, color: "#666", marginTop: 4, lineHeight: "20px" }}>{subtitle}</div>
+            {subtitle && <div style={{ fontSize: 14, color: "#666", marginTop: 4, lineHeight: "20px" }}>{subtitle}</div>}
           </div>
-          {/* 키비주얼 영역 (이미지 슬롯) */}
           <div style={{
             width: 80, height: 80, borderRadius: metaTokens.radius.meta_r4,
             background: "rgba(255,255,255,0.5)",
@@ -124,19 +116,86 @@ export function BrandnewBanner({
   );
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// TYPE 2: 이미지 배경 배너 (brandnew banner)
+// ═══════════════════════════════════════════════════════════════════════════════
+// 케이스: 텍스트 O/X, 텍스트 색상 반전 (black/white), 서브텍스트 O/X
+export function BrandnewImageBanner({
+  bgImage = null,
+  bgColor = "#1a1a2e",
+  title = "매일 하루종일 특가\n+최대 5% 적립까지!",
+  subtitle = "멈추지 않는 선착순 할인!",
+  showTitle = true,
+  showSubtitle = true,
+  textInvert = true,
+  height = 200,
+  borderRadius = 16,
+  onClick,
+}) {
+  const textColor = textInvert ? "#fff" : "#333";
+  const subColor = textInvert ? "rgba(255,255,255,0.7)" : "#666";
+
+  return (
+    <div style={{
+      position: "relative",
+      width: "100%", height,
+      borderRadius,
+      overflow: "hidden",
+      background: bgColor,
+      cursor: onClick ? "pointer" : "default",
+      fontFamily: "'YOGIYO Sans', Pretendard, Roboto, sans-serif",
+    }} onClick={onClick}>
+      {/* Background image */}
+      {bgImage && (
+        <img src={bgImage} alt="" style={{
+          position: "absolute", inset: 0,
+          width: "100%", height: "100%",
+          objectFit: "cover", objectPosition: "center",
+        }} />
+      )}
+
+      {/* Text overlay */}
+      {showTitle && (
+        <div style={{
+          position: "absolute", inset: 0,
+          display: "flex", flexDirection: "column",
+          justifyContent: "center",
+          padding: "24px 20px",
+        }}>
+          <div style={{
+            fontSize: 24, fontWeight: 700, color: textColor,
+            lineHeight: "32px", whiteSpace: "pre-line",
+          }}>
+            {title}
+          </div>
+          {showSubtitle && subtitle && (
+            <div style={{
+              fontSize: 14, fontWeight: 400, color: subColor,
+              marginTop: 8, lineHeight: "20px",
+              fontFamily: "Pretendard, Roboto, sans-serif",
+            }}>
+              {subtitle}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── BrandnewCarousel (다중 배너 캐러셀) ────────────────────────────────────
-export function BrandnewCarousel({ banners = [] }) {
+export function BrandnewCarousel({ banners = [], type = "color" }) {
   const [current, setCurrent] = useState(0);
   if (banners.length === 0) return null;
   const b = banners[current];
 
   return (
     <div style={{ position: "relative", fontFamily: "Pretendard, Roboto, sans-serif" }}>
-      <BrandnewBanner
-        {...b}
-        imageCount={banners.length}
-        currentImage={current + 1}
-      />
+      {type === "image" ? (
+        <BrandnewImageBanner {...b} />
+      ) : (
+        <BrandnewBanner {...b} imageCount={banners.length} currentImage={current + 1} />
+      )}
       {banners.length > 1 && (
         <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 8 }}>
           {banners.map((_, i) => (
@@ -155,42 +214,72 @@ export function BrandnewCarousel({ banners = [] }) {
 }
 
 // ── Section (Storybook) ─────────────────────────────────────────────────────
-const SAMPLE_BANNERS = [
-  { themeId: "blue",   title: "선착순 특가", subtitle: "오늘만 이 가격!", fixedBadges: ["lowest", "specialpoint"] },
-  { themeId: "green",  title: "네이버 멤버십", subtitle: "최대 10% 적립 혜택", fixedBadges: ["specialpoint"], customBadges: ["네이버페이"] },
-  { themeId: "purple", title: "무한적립", subtitle: "주문할수록 적립이 쌓여요", fixedBadges: ["specialpoint"] },
-  { themeId: "red",    title: "오늘의 핫딜", subtitle: "매일 바뀌는 특가 메뉴", fixedBadges: ["lowest"], customBadges: ["한정수량"] },
-  { themeId: "orange", title: "브랜드 위크", subtitle: "인기 브랜드 할인 모음", fixedBadges: ["lowest", "specialpoint"] },
-  { themeId: "pink",   title: "뷰티 먹거리", subtitle: "건강한 한 끼", customBadges: ["건강식", "샐러드"] },
-];
-
 export default function BrandnewBannerSection() {
   const [selectedTheme, setSelectedTheme] = useState("blue");
+  const [textInvert, setTextInvert] = useState(true);
+  const [showSub, setShowSub] = useState(true);
 
   return (
     <div style={{ padding: "24px 0" }}>
-      {/* Theme selector */}
-      <div style={{ display: "flex", gap: 6, marginBottom: 24, flexWrap: "wrap", alignItems: "center" }}>
-        <span style={{ fontSize: 11, color: "#999", marginRight: 4 }}>Theme:</span>
-        {BANNER_THEMES.map(t => (
-          <button key={t.id} onClick={() => setSelectedTheme(t.id)}
-            style={{
-              width: 28, height: 28, borderRadius: 8,
-              background: t.bannerBg,
-              border: selectedTheme === t.id ? `2px solid ${t.badgeColor}` : "2px solid transparent",
-              cursor: "pointer", position: "relative",
-            }}
-            title={t.id}
+      {/* ── 이미지 배너 (Type 2) ── */}
+      <div style={{ marginBottom: 40 }}>
+        <h3 style={{ fontSize: 16, fontWeight: 700, color: "#333", marginBottom: 16 }}>Image Banner (brandnew banner)</h3>
+
+        <div style={{ display: "flex", gap: 8, marginBottom: 16, alignItems: "center" }}>
+          <span style={{ fontSize: 11, color: "#999" }}>Text color:</span>
+          <button onClick={() => setTextInvert(!textInvert)}
+            style={{ padding: "4px 12px", borderRadius: 20, border: "1.5px solid #e0e0e0",
+              background: textInvert ? "#333" : "#fff", color: textInvert ? "#fff" : "#333",
+              fontSize: 10, cursor: "pointer" }}>{textInvert ? "White" : "Black"}</button>
+          <span style={{ fontSize: 11, color: "#999", marginLeft: 8 }}>Subtitle:</span>
+          <button onClick={() => setShowSub(!showSub)}
+            style={{ padding: "4px 12px", borderRadius: 20, border: `1.5px solid ${showSub ? "#0C74E4" : "#e0e0e0"}`,
+              background: showSub ? "#0C74E4" : "#fff", color: showSub ? "#fff" : "#666",
+              fontSize: 10, cursor: "pointer" }}>{showSub ? "ON" : "OFF"}</button>
+        </div>
+
+        {/* 서브 텍스트 O */}
+        <div style={{ width: 375, marginBottom: 16 }}>
+          <div style={{ fontSize: 11, color: "#999", marginBottom: 6 }}>텍스트 O · 서브텍스트 {showSub ? "O" : "X"} · {textInvert ? "white" : "black"}</div>
+          <BrandnewImageBanner
+            bgColor="#1a1a2e"
+            title={"매일 하루종일 특가\n+최대 5% 적립까지!"}
+            subtitle="멈추지 않는 선착순 할인!"
+            textInvert={textInvert}
+            showSubtitle={showSub}
           />
-        ))}
+        </div>
+
+        {/* 텍스트 X */}
+        <div style={{ width: 375 }}>
+          <div style={{ fontSize: 11, color: "#999", marginBottom: 6 }}>텍스트 X (이미지만)</div>
+          <BrandnewImageBanner
+            bgColor="#2d1b4e"
+            showTitle={false}
+          />
+        </div>
       </div>
 
-      {/* Single banner with selected theme */}
-      <div style={{ marginBottom: 32 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: "#333", marginBottom: 12 }}>
-          BrandnewBanner — {selectedTheme}
+      {/* ── 컬러 테마 배너 (Type 1) ── */}
+      <div style={{ marginBottom: 40 }}>
+        <h3 style={{ fontSize: 16, fontWeight: 700, color: "#333", marginBottom: 16 }}>Color Theme Banner</h3>
+
+        <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
+          <span style={{ fontSize: 11, color: "#999", marginRight: 4 }}>Theme:</span>
+          {BANNER_THEMES.map(t => (
+            <button key={t.id} onClick={() => setSelectedTheme(t.id)}
+              style={{
+                width: 28, height: 28, borderRadius: 8,
+                background: t.bannerBg,
+                border: selectedTheme === t.id ? `2px solid ${t.badgeColor}` : "2px solid transparent",
+                cursor: "pointer",
+              }}
+              title={t.id}
+            />
+          ))}
         </div>
-        <div style={{ width: 375 }}>
+
+        <div style={{ width: 375, marginBottom: 16 }}>
           <BrandnewBanner
             themeId={selectedTheme}
             title="선착순 특가"
@@ -199,10 +288,8 @@ export default function BrandnewBannerSection() {
             customBadges={["한정수량"]}
           />
         </div>
-      </div>
 
-      {/* All 10 themes */}
-      <div style={{ marginBottom: 32 }}>
+        {/* All 10 themes */}
         <div style={{ fontSize: 13, fontWeight: 700, color: "#333", marginBottom: 12 }}>All 10 Themes</div>
         <div style={{ width: 375, display: "flex", flexDirection: "column", gap: 12 }}>
           {BANNER_THEMES.map(t => (
@@ -218,11 +305,15 @@ export default function BrandnewBannerSection() {
         </div>
       </div>
 
-      {/* Carousel */}
+      {/* ── Carousel ── */}
       <div>
-        <div style={{ fontSize: 13, fontWeight: 700, color: "#333", marginBottom: 12 }}>BrandnewCarousel</div>
+        <h3 style={{ fontSize: 16, fontWeight: 700, color: "#333", marginBottom: 16 }}>Carousel</h3>
         <div style={{ width: 375 }}>
-          <BrandnewCarousel banners={SAMPLE_BANNERS} />
+          <BrandnewCarousel banners={[
+            { themeId: "blue", title: "선착순 특가", subtitle: "오늘만 이 가격!", fixedBadges: ["lowest", "specialpoint"] },
+            { themeId: "green", title: "네이버 멤버십", subtitle: "최대 10% 적립 혜택", fixedBadges: ["specialpoint"], customBadges: ["네이버페이"] },
+            { themeId: "red", title: "오늘의 핫딜", subtitle: "매일 바뀌는 특가 메뉴", fixedBadges: ["lowest"], customBadges: ["한정수량"] },
+          ]} />
         </div>
       </div>
     </div>
