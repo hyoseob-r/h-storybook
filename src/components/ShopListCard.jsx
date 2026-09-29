@@ -43,8 +43,9 @@ function RedBenefitBanner({ items = [] }) {
 // ── 하단 뱃지 (Badge Wrap) ──────────────────────────────────────────────────
 // Figma 기준: 혜택 관련 → secondary(파란색), 정보성 → gray
 const DEFAULT_BOTTOM_BADGES = [
-  { text: "배달앱 최저가", colorStyle: "gray", showLeftIcon: true, leftIconName: "point" },
-  { text: "스페셜적립", colorStyle: "gray", showLeftIcon: true, leftIconName: "point" },
+  { text: "배달앱 최저가", colorStyle: "gray", showLeftIcon: true, leftIconName: "ic_lowest" },
+  { text: "스페셜적립", colorStyle: "gray", showLeftIcon: true, leftIconName: "ic_specialpoint" },
+  { text: "한식 할인 1위", colorStyle: "gray", showLeftIcon: true, leftIconName: "ic_bpr" },
   { text: "1,000원 추가할인", colorStyle: "secondary" },
   { text: "카카오페이 쿠폰", colorStyle: "secondary" },
   { text: "위생안심", colorStyle: "gray" },
@@ -261,9 +262,9 @@ export default function ShopListCardSection() {
           benefitType={benefitType} subscriptionType={subType}
           showMenuThumbnails={showThumbnails}
           bottomBadges={[
-            { text: "배달앱 최저가", colorStyle: "gray", showLeftIcon: true, leftIconName: "point" },
-            { text: "스페셜적립", colorStyle: "gray", showLeftIcon: true, leftIconName: "point" },
-            { text: "한식 할인 1위", colorStyle: "gray", showLeftIcon: true, leftIconName: "coupon" },
+            { text: "배달앱 최저가", colorStyle: "gray", showLeftIcon: true, leftIconName: "ic_lowest" },
+            { text: "스페셜적립", colorStyle: "gray", showLeftIcon: true, leftIconName: "ic_specialpoint" },
+            { text: "한식 할인 1위", colorStyle: "gray", showLeftIcon: true, leftIconName: "ic_bpr" },
             { text: "1,000원 추가할인", colorStyle: "secondary" },
             { text: "카카오페이 n% 쿠폰", colorStyle: "secondary" },
             { text: "위생안심", colorStyle: "gray" },

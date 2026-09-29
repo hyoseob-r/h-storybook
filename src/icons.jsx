@@ -168,7 +168,7 @@ export const BADGE_ICONS = {
     ),
   },
   "ic_bpr": {
-    label: "배프라 (BPR)",
+    label: "할인랭킹",
     vb: "0 0 12 12",
     svg: (size) => (
       <svg width={size} height={size} viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
