@@ -74,16 +74,15 @@ function MenuThumbnailRow({ shopId, onTransition }) {
   const btnBorder = 1.3 + btnScale * 1.3; // 1.3→2.6
 
   return (
-    <div style={{ position: "relative", width: "100%", overflow: "hidden" }}>
-      {/* 스크롤 가능한 메뉴 썸네일 영역 */}
+    <div style={{ width: "100%", overflow: "hidden" }}>
       <div
         ref={scrollRef}
         onScroll={handleScroll}
         style={{
-          display: "flex", gap: 8, overflowX: "auto",
-          scrollbarWidth: "none",
+          display: "flex", gap: 8, alignItems: "center",
+          overflowX: "auto", scrollbarWidth: "none",
           WebkitOverflowScrolling: "touch",
-          paddingLeft: 16, paddingRight: 56,
+          paddingLeft: 16, paddingRight: 16,
         }}
       >
         {menus.map((menu) => (
@@ -110,21 +109,20 @@ function MenuThumbnailRow({ shopId, onTransition }) {
             </div>
           </div>
         ))}
-      </div>
 
-      {/* auto_transition 버튼 — 스크롤 끝에서 scale up */}
-      <div style={{
-        position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        width: btnSize, height: btnSize,
-        borderRadius: btnRadius,
-        background: "#f6f6f6",
-        border: `${btnBorder}px solid #e5e5e5`,
-        cursor: "pointer",
-        transition: "all 0.15s ease-out",
-        zIndex: 2,
-      }} onClick={onTransition}>
-        <YdsIcon name="chevron_right_s" size={iconSize} color="#999" />
+        {/* auto_transition 버튼 — 스윔레인 끝에 위치, 스크롤 끝에서 scale up */}
+        <div onClick={onTransition} style={{
+          flexShrink: 0,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          width: btnSize, height: btnSize,
+          borderRadius: btnRadius,
+          background: "#f6f6f6",
+          border: `${btnBorder}px solid #e5e5e5`,
+          cursor: "pointer",
+          transition: "all 0.15s ease-out",
+        }}>
+          <YdsIcon name="chevron_right_s" size={iconSize} color="#999" />
+        </div>
       </div>
     </div>
   );
