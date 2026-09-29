@@ -34,9 +34,9 @@ export function BrandCard({
     }}>
       {/* Logo */}
       <div style={{
-        width: 48, height: 48, borderRadius: metaTokens.radius.meta_r5,
+        width: 48, height: 48, borderRadius: metaTokens.radius.meta_r4,
         overflow: "hidden", background: "#fff", flexShrink: 0,
-        position: "relative", padding: 4,
+        position: "relative",
         display: "flex", alignItems: "center", justifyContent: "center",
       }}>
         {logoSrc ? (
