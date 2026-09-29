@@ -53,8 +53,8 @@ function CustomBadge({ text, theme }) {
 }
 
 const FIXED_BADGE_PRESETS = {
-  lowest:       { text: "배달앱 최저가", iconName: "ic_lowest" },
-  specialpoint: { text: "스페셜적립", iconName: "ic_specialpoint" },
+  lowest:       { text: "배달앱 최저가", iconName: "ic_lowest_flat" },
+  specialpoint: { text: "스페셜적립", iconName: "ic_specialpoint_flat" },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════

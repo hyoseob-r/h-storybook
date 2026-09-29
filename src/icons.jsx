@@ -184,10 +184,50 @@ export const BADGE_ICONS = {
   },
 };
 
+// ── Flat 버전 (단색 white — 배너 고정뱃지용) ────────────────────────────────
+// color prop으로 fill 색상 변경 가능
+export const BADGE_ICONS_FLAT = {
+  "ic_lowest_flat": {
+    label: "배달앱 최저가 (flat)",
+    vb: "0 0 12 12",
+    svg: (size, color = "white") => (
+      <svg width={size} height={size} viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <g clipPath="url(#clip_lowest_f)">
+          <path d="M10.7848 3.90129L7.81169 3.90785L11.8976 0.495454C12.1092 0.318272 11.9693 0 11.6783 0L4.4409 0.0155855C4.18148 0.0155855 3.93912 0.132066 3.79576 0.326475L0.0708267 5.40488C-0.116913 5.65999 0.0878939 5.99959 0.430093 5.99959H4.6679L2.73418 9.18477L2.04807 8.8665C1.83046 8.8222 1.62992 8.98462 1.65979 9.18231V11.7506C1.68795 11.9467 1.92433 12.0582 2.12146 11.9688L5.76618 10.4997C6.03328 10.3783 5.98378 10.0247 5.69279 9.96568L4.6824 9.80901L11.0024 4.39921C11.2141 4.22203 11.0741 3.90375 10.7831 3.90375L10.7848 3.90211V3.90129Z" fill={color}/>
+        </g>
+        <defs><clipPath id="clip_lowest_f"><rect width="12" height="12" fill="white"/></clipPath></defs>
+      </svg>
+    ),
+  },
+  "ic_specialpoint_flat": {
+    label: "스페셜적립 (flat)",
+    vb: "0 0 12 12",
+    svg: (size, color = "white") => (
+      <svg width={size} height={size} viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <g clipPath="url(#clip_sp_f)">
+          <path d="M6 0C9.31385 0 12 2.68615 12 6C12 9.31385 9.31385 12 6 12C2.68615 12 0 9.31385 0 6C0 2.68615 2.68615 0 6 0ZM3.78462 2.67692V9.44308H5.50062V7.31077H6.87231C8.31231 7.31077 9.32215 6.38492 9.32215 4.99385C9.32215 3.60185 8.31231 2.67692 6.87231 2.67692H3.78462ZM6.65446 4.09754C7.24615 4.09754 7.57846 4.46954 7.57846 4.99385C7.57846 5.51815 7.24523 5.89015 6.65446 5.89015H5.50154V4.09846L6.65446 4.09754Z" fill={color}/>
+        </g>
+        <defs><clipPath id="clip_sp_f"><rect width="12" height="12" fill="white"/></clipPath></defs>
+      </svg>
+    ),
+  },
+};
+
 export const BADGE_ICON_NAMES = Object.keys(BADGE_ICONS);
 
 export function YdsIcon({ name, size = 24, color = "#333333", style }) {
   // 멀티컬러 배지 아이콘 처리
+  // flat 배지 아이콘 (단색, color prop 적용)
+  const flatIcon = BADGE_ICONS_FLAT[name];
+  if (flatIcon) {
+    return (
+      <span style={{ display: "inline-flex", flexShrink: 0, ...style }}>
+        {flatIcon.svg(size, color)}
+      </span>
+    );
+  }
+
+  // 멀티컬러 배지 아이콘
   const badgeIcon = BADGE_ICONS[name];
   if (badgeIcon) {
     return (
