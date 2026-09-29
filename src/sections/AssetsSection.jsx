@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { getAllLogos, SHOP_LOGOS } from "../shopLogos";
+import { getAllShopImages, getAllMenuImages, SHOP_IMAGES, MENU_IMAGES } from "../shopImages";
 
 const shopLogoItems = getAllLogos();
+const shopImageItems = getAllShopImages();
+const menuImageItems = getAllMenuImages();
 
 const ASSET_CATEGORIES = [
   {
@@ -10,6 +13,22 @@ const ASSET_CATEGORIES = [
     desc: "ShopListCard, SwimlaneCard 등에 사용되는 일반 가게 로고 (44x44)",
     status: "ready",
     items: shopLogoItems,
+  },
+  {
+    id: "shop-image",
+    label: "가게 대표이미지",
+    desc: "가게 상세, 검색결과 등에 사용되는 대표 이미지",
+    status: shopImageItems.length > 0 ? "ready" : "empty",
+    items: shopImageItems,
+    type: "shop-image",
+  },
+  {
+    id: "menu-image",
+    label: "메뉴이미지",
+    desc: "가게별 메뉴 사진. 가게명_메뉴N 형식. 독립 사용 가능.",
+    status: menuImageItems.length > 0 ? "ready" : "empty",
+    items: menuImageItems,
+    type: "menu-image",
   },
   {
     id: "tab-logo",
@@ -58,8 +77,15 @@ export default function AssetsSection() {
   const [selected, setSelected] = useState(null);
   const [copied, setCopied] = useState(null);
 
-  const copyImport = (item) => {
-    const code = `import { getShopLogo } from "../shopLogos";\n// url: getShopLogo("${item.id}")  →  ${item.name}`;
+  const copyImport = (item, catType) => {
+    let code;
+    if (catType === "shop-image") {
+      code = `import { getShopImage } from "../shopImages";\n// url: getShopImage("${item.id}")  →  ${item.name}`;
+    } else if (catType === "menu-image") {
+      code = `import { getMenuImage } from "../shopImages";\n// url: getMenuImage("${item.id}")  →  ${item.label || item.id}`;
+    } else {
+      code = `import { getShopLogo } from "../shopLogos";\n// url: getShopLogo("${item.id}")  →  ${item.name}`;
+    }
     navigator.clipboard.writeText(code);
     setCopied(item.id);
     setTimeout(() => setCopied(null), 1500);
@@ -103,17 +129,34 @@ export default function AssetsSection() {
                       <div style={{ fontSize: 11, color: "#ddd", marginTop: 4 }}>이미지 URL 또는 파일을 등록해주세요</div>
                     </div>
                   ) : (
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(72px, 1fr))", gap: 6 }}>
-                      {cat.items.map((item) => (
-                        <div key={item.id} onClick={() => copyImport(item)}
-                          style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: 6, borderRadius: 8, cursor: "pointer", background: copied === item.id ? "#e8f5e8" : "transparent", border: copied === item.id ? "1px solid #88cc88" : "1px solid transparent", transition: "all 0.15s" }}
-                          title={`${item.name} — 클릭하면 import 코드 복사`}>
-                          <img src={item.url} alt={item.name} style={{ width: 44, height: 44, borderRadius: 8, objectFit: "cover", border: "1px solid #e5e5e5" }} />
-                          <span style={{ fontSize: 9, color: copied === item.id ? "#338833" : "#999", textAlign: "center", lineHeight: 1.3, maxWidth: 64, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                            {copied === item.id ? "복사됨" : item.name}
-                          </span>
-                        </div>
-                      ))}
+                    <div style={{
+                      display: "grid",
+                      gridTemplateColumns: cat.type === "shop-image" || cat.type === "menu-image"
+                        ? "repeat(auto-fill, minmax(120px, 1fr))"
+                        : "repeat(auto-fill, minmax(72px, 1fr))",
+                      gap: cat.type === "shop-image" || cat.type === "menu-image" ? 10 : 6
+                    }}>
+                      {cat.items.map((item) => {
+                        const isImage = cat.type === "shop-image" || cat.type === "menu-image";
+                        const displayName = item.label || item.name || item.id;
+                        return (
+                          <div key={item.id} onClick={() => copyImport(item, cat.type)}
+                            style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: isImage ? 8 : 6, borderRadius: 8, cursor: "pointer", background: copied === item.id ? "#e8f5e8" : "transparent", border: copied === item.id ? "1px solid #88cc88" : "1px solid transparent", transition: "all 0.15s" }}
+                            title={`${displayName} — 클릭하면 import 코드 복사`}>
+                            <img src={item.url} alt={displayName} style={{
+                              width: isImage ? 100 : 44,
+                              height: isImage ? 100 : 44,
+                              borderRadius: isImage ? 10 : 8,
+                              objectFit: "cover",
+                              objectPosition: "center",
+                              border: "1px solid #e5e5e5"
+                            }} />
+                            <span style={{ fontSize: 9, color: copied === item.id ? "#338833" : "#999", textAlign: "center", lineHeight: 1.3, maxWidth: isImage ? 100 : 64, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              {copied === item.id ? "복사됨" : displayName}
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -128,15 +171,19 @@ export default function AssetsSection() {
         <strong>사용법</strong><br/>
         <code style={{ background: "#e8f0ff", padding: "1px 6px", borderRadius: 4 }}>{"import { getShopLogo, getRandomLogos } from \"../shopLogos\";"}</code><br/>
         <code style={{ background: "#e8f0ff", padding: "1px 6px", borderRadius: 4 }}>{"getShopLogo(\"bbq\")  →  /assets/shop-logos/bbq_44x44.png"}</code><br/>
-        <code style={{ background: "#e8f0ff", padding: "1px 6px", borderRadius: 4 }}>{"getRandomLogos(5)  →  랜덤 5개 로고 (미리보기용)"}</code>
+        <code style={{ background: "#e8f0ff", padding: "1px 6px", borderRadius: 4 }}>{"getRandomLogos(5)  →  랜덤 5개 로고 (미리보기용)"}</code><br/><br/>
+        <code style={{ background: "#e8f0ff", padding: "1px 6px", borderRadius: 4 }}>{"import { getShopImage, getMenuImage, getMenusByShop } from \"../shopImages\";"}</code><br/>
+        <code style={{ background: "#e8f0ff", padding: "1px 6px", borderRadius: 4 }}>{"getShopImage(\"bbq\")     →  가게 대표이미지"}</code><br/>
+        <code style={{ background: "#e8f0ff", padding: "1px 6px", borderRadius: 4 }}>{"getMenuImage(\"bbq_메뉴1\")  →  메뉴이미지 (독립 사용)"}</code><br/>
+        <code style={{ background: "#e8f0ff", padding: "1px 6px", borderRadius: 4 }}>{"getMenusByShop(\"bbq\")   →  해당 가게 메뉴 전체"}</code>
       </div>
 
       {/* 요약 */}
       <div style={{ marginTop: 12, padding: 16, background: "#f8f8f8", borderRadius: 10, fontSize: 11, color: "#999", lineHeight: 1.8 }}>
         <strong style={{ color: "#555" }}>에셋 현황</strong><br/>
-        아이콘: ✅ 122개 (icons.jsx) · 디자인 토큰: ✅ 완비 (tokens.js)<br/>
-        가게 로고: ✅ {SHOP_LOGOS.length}개 (shopLogos.js) · 탭 로고: 미등록 · 바텀시트 로고: 미등록<br/>
-        푸드 카테고리: 일부 있음 · 퀵커머스: 별도 제작 · 프로모션: 미등록
+        아이콘: 122개 (icons.jsx) · 디자인 토큰: 완비 (tokens.js)<br/>
+        가게 로고: {SHOP_LOGOS.length}개 (shopLogos.js) · 가게 대표이미지: {SHOP_IMAGES.length}개 · 메뉴이미지: {MENU_IMAGES.length}개 (shopImages.js)<br/>
+        탭 로고: 미등록 · 바텀시트 로고: 미등록 · 푸드 카테고리: 일부 · 퀵커머스: 별도 제작 · 프로모션: 미등록
       </div>
     </div>
   );
