@@ -58,10 +58,11 @@ function MenuThumbnailRow({ shopId }) {
 
   return (
     <div style={{
-      display: "flex", gap: 2, overflow: "hidden",
-      width: "100%",
+      display: "flex", gap: 2, overflowX: "auto",
+      width: "100%", scrollbarWidth: "none",
+      WebkitOverflowScrolling: "touch",
     }}>
-      {menus.slice(0, 3).map((menu) => (
+      {menus.map((menu) => (
         <div key={menu.id} style={{
           position: "relative", flexShrink: 0,
           width: 148, height: 118,
