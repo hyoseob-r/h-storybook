@@ -90,13 +90,13 @@ function MenuThumbnailRow({ shopId, onTransition }) {
         {menus.map((menu) => (
           <div key={menu.id} onClick={() => menu.onClick && menu.onClick()} style={{
             position: "relative", flexShrink: 0,
-            width: 148, height: 148,
+            width: 148, height: 118,
             borderRadius: 12, overflow: "hidden",
             border: "1px solid rgba(0,0,0,0.04)",
             cursor: "pointer",
           }}>
             <img src={menu.url} alt={menu.label || menu.id}
-              style={{ ...imageStyle(148, 148, 0), display: "block" }} />
+              style={{ ...imageStyle(148, 118, 0), display: "block" }} />
             <div style={{
               position: "absolute", top: 0, left: 0, right: 0,
               padding: "8px 8px 12px",
@@ -179,7 +179,7 @@ export function ShopListCard({
       <div style={{ display: "flex", gap: 6, padding: "0 16px", alignItems: "flex-start" }}>
         {/* Logo — 36px (신규) */}
         <div style={{ flexShrink: 0, position: "relative" }}>
-          <LogoBadge src={logoSrc} size={44} />
+          <LogoBadge src={logoSrc} size={36} />
           {isAd && (
             <span style={{
               position: "absolute", top: -4, right: -4,
