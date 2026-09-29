@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { YdsIcon, ICON_NAMES } from "../icons.jsx";
+import { YdsIcon, ICON_NAMES, BADGE_ICONS, BADGE_ICON_NAMES } from "../icons.jsx";
 import { SizeControl } from "../shared/ui.jsx";
 
 function IconsSection() {
@@ -33,6 +33,26 @@ function IconsSection() {
             </div>
           </button>
         ))}
+      </div>
+
+      {/* Badge Icons (멀티컬러) */}
+      <div style={{ marginTop: 32 }}>
+        <div style={{ fontSize: 11, color: "#999", marginBottom: 12 }}>
+          Badge Icons (멀티컬러) — {BADGE_ICON_NAMES.length}개 · 배지 전용 아이콘
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(${gridMin}px, 1fr))`, gap: 8 }}>
+          {BADGE_ICON_NAMES.map(name => (
+            <button key={name} onClick={() => copy(name)}
+              style={{ background: copied===name?"#e8f5e8":"#ffffff", border: copied===name?"1px solid #5aaa5a":"1px solid #e5e5e5", borderRadius: 10, padding: `${sz < 20 ? 10 : 16}px 8px ${sz < 20 ? 8 : 12}px`, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer", transition: "all 0.15s" }}
+              onMouseEnter={e => { if (copied!==name) { e.currentTarget.style.background="#eeeeee"; e.currentTarget.style.borderColor="#c0c0c0"; }}}
+              onMouseLeave={e => { if (copied!==name) { e.currentTarget.style.background="#ffffff"; e.currentTarget.style.borderColor="#e5e5e5"; }}}>
+              <YdsIcon name={name} size={sz} />
+              <div style={{ fontSize: 9, color: copied===name?"#60cc90":"#999", textAlign: "center", wordBreak: "break-all", lineHeight: 1.4 }}>
+                {copied===name ? "복사됨" : `${name}\n${BADGE_ICONS[name].label}`}
+              </div>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
