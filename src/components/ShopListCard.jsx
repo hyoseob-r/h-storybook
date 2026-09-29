@@ -74,23 +74,25 @@ function MenuThumbnailRow({ shopId, onTransition }) {
   const btnBorder = 1.3 + btnScale * 1.3; // 1.3→2.6
 
   return (
-    <div style={{ position: "relative", width: "100%" }}>
+    <div style={{ position: "relative", width: "100%", overflow: "hidden" }}>
+      {/* 스크롤 가능한 메뉴 썸네일 영역 */}
       <div
         ref={scrollRef}
         onScroll={handleScroll}
         style={{
           display: "flex", gap: 8, overflowX: "auto",
-          width: "100%", scrollbarWidth: "none",
+          scrollbarWidth: "none",
           WebkitOverflowScrolling: "touch",
           paddingLeft: 16, paddingRight: 56,
         }}
       >
         {menus.map((menu) => (
-          <div key={menu.id} style={{
+          <div key={menu.id} onClick={() => menu.onClick && menu.onClick()} style={{
             position: "relative", flexShrink: 0,
             width: 148, height: 148,
             borderRadius: 12, overflow: "hidden",
             border: "1px solid rgba(0,0,0,0.04)",
+            cursor: "pointer",
           }}>
             <img src={menu.url} alt={menu.label || menu.id}
               style={{ ...imageStyle(148, 148, 0), display: "block" }} />
@@ -163,10 +165,8 @@ export function ShopListCard({
     }}>
       {/* 메뉴 썸네일 + 빨간 혜택 배너 */}
       {showMenuThumbnails && shopId && (
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "start", overflow: "hidden" }}>
-          <div style={{ width: "100%", overflow: "visible" }}>
-            <MenuThumbnailRow shopId={shopId} />
-          </div>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "start" }}>
+          <MenuThumbnailRow shopId={shopId} />
           {banner && (
             <div style={{ marginTop: -10, paddingLeft: 20, position: "relative", zIndex: 1, width: "100%" }}>
               <RedBenefitBanner items={banner.items} />
