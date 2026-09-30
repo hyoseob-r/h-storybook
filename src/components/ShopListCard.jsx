@@ -52,12 +52,9 @@ const DEFAULT_BOTTOM_BADGES = [
 ];
 
 // ── 메뉴 썸네일 가로 스크롤 + auto_transition 버튼 ──────────────────────────
-// Figma 스펙:
-// - 버튼 영역: 56x56 고정, 버튼은 좌측정렬 + v-center
-// - 버튼 기본: 28x28 → 최대 48x48 (56x56 영역 안에서)
-// - 마지막 썸네일 ~ 버튼 영역: gap 36px 고정
-// - 샵리스트 우측 여백: 56px (버튼 영역 포함)
-// - 스크롤 끝을 넘어서 당겨야 커짐, 놓으면 스냅백
+// Wolf 앱 레퍼런스: 스윔레인 끝까지 스크롤 후 계속 당기면 버튼이 커짐
+// 놓으면 원래 크기로 스냅백
+// Figma: 버튼 영역 56x56, 버튼 28→48, gap 36, 좌측정렬 v-center
 const BTN_AREA = 56;
 const BTN_MIN = 28;
 const BTN_MAX = 48;
@@ -67,51 +64,42 @@ function MenuThumbnailRow({ shopId, onTransition }) {
   const menus = getMenusByShop(shopId);
   const scrollRef = useRef(null);
   const [pullProgress, setPullProgress] = useState(0);
-  const isDragging = useRef(false);
-  const startX = useRef(0);
-  const startScroll = useRef(0);
+  const atEnd = useRef(false);
+  const endTouchX = useRef(0);
 
-  // 터치/마우스로 끝을 넘어 당길 때 감지
+  // 스크롤 이벤트: 끝 도달 감지
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const remaining = el.scrollWidth - el.scrollLeft - el.clientWidth;
+    atEnd.current = remaining < 2;
+    // 스크롤로 끝에서 벗어나면 리셋
+    if (!atEnd.current) setPullProgress(0);
+  }, []);
+
+  // 터치: 끝 도달 후 추가 드래그 감지
   const handleTouchStart = useCallback((e) => {
-    isDragging.current = true;
-    startX.current = e.touches ? e.touches[0].clientX : e.clientX;
-    startScroll.current = scrollRef.current?.scrollLeft || 0;
+    const x = e.touches ? e.touches[0].clientX : e.clientX;
+    endTouchX.current = x;
   }, []);
 
   const handleTouchMove = useCallback((e) => {
-    if (!isDragging.current || !scrollRef.current) return;
-    const el = scrollRef.current;
-    const maxScroll = el.scrollWidth - el.clientWidth;
-    const currentX = e.touches ? e.touches[0].clientX : e.clientX;
-    const delta = startX.current - currentX;
-    const wouldScroll = startScroll.current + delta;
-    // 끝을 넘어선 정도
-    const overPull = Math.max(0, wouldScroll - maxScroll);
-    const progress = Math.min(1, overPull / 80);
+    if (!atEnd.current) {
+      // 아직 끝이 아니면 현재 위치만 갱신
+      const x = e.touches ? e.touches[0].clientX : e.clientX;
+      endTouchX.current = x;
+      return;
+    }
+    // 끝에 도달한 상태에서 추가로 왼쪽으로 당기는 거리
+    const x = e.touches ? e.touches[0].clientX : e.clientX;
+    const pull = Math.max(0, endTouchX.current - x);
+    const progress = Math.min(1, pull / 80);
     setPullProgress(progress);
   }, []);
 
   const handleTouchEnd = useCallback(() => {
-    isDragging.current = false;
     setPullProgress(0);
-    // 스냅백: 스크롤을 끝으로 돌림
-    if (scrollRef.current) {
-      const el = scrollRef.current;
-      const maxScroll = el.scrollWidth - el.clientWidth;
-      el.scrollTo({ left: maxScroll, behavior: "smooth" });
-    }
-  }, []);
-
-  // 마우스 휠 스크롤 끝 감지 (데스크톱)
-  const handleScroll = useCallback(() => {
-    if (isDragging.current) return;
-    const el = scrollRef.current;
-    if (!el) return;
-    const remaining = el.scrollWidth - el.scrollLeft - el.clientWidth;
-    if (remaining <= 1) {
-      // 끝에 도달 — 터치가 아닌 경우는 기본 크기 유지
-      setPullProgress(0);
-    }
+    atEnd.current = false;
   }, []);
 
   if (!menus || menus.length === 0) return null;
