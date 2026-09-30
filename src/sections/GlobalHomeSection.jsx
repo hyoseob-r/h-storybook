@@ -2,6 +2,7 @@ import { useState } from "react";
 import { TopBanner } from "../components/TopBanner.jsx";
 import { VerticalLauncherRow } from "../components/VerticalLauncher.jsx";
 import { FoodCategorySwimlane } from "../components/FoodCategory.jsx";
+import { QCSwimlaneRow } from "../components/QCSwimlane.jsx";
 import { SwimlaneCard, SwimlaneRow } from "../components/SwimlaneCard.jsx";
 import { ShopListCard } from "../components/ShopListCard.jsx";
 import { BrandnewImageBanner } from "../components/BrandnewBanner.jsx";
@@ -112,6 +113,11 @@ export default function GlobalHomeSection() {
 
           {/* 2.5. Food Category */}
           <FoodCategorySwimlane />
+
+          <SectionDivider />
+
+          {/* 2.7. QC Swimlane */}
+          <QCSwimlaneRow />
 
           <SectionDivider />
 
