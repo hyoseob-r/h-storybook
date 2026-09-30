@@ -94,11 +94,10 @@ function MenuThumbnailRow({ shopId, onTransition }) {
     }
 
     if (pulling.current) {
-      const pull = Math.max(0, anchorX.current - x);
-      if (pull > 0 && e.cancelable) {
-        e.preventDefault(); // 네이티브 스크롤 방지, 직접 제어
-      }
-      setPullOffset(pull);
+      const rawPull = Math.max(0, anchorX.current - x);
+      // 러버밴드 저항 — 많이 당길수록 점점 무거워짐
+      const dampened = PULL_THRESHOLD * (1 - Math.exp(-rawPull / PULL_THRESHOLD));
+      setPullOffset(dampened);
     }
 
     // 끝에서 벗어나면 (오른쪽으로 되돌아가면) pull 해제
@@ -108,15 +107,19 @@ function MenuThumbnailRow({ shopId, onTransition }) {
     }
   }, []);
 
-  // 터치/마우스 끝
+  // 터치/마우스 끝 — 스냅백
   const onPointerUp = useCallback(() => {
-    const didReachThreshold = pullOffset >= PULL_THRESHOLD;
-    // 항상 스냅백
+    const didReachThreshold = pullOffset >= PULL_THRESHOLD * 0.95;
+    // 스냅백: 당긴 거리 + 스크롤 위치 복원
     setPullOffset(0);
     pulling.current = false;
-    // 임계 도달했으면 전환 콜백
+    // 스크롤도 끝 위치로 복원
+    if (scrollRef.current) {
+      const el = scrollRef.current;
+      el.scrollTo({ left: el.scrollWidth - el.clientWidth, behavior: "smooth" });
+    }
     if (didReachThreshold && onTransition) {
-      setTimeout(() => onTransition(), 200);
+      setTimeout(() => onTransition(), 300);
     }
   }, [pullOffset, onTransition]);
 
@@ -145,7 +148,7 @@ function MenuThumbnailRow({ shopId, onTransition }) {
           WebkitOverflowScrolling: "touch",
           paddingLeft: 16,
           transform: pullOffset > 0 ? `translateX(-${pullOffset}px)` : "none",
-          transition: pullOffset > 0 ? "none" : "transform 0.3s ease-out",
+          transition: pullOffset > 0 ? "none" : "transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
         }}
       >
         {/* 메뉴 썸네일들 */}
@@ -188,7 +191,7 @@ function MenuThumbnailRow({ shopId, onTransition }) {
             background: "#f6f6f6",
             border: `${btnBorder}px solid #e5e5e5`,
             cursor: "pointer",
-            transition: pullOffset > 0 ? "none" : "all 0.3s ease-out",
+            transition: pullOffset > 0 ? "none" : "all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
           }}>
             <YdsIcon name="chevron_right_s" size={iconSize} color="#999" />
           </div>
