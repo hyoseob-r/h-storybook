@@ -4,26 +4,51 @@ import { YdsIcon } from "../icons.jsx";
 import { SingleBadge, GroupBadge, LogoBadge } from "./Badge.jsx";
 import { RatingCompact } from "./Rating.jsx";
 import { getShopLogo } from "../shopLogos";
+import { getShopImage, imageStyle } from "../shopImages";
 
-// ─── YDS 2.0 SwimlaneCard Component (리뉴얼-2026) ──────────────────────────
-// Figma: 리뉴얼-2026 > Swimlane Card
-// 가로 스크롤 카드 — 썸네일 상단 + 가게 정보 하단
+// ─── YDS 2.0 SwimlaneCard Component (리뉴얼-2026 v2) ──────────────────────
+// Figma: 리뉴얼-2026 > swimlane_p04
+// 가로 스크롤 카드 — 썸네일(메뉴 라벨) + 빨간 혜택배너 + 가게정보 + 뱃지
 
-const CARD_WIDTH = 150;
-const THUMB_HEIGHT = 150;
+const CARD_WIDTH = 148;
+const THUMB_HEIGHT = 180;
+
+// 빨간 혜택 배너 프리셋
+const BENEFIT_PRESETS = {
+  none: null,
+  ypx_free: { items: ["무료배달", "즉시할인", "최대 15% 적립"] },
+  store_free: { items: ["무료배달", "즉시할인", "최대 3% 적립"] },
+  single_discount: { items: ["즉시할인"] },
+  single_cashback: { items: ["최대 5% 적립"] },
+};
+
+// 하단 뱃지 프리셋 (배달앱최저가, 스페셜적립, 할인랭킹 등)
+const BADGE_PRESETS = {
+  lowest:       { text: "배달앱 최저가", colorStyle: "gray", showLeftIcon: true, leftIconName: "ic_lowest" },
+  specialpoint: { text: "스페셜적립", colorStyle: "gray", showLeftIcon: true, leftIconName: "ic_specialpoint" },
+  ranking:      { text: "할인 1위", colorStyle: "gray", showLeftIcon: true, leftIconName: "ic_bpr" },
+  discount:     { text: "즉시할인", colorStyle: "secondary" },
+  cashback:     { text: "최대 5% 적립", colorStyle: "secondary" },
+};
 
 export function SwimlaneCard({
   shopName = "맛있는 분식집",
   thumbSrc = null,
   logoSrc = null,
+  menuLabel = null,
+  menuPrice = null,
   rating = 4.8,
   reviewCount = 1234,
   deliveryTime = "30~45분",
   deliveryFee = "0원",
-  benefits = [],
-  offerText = null,
+  distance = null,
+  minOrder = null,
+  benefitType = "none",
+  badges = [],
   isAd = false,
 }) {
+  const banner = BENEFIT_PRESETS[benefitType];
+
   return (
     <div style={{
       width: CARD_WIDTH, flexShrink: 0,
@@ -35,49 +60,108 @@ export function SwimlaneCard({
         overflow: "hidden", background: "#f2f2f2", position: "relative",
       }}>
         {thumbSrc ? (
-          <img src={thumbSrc} alt={shopName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          <img src={thumbSrc} alt={shopName} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
         ) : (
           <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <span style={{ fontSize: 32, color: "#ddd" }}>🍽</span>
           </div>
         )}
+
+        {/* 메뉴 라벨 오버레이 (상단) */}
+        {menuLabel && (
+          <div style={{
+            position: "absolute", top: 0, left: 0, right: 0,
+            padding: "8px 8px 16px",
+            background: "linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.35) 59%, transparent 100%)",
+          }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#fff", lineHeight: "16px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {menuLabel}
+            </div>
+            {menuPrice && (
+              <div style={{ fontSize: 12, fontWeight: 400, color: "#fff", lineHeight: "16px" }}>
+                {menuPrice}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* AD label */}
         {isAd && (
           <span style={{
-            position: "absolute", top: 6, left: 6,
-            fontSize: 9, color: "#999", background: "rgba(255,255,255,0.85)",
-            padding: "1px 4px", borderRadius: 3,
+            position: "absolute", bottom: 6, left: 6,
+            fontSize: 9, color: "#fff", background: "rgba(0,0,0,0.12)",
+            padding: "2px 5px", borderRadius: 100, lineHeight: 1,
           }}>AD</span>
         )}
-        {/* Heart button */}
-        <button style={{
-          position: "absolute", top: 6, right: 6, background: "none", border: "none",
-          cursor: "pointer", padding: 0,
-        }}>
-          <YdsIcon name="heart" size={20} color="rgba(255,255,255,0.8)" />
-        </button>
-        {/* Inline border (a_black50) */}
+
+        {/* Inline border */}
         <span style={{ position: "absolute", inset: 0, borderRadius: "inherit", border: `1px solid ${metaTokens.colors.alpha.a_black50}`, pointerEvents: "none" }} />
       </div>
 
+      {/* 빨간 혜택 배너 */}
+      {banner && (
+        <div style={{
+          display: "flex", gap: 2, alignItems: "center", justifyContent: "center",
+          height: 20, padding: "4px 6px", marginTop: -10,
+          background: "#FA0050", borderRadius: 12,
+          overflow: "hidden", position: "relative", zIndex: 1,
+        }}>
+          {banner.items.map((text, i) => (
+            <span key={i} style={{ display: "flex", alignItems: "center", gap: 2 }}>
+              {i > 0 && <span style={{ fontSize: 11, fontWeight: 700, color: "#fff" }}>+</span>}
+              <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", whiteSpace: "nowrap" }}>{text}</span>
+            </span>
+          ))}
+        </div>
+      )}
+
       {/* Info */}
       <div style={{ padding: "8px 0", display: "flex", flexDirection: "column", gap: 2 }}>
-        <div style={{
-          fontSize: 14, fontWeight: 700, color: "#333",
-          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-        }}>{shopName}</div>
+        {/* 가게명 + 별점 */}
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <span style={{
+            fontSize: 14, fontWeight: 700, color: "#333",
+            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+          }}>{shopName}</span>
+        </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#999" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
           <RatingCompact grade={rating} total={reviewCount} size="small" />
         </div>
 
-        <div style={{ fontSize: 11, color: "#666" }}>
-          {deliveryTime} · 배달비 {deliveryFee}
+        {/* 배달비 */}
+        <div style={{ fontSize: 12, color: "#333" }}>
+          배달비 {deliveryFee}
         </div>
 
-        {benefits.length > 0 && (
-          <div style={{ marginTop: 2 }}>
-            <GroupBadge items={benefits} colorStyle="secondary" size="small" />
+        {/* 배달시간 · 거리 · 최소주문 */}
+        <div style={{ fontSize: 12, color: "#666", display: "flex", gap: 4, alignItems: "center", flexWrap: "wrap" }}>
+          <span>{deliveryTime}</span>
+          {distance && (
+            <>
+              <span style={{ width: 3, height: 3, borderRadius: 1.5, background: "#ccc", display: "inline-block" }} />
+              <span>{distance}</span>
+            </>
+          )}
+          {minOrder && (
+            <>
+              <span style={{ width: 3, height: 3, borderRadius: 1.5, background: "#ccc", display: "inline-block" }} />
+              <span>최소 {minOrder}</span>
+            </>
+          )}
+        </div>
+
+        {/* 하단 뱃지 */}
+        {badges.length > 0 && (
+          <div style={{ marginTop: 2, display: "flex", flexWrap: "wrap", gap: 4 }}>
+            {badges.map((key, i) => {
+              const preset = BADGE_PRESETS[key];
+              if (!preset) return null;
+              return (
+                <SingleBadge key={i} text={preset.text} colorStyle={preset.colorStyle}
+                  size="small" showLeftIcon={preset.showLeftIcon} leftIconName={preset.leftIconName} />
+              );
+            })}
           </div>
         )}
       </div>
@@ -105,7 +189,7 @@ export function SwimlaneRow({
       </div>
       {/* Scrollable row */}
       <div style={{
-        display: "flex", gap: 12, overflowX: "auto", paddingBottom: 4,
+        display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4,
         scrollbarWidth: "none",
       }}>
         {children}
@@ -117,31 +201,26 @@ export function SwimlaneRow({
 // ── Section (Storybook) ─────────────────────────────────────────────────────
 export default function SwimlaneCardSection() {
   const sampleShops = [
-    { shopName: "서브웨이 서초점", logoSrc: getShopLogo("subway"), rating: 4.8, reviewCount: 1523, deliveryTime: "25~40분", deliveryFee: "0원", offerText: "1,000원 할인" },
-    { shopName: "맘스터치 강남역점", logoSrc: getShopLogo("moms"), rating: 4.5, reviewCount: 892, deliveryTime: "30~45분", deliveryFee: "1,000원" },
-    { shopName: "피자헛 역삼점", logoSrc: getShopLogo("pizzahut"), rating: 4.2, reviewCount: 456, deliveryTime: "35~50분", deliveryFee: "0원", benefits: [{ text: "무료배달", showLeftIcon: true, leftIconName: "benefit" }] },
-    { shopName: "교촌치킨 서초점", logoSrc: getShopLogo("kyochon"), rating: 4.6, reviewCount: 2103, deliveryTime: "40~55분", deliveryFee: "2,000원" },
-    { shopName: "BHC 강남점", logoSrc: getShopLogo("bhc"), rating: 4.4, reviewCount: 731, deliveryTime: "35~50분", deliveryFee: "1,500원", isAd: true },
-    { shopName: "굽네치킨 역삼점", logoSrc: getShopLogo("goobne"), rating: 4.3, reviewCount: 512, deliveryTime: "30~45분", deliveryFee: "0원" },
+    { shopName: "서브웨이 서초점", thumbSrc: getShopImage("sandwitch_1"), menuLabel: "에그마요", menuPrice: "6,900원", rating: 4.8, reviewCount: 1523, deliveryTime: "25~40분", deliveryFee: "0원", distance: "0.8km", benefitType: "ypx_free", badges: ["lowest", "specialpoint"] },
+    { shopName: "맘스터치 강남역점", thumbSrc: getShopImage("burger_1"), menuLabel: "싸이버거", menuPrice: "5,900원", rating: 4.5, reviewCount: 892, deliveryTime: "30~45분", deliveryFee: "1,000원", distance: "1.5km", badges: ["discount"] },
+    { shopName: "피자헛 역삼점", thumbSrc: getShopImage("pizza_1"), menuLabel: "슈퍼슈프림", menuPrice: "24,900원", rating: 4.2, reviewCount: 456, deliveryTime: "35~50분", deliveryFee: "0원", distance: "2.1km", benefitType: "single_discount", badges: ["ranking"] },
+    { shopName: "교촌치킨 서초점", thumbSrc: getShopImage("chiken_1"), menuLabel: "허니콤보", menuPrice: "19,000원", rating: 4.6, reviewCount: 2103, deliveryTime: "40~55분", deliveryFee: "2,000원", distance: "1.2km", badges: ["lowest"] },
+    { shopName: "BHC 강남점", thumbSrc: getShopImage("chiken_2"), menuLabel: "뿌링클", menuPrice: "18,000원", rating: 4.4, reviewCount: 731, deliveryTime: "35~50분", deliveryFee: "1,500원", distance: "0.5km", isAd: true, badges: ["specialpoint"] },
+    { shopName: "본도시락 역삼역", thumbSrc: getShopImage("hansik_1"), menuLabel: "고추장불고기", menuPrice: "8,500원", rating: 4.7, reviewCount: 1890, deliveryTime: "20~35분", deliveryFee: "0원", distance: "372m", benefitType: "ypx_free", badges: ["lowest", "specialpoint", "ranking"] },
   ];
 
   return (
     <div style={{ padding: "24px 0" }}>
-      {/* Swimlane Row demo */}
-      <div style={{ marginBottom: 32, width: 375, background: "#fff", borderRadius: 12, padding: 16 }}>
+      <div style={{ marginBottom: 32, width: 390, background: "#fff", borderRadius: 12, padding: 16, overflow: "hidden" }}>
         <SwimlaneRow title="이 가게 어때요?">
           {sampleShops.map((s, i) => <SwimlaneCard key={i} {...s} />)}
         </SwimlaneRow>
       </div>
 
-      {/* Second row */}
-      <div style={{ width: 375, background: "#fff", borderRadius: 12, padding: 16 }}>
-        <SwimlaneRow title="골라먹는 재미 🎉" showMore={false}>
+      <div style={{ width: 390, background: "#fff", borderRadius: 12, padding: 16, overflow: "hidden" }}>
+        <SwimlaneRow title="골라먹는 재미">
           {sampleShops.slice(0, 4).map((s, i) => (
-            <SwimlaneCard key={i} {...s} offerText={null} benefits={[
-              { text: "즉시할인", showLeftIcon: true, leftIconName: "coupon" },
-              { text: "최대 5% 적립", showLeftIcon: true, leftIconName: "point" },
-            ]} />
+            <SwimlaneCard key={i} {...s} benefitType="single_cashback" badges={["cashback", "discount"]} />
           ))}
         </SwimlaneRow>
       </div>

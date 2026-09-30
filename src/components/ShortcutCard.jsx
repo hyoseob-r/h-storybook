@@ -102,7 +102,7 @@ export default function ShortcutCardSection() {
       {/* Default row */}
       <div style={{ marginBottom: 32 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: "#333", marginBottom: 12 }}>ShortcutRow (8 items)</div>
-        <div style={{ width: 375, background: "#fff", borderRadius: 12, padding: 16 }}>
+        <div style={{ width: 390, background: "#fff", borderRadius: 12, padding: 16 }}>
           <ShortcutRow items={SHORTCUT_PRESETS} size={size} />
         </div>
       </div>
@@ -110,7 +110,7 @@ export default function ShortcutCardSection() {
       {/* With badges */}
       <div style={{ marginBottom: 32 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: "#333", marginBottom: 12 }}>With badges</div>
-        <div style={{ width: 375, background: "#fff", borderRadius: 12, padding: 16 }}>
+        <div style={{ width: 390, background: "#fff", borderRadius: 12, padding: 16 }}>
           <ShortcutRow items={[
             { icon: "coupon", label: "쿠폰함", color: "#0C74E4", badge: "3" },
             { icon: "receipt", label: "재주문", color: "#FA0050", badge: "N" },
