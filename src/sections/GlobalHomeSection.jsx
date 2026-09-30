@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { TopBanner } from "../components/TopBanner.jsx";
-import { ShortcutRow } from "../components/ShortcutCard.jsx";
+import { VerticalLauncherRow } from "../components/VerticalLauncher.jsx";
+import { FoodCategorySwimlane } from "../components/FoodCategory.jsx";
 import { SwimlaneCard, SwimlaneRow } from "../components/SwimlaneCard.jsx";
 import { ShopListCard } from "../components/ShopListCard.jsx";
 import { BrandnewImageBanner } from "../components/BrandnewBanner.jsx";
@@ -11,17 +12,6 @@ import { getShopImage } from "../shopImages";
 // ─── Global Home Simulator ──────────────────────────────────────────────────
 // Figma: 리뉴얼-2026 > node 13497:360471 (2053)
 // 글로벌홈 전체 구성을 하나의 스크롤 페이지로 조합
-
-const SHORTCUT_ITEMS = [
-  { id: "reorder",  icon: "receipt",  label: "재주문",   color: "#FA0050" },
-  { id: "coupon",   icon: "coupon",   label: "쿠폰함",   color: "#0C74E4", badge: "3" },
-  { id: "timedeal", icon: "benefit",  label: "타임딜",   color: "#FF8800" },
-  { id: "rank",     icon: "task",     label: "할인랭킹",  color: "#7B61FF" },
-  { id: "new",      icon: "gift",     label: "신규 혜택", color: "#00B886" },
-  { id: "yogipass", icon: "heart",    label: "요기패스X", color: "#FA0050" },
-  { id: "mart",     icon: "house",    label: "요마트",   color: "#0C74E4" },
-  { id: "franchise",icon: "information", label: "프랜차이즈", color: "#333" },
-];
 
 const SWIMLANE_SHOPS = [
   { shopName: "본도시락", thumbSrc: getShopImage("hansik_1"), menuLabel: "고추장불고기", menuPrice: "8,500원", rating: 4.8, reviewCount: 1567, deliveryTime: "20~35분", deliveryFee: "0원", distance: "372m", benefitType: "ypx_free", badges: ["lowest", "specialpoint"] },
@@ -111,10 +101,17 @@ export default function GlobalHomeSection() {
             subtitle="멈추지 않는 선착순 할인!"
           />
 
-          {/* 2. Shortcut Row */}
-          <div style={{ padding: "16px 16px 12px" }}>
-            <ShortcutRow items={SHORTCUT_ITEMS} size="medium" />
-          </div>
+          {/* 2. Vertical Launcher */}
+          <VerticalLauncherRow items={[
+            { id: "yogiplus", icon: "point", label: "요기더+적립" },
+            { id: "takeout", icon: "receipt", label: "포장", badge: "7% 할인" },
+            { id: "gift", icon: "gift", label: "선물하기" },
+            { id: "rank", icon: "ic_bpr", label: "할인랭킹" },
+            { id: "robot", icon: "house", label: "로봇배달" },
+          ]} />
+
+          {/* 2.5. Food Category */}
+          <FoodCategorySwimlane />
 
           <SectionDivider />
 
