@@ -52,48 +52,103 @@ const DEFAULT_BOTTOM_BADGES = [
 ];
 
 // ── 메뉴 썸네일 가로 스크롤 + auto_transition 버튼 ──────────────────────────
-// 스크롤 끝에 도달하면 > 버튼이 28→48px로 커짐 (당겨서 새로고침 UX)
+// Figma 스펙:
+// - 버튼 영역: 56x56 고정, 버튼은 좌측정렬 + v-center
+// - 버튼 기본: 28x28 → 최대 48x48 (56x56 영역 안에서)
+// - 마지막 썸네일 ~ 버튼 영역: gap 36px 고정
+// - 샵리스트 우측 여백: 56px (버튼 영역 포함)
+// - 스크롤 끝을 넘어서 당겨야 커짐, 놓으면 스냅백
+const BTN_AREA = 56;
+const BTN_MIN = 28;
+const BTN_MAX = 48;
+const THUMB_BTN_GAP = 36;
+
 function MenuThumbnailRow({ shopId, onTransition }) {
   const menus = getMenusByShop(shopId);
   const scrollRef = useRef(null);
-  const [btnScale, setBtnScale] = useState(0);
+  const [pullProgress, setPullProgress] = useState(0);
+  const isDragging = useRef(false);
+  const startX = useRef(0);
+  const startScroll = useRef(0);
 
+  // 터치/마우스로 끝을 넘어 당길 때 감지
+  const handleTouchStart = useCallback((e) => {
+    isDragging.current = true;
+    startX.current = e.touches ? e.touches[0].clientX : e.clientX;
+    startScroll.current = scrollRef.current?.scrollLeft || 0;
+  }, []);
+
+  const handleTouchMove = useCallback((e) => {
+    if (!isDragging.current || !scrollRef.current) return;
+    const el = scrollRef.current;
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    const currentX = e.touches ? e.touches[0].clientX : e.clientX;
+    const delta = startX.current - currentX;
+    const wouldScroll = startScroll.current + delta;
+    // 끝을 넘어선 정도
+    const overPull = Math.max(0, wouldScroll - maxScroll);
+    const progress = Math.min(1, overPull / 80);
+    setPullProgress(progress);
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    isDragging.current = false;
+    setPullProgress(0);
+    // 스냅백: 스크롤을 끝으로 돌림
+    if (scrollRef.current) {
+      const el = scrollRef.current;
+      const maxScroll = el.scrollWidth - el.clientWidth;
+      el.scrollTo({ left: maxScroll, behavior: "smooth" });
+    }
+  }, []);
+
+  // 마우스 휠 스크롤 끝 감지 (데스크톱)
   const handleScroll = useCallback(() => {
+    if (isDragging.current) return;
     const el = scrollRef.current;
     if (!el) return;
-    // 스크롤 끝까지 갔을 때의 남은 거리 (0 = 완전히 끝)
     const remaining = el.scrollWidth - el.scrollLeft - el.clientWidth;
-    // 60px 이내로 접근하면 점점 커짐, 0이면 최대
-    const progress = Math.min(1, Math.max(0, 1 - remaining / 60));
-    setBtnScale(progress);
+    if (remaining <= 1) {
+      // 끝에 도달 — 터치가 아닌 경우는 기본 크기 유지
+      setPullProgress(0);
+    }
   }, []);
 
   if (!menus || menus.length === 0) return null;
 
-  const btnSize = 28 + btnScale * 20; // 28→48
-  const btnRadius = 10 + btnScale * 6; // 10→16
-  const iconSize = 16 + btnScale * 16; // 16→32
-  const btnBorder = 1.3 + btnScale * 1.3; // 1.3→2.6
+  const btnSize = BTN_MIN + pullProgress * (BTN_MAX - BTN_MIN);
+  const btnRadius = 10 + pullProgress * 6;
+  const iconSize = 16 + pullProgress * 16;
+  const btnBorder = 1.3 + pullProgress * 1.3;
 
   return (
     <div style={{ width: "100%", overflow: "hidden" }}>
       <div
         ref={scrollRef}
         onScroll={handleScroll}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onMouseDown={handleTouchStart}
+        onMouseMove={handleTouchMove}
+        onMouseUp={handleTouchEnd}
+        onMouseLeave={() => { if (isDragging.current) handleTouchEnd(); }}
         style={{
-          display: "flex", gap: 8, alignItems: "center",
+          display: "flex", alignItems: "center",
           overflowX: "auto", scrollbarWidth: "none",
           WebkitOverflowScrolling: "touch",
-          paddingLeft: 16, paddingRight: 16,
+          paddingLeft: 16,
         }}
       >
-        {menus.map((menu) => (
+        {/* 메뉴 썸네일들 */}
+        {menus.map((menu, i) => (
           <div key={menu.id} onClick={() => menu.onClick && menu.onClick()} style={{
             position: "relative", flexShrink: 0,
             width: 148, height: 118,
             borderRadius: 12, overflow: "hidden",
             border: "1px solid rgba(0,0,0,0.04)",
             cursor: "pointer",
+            marginLeft: i > 0 ? 8 : 0,
           }}>
             <img src={menu.url} alt={menu.label || menu.id}
               style={{ ...imageStyle(148, 118, 0), display: "block" }} />
@@ -112,18 +167,23 @@ function MenuThumbnailRow({ shopId, onTransition }) {
           </div>
         ))}
 
-        {/* auto_transition 버튼 — 스윔레인 끝에 위치, 스크롤 끝에서 scale up */}
-        <div onClick={onTransition} style={{
-          flexShrink: 0,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          width: btnSize, height: btnSize,
-          borderRadius: btnRadius,
-          background: "#f6f6f6",
-          border: `${btnBorder}px solid #e5e5e5`,
-          cursor: "pointer",
-          transition: "all 0.15s ease-out",
+        {/* gap 36px + 버튼 영역 56x56 고정 */}
+        <div style={{
+          flexShrink: 0, marginLeft: THUMB_BTN_GAP,
+          width: BTN_AREA, height: BTN_AREA,
+          display: "flex", alignItems: "center", justifyContent: "flex-start",
         }}>
-          <YdsIcon name="chevron_right_s" size={iconSize} color="#999" />
+          <div onClick={onTransition} style={{
+            display: "flex", alignItems: "center", justifyContent: "center",
+            width: btnSize, height: btnSize,
+            borderRadius: btnRadius,
+            background: "#f6f6f6",
+            border: `${btnBorder}px solid #e5e5e5`,
+            cursor: "pointer",
+            transition: pullProgress > 0 ? "none" : "all 0.2s ease-out",
+          }}>
+            <YdsIcon name="chevron_right_s" size={iconSize} color="#999" />
+          </div>
         </div>
       </div>
     </div>
