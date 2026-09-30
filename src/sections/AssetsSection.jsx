@@ -1,10 +1,14 @@
 import { useState } from "react";
 import { getAllLogos, SHOP_LOGOS } from "../shopLogos";
 import { getAllShopImages, getAllMenuImages, SHOP_IMAGES, MENU_IMAGES } from "../shopImages";
+import { getAllTabLogos, getAllBottomsheetLogos, getAllFoodCategories, TAB_LOGOS, BOTTOMSHEET_LOGOS, FOOD_CATEGORIES } from "../tabLogos";
 
 const shopLogoItems = getAllLogos();
 const shopImageItems = getAllShopImages();
 const menuImageItems = getAllMenuImages();
+const tabLogoItems = getAllTabLogos();
+const bottomsheetLogoItems = getAllBottomsheetLogos();
+const foodCategoryItems = getAllFoodCategories();
 
 const ASSET_CATEGORIES = [
   {
@@ -33,23 +37,23 @@ const ASSET_CATEGORIES = [
   {
     id: "tab-logo",
     label: "2depth 탭 버튼 로고",
-    desc: "카테고리 탭, 가상카테고리 대표이미지",
-    status: "empty",
-    items: [],
+    desc: "카테고리 탭, 가상카테고리 대표이미지 (44x42, _tap)",
+    status: tabLogoItems.length > 0 ? "ready" : "empty",
+    items: tabLogoItems,
   },
   {
     id: "bottomsheet-logo",
     label: "바텀시트 썸네일 로고",
-    desc: "더보기 바텀시트에 표시되는 썸네일",
-    status: "empty",
-    items: [],
+    desc: "더보기 바텀시트에 표시되는 썸네일 (44x42, _b)",
+    status: bottomsheetLogoItems.length > 0 ? "ready" : "empty",
+    items: bottomsheetLogoItems,
   },
   {
     id: "food-category",
     label: "푸드 카테고리 로고",
     desc: "글로벌홈 카테고리 아이콘 (치킨, 피자, 한식 등)",
-    status: "partial",
-    items: [],
+    status: foodCategoryItems.length > 0 ? "ready" : "empty",
+    items: foodCategoryItems,
   },
   {
     id: "quickcommerce",
@@ -182,8 +186,8 @@ export default function AssetsSection() {
       <div style={{ marginTop: 12, padding: 16, background: "#f8f8f8", borderRadius: 10, fontSize: 11, color: "#999", lineHeight: 1.8 }}>
         <strong style={{ color: "#555" }}>에셋 현황</strong><br/>
         아이콘: 122개 (icons.jsx) · 디자인 토큰: 완비 (tokens.js)<br/>
-        가게 로고: {SHOP_LOGOS.length}개 (shopLogos.js) · 가게 대표이미지: {SHOP_IMAGES.length}개 · 메뉴이미지: {MENU_IMAGES.length}개 (shopImages.js)<br/>
-        탭 로고: 미등록 · 바텀시트 로고: 미등록 · 푸드 카테고리: 일부 · 퀵커머스: 별도 제작 · 프로모션: 미등록
+        가게 로고: {SHOP_LOGOS.length}개 · 대표이미지: {SHOP_IMAGES.length}개 · 메뉴: {MENU_IMAGES.length}개<br/>
+        탭 로고: {TAB_LOGOS.length}개 · 바텀시트: {BOTTOMSHEET_LOGOS.length}개 · 카테고리: {FOOD_CATEGORIES.length}개 · 퀵커머스: 미등록 · 프로모션: 미등록
       </div>
     </div>
   );
