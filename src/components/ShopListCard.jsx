@@ -51,81 +51,101 @@ const DEFAULT_BOTTOM_BADGES = [
   { text: "위생안심", colorStyle: "gray" },
 ];
 
-// ── 메뉴 썸네일 가로 스크롤 + auto_transition 버튼 ──────────────────────────
-// Wolf 앱 레퍼런스: 스윔레인 끝까지 스크롤 후 계속 당기면 버튼이 커짐
-// 놓으면 원래 크기로 스냅백
-// Figma: 버튼 영역 56x56, 버튼 28→48, gap 36, 좌측정렬 v-center
+// ── 메뉴 썸네일 가로 스크롤 + auto_transition (pull-to-transition) ───────────
+// Wolf 앱 레퍼런스 — 풀투리프레시와 동일한 인터랙션:
+// 1. 스크롤 끝까지 닿으면 네이티브 스크롤 멈춤
+// 2. 거기서 더 당기면 컨텐츠가 왼쪽으로 밀리면서 버튼이 28→56 커짐
+// 3. 임계(threshold)까지 당기면 → 화면 전환 (onTransition)
+// 4. 임계 전에 놓으면 → 원래 위치 + 원래 크기로 스냅백
+// 5. 임계에 닿았어도 → 스냅백 후 전환
 const BTN_AREA = 56;
 const BTN_MIN = 28;
-const BTN_MAX = 48;
+const BTN_MAX = 56;
 const THUMB_BTN_GAP = 36;
+const PULL_THRESHOLD = 80; // 이만큼 당기면 전환
 
 function MenuThumbnailRow({ shopId, onTransition }) {
   const menus = getMenusByShop(shopId);
   const scrollRef = useRef(null);
-  const [pullProgress, setPullProgress] = useState(0);
-  const atEnd = useRef(false);
-  const endTouchX = useRef(0);
+  const [pullOffset, setPullOffset] = useState(0); // 실제 당긴 px
+  const pulling = useRef(false);
+  const anchorX = useRef(0);
 
-  // 스크롤 이벤트: 끝 도달 감지
-  const handleScroll = useCallback(() => {
+  // 터치/마우스 시작
+  const onPointerDown = useCallback((e) => {
+    const x = e.touches ? e.touches[0].clientX : e.clientX;
+    anchorX.current = x;
+  }, []);
+
+  // 터치/마우스 이동
+  const onPointerMove = useCallback((e) => {
     const el = scrollRef.current;
     if (!el) return;
+    const x = e.touches ? e.touches[0].clientX : e.clientX;
+
+    // 네이티브 스크롤이 끝에 도달했는지 체크
     const remaining = el.scrollWidth - el.scrollLeft - el.clientWidth;
-    atEnd.current = remaining < 2;
-    // 스크롤로 끝에서 벗어나면 리셋
-    if (!atEnd.current) setPullProgress(0);
-  }, []);
+    const atEnd = remaining < 2;
 
-  // 터치: 끝 도달 후 추가 드래그 감지
-  const handleTouchStart = useCallback((e) => {
-    const x = e.touches ? e.touches[0].clientX : e.clientX;
-    endTouchX.current = x;
-  }, []);
-
-  const handleTouchMove = useCallback((e) => {
-    if (!atEnd.current) {
-      // 아직 끝이 아니면 현재 위치만 갱신
-      const x = e.touches ? e.touches[0].clientX : e.clientX;
-      endTouchX.current = x;
-      return;
+    if (atEnd && !pulling.current) {
+      // 끝에 닿은 순간 — 앵커 잡기
+      pulling.current = true;
+      anchorX.current = x;
     }
-    // 끝에 도달한 상태에서 추가로 왼쪽으로 당기는 거리
-    const x = e.touches ? e.touches[0].clientX : e.clientX;
-    const pull = Math.max(0, endTouchX.current - x);
-    const progress = Math.min(1, pull / 80);
-    setPullProgress(progress);
+
+    if (pulling.current) {
+      const pull = Math.max(0, anchorX.current - x);
+      if (pull > 0 && e.cancelable) {
+        e.preventDefault(); // 네이티브 스크롤 방지, 직접 제어
+      }
+      setPullOffset(pull);
+    }
+
+    // 끝에서 벗어나면 (오른쪽으로 되돌아가면) pull 해제
+    if (!atEnd && pulling.current) {
+      pulling.current = false;
+      setPullOffset(0);
+    }
   }, []);
 
-  const handleTouchEnd = useCallback(() => {
-    setPullProgress(0);
-    atEnd.current = false;
-  }, []);
+  // 터치/마우스 끝
+  const onPointerUp = useCallback(() => {
+    const didReachThreshold = pullOffset >= PULL_THRESHOLD;
+    // 항상 스냅백
+    setPullOffset(0);
+    pulling.current = false;
+    // 임계 도달했으면 전환 콜백
+    if (didReachThreshold && onTransition) {
+      setTimeout(() => onTransition(), 200);
+    }
+  }, [pullOffset, onTransition]);
 
   if (!menus || menus.length === 0) return null;
 
-  const btnSize = BTN_MIN + pullProgress * (BTN_MAX - BTN_MIN);
-  const btnRadius = 10 + pullProgress * 6;
-  const iconSize = 16 + pullProgress * 16;
-  const btnBorder = 1.3 + pullProgress * 1.3;
+  const progress = Math.min(1, pullOffset / PULL_THRESHOLD);
+  const btnSize = BTN_MIN + progress * (BTN_MAX - BTN_MIN);
+  const btnRadius = 10 + progress * 10;
+  const iconSize = 16 + progress * 16;
+  const btnBorder = 1.3 + progress * 1.3;
 
   return (
     <div style={{ width: "100%", overflow: "hidden" }}>
       <div
         ref={scrollRef}
-        onScroll={handleScroll}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onMouseDown={handleTouchStart}
-        onMouseMove={handleTouchMove}
-        onMouseUp={handleTouchEnd}
-        onMouseLeave={() => { if (isDragging.current) handleTouchEnd(); }}
+        onTouchStart={onPointerDown}
+        onTouchMove={onPointerMove}
+        onTouchEnd={onPointerUp}
+        onMouseDown={onPointerDown}
+        onMouseMove={onPointerMove}
+        onMouseUp={onPointerUp}
+        onMouseLeave={() => { if (pulling.current) onPointerUp(); }}
         style={{
           display: "flex", alignItems: "center",
           overflowX: "auto", scrollbarWidth: "none",
           WebkitOverflowScrolling: "touch",
           paddingLeft: 16,
+          transform: pullOffset > 0 ? `translateX(-${pullOffset}px)` : "none",
+          transition: pullOffset > 0 ? "none" : "transform 0.3s ease-out",
         }}
       >
         {/* 메뉴 썸네일들 */}
@@ -168,7 +188,7 @@ function MenuThumbnailRow({ shopId, onTransition }) {
             background: "#f6f6f6",
             border: `${btnBorder}px solid #e5e5e5`,
             cursor: "pointer",
-            transition: pullProgress > 0 ? "none" : "all 0.2s ease-out",
+            transition: pullOffset > 0 ? "none" : "all 0.3s ease-out",
           }}>
             <YdsIcon name="chevron_right_s" size={iconSize} color="#999" />
           </div>
