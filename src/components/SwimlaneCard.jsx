@@ -10,8 +10,8 @@ import { getShopImage, imageStyle } from "../shopImages";
 // Figma: 리뉴얼-2026 > swimlane_p04
 // 가로 스크롤 카드 — 썸네일(메뉴 라벨) + 빨간 혜택배너 + 가게정보 + 뱃지
 
-const CARD_WIDTH = 148;
-const THUMB_HEIGHT = 180;
+const CARD_WIDTH = 270;
+const THUMB_HEIGHT = 144;
 
 // 빨간 혜택 배너 프리셋
 const BENEFIT_PRESETS = {
@@ -85,6 +85,17 @@ export function SwimlaneCard({
           </div>
         )}
 
+        {/* 로고 오버레이 (좌상단 48px) */}
+        {logoSrc && (
+          <div style={{
+            position: "absolute", top: 6, left: 6,
+            width: 48, height: 48, borderRadius: 400, overflow: "hidden",
+            border: `1px solid ${metaTokens.colors.alpha.a_black50}`,
+          }}>
+            <img src={logoSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          </div>
+        )}
+
         {/* AD label */}
         {isAd && (
           <span style={{
@@ -95,7 +106,7 @@ export function SwimlaneCard({
         )}
 
         {/* Inline border */}
-        <span style={{ position: "absolute", inset: 0, borderRadius: "inherit", border: `1px solid ${metaTokens.colors.alpha.a_black50}`, pointerEvents: "none" }} />
+        <span style={{ position: "absolute", inset: 0, borderRadius: "inherit", border: `1px solid rgba(0,0,0,0.04)`, pointerEvents: "none" }} />
       </div>
 
       {/* 빨간 혜택 배너 */}
@@ -116,7 +127,7 @@ export function SwimlaneCard({
       )}
 
       {/* Info */}
-      <div style={{ padding: "8px 0", display: "flex", flexDirection: "column", gap: 2 }}>
+      <div style={{ padding: "4px 6px 0", display: "flex", flexDirection: "column", gap: 4 }}>
         {/* 가게명 + 별점 */}
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <span style={{
@@ -201,12 +212,12 @@ export function SwimlaneRow({
 // ── Section (Storybook) ─────────────────────────────────────────────────────
 export default function SwimlaneCardSection() {
   const sampleShops = [
-    { shopName: "서브웨이 서초점", thumbSrc: getShopImage("sandwitch_1"), menuLabel: "에그마요", menuPrice: "6,900원", rating: 4.8, reviewCount: 1523, deliveryTime: "25~40분", deliveryFee: "0원", distance: "0.8km", benefitType: "ypx_free", badges: ["lowest", "specialpoint"] },
-    { shopName: "맘스터치 강남역점", thumbSrc: getShopImage("burger_1"), menuLabel: "싸이버거", menuPrice: "5,900원", rating: 4.5, reviewCount: 892, deliveryTime: "30~45분", deliveryFee: "1,000원", distance: "1.5km", badges: ["discount"] },
-    { shopName: "피자헛 역삼점", thumbSrc: getShopImage("pizza_1"), menuLabel: "슈퍼슈프림", menuPrice: "24,900원", rating: 4.2, reviewCount: 456, deliveryTime: "35~50분", deliveryFee: "0원", distance: "2.1km", benefitType: "single_discount", badges: ["ranking"] },
-    { shopName: "교촌치킨 서초점", thumbSrc: getShopImage("chiken_1"), menuLabel: "허니콤보", menuPrice: "19,000원", rating: 4.6, reviewCount: 2103, deliveryTime: "40~55분", deliveryFee: "2,000원", distance: "1.2km", badges: ["lowest"] },
-    { shopName: "BHC 강남점", thumbSrc: getShopImage("chiken_2"), menuLabel: "뿌링클", menuPrice: "18,000원", rating: 4.4, reviewCount: 731, deliveryTime: "35~50분", deliveryFee: "1,500원", distance: "0.5km", isAd: true, badges: ["specialpoint"] },
-    { shopName: "본도시락 역삼역", thumbSrc: getShopImage("hansik_1"), menuLabel: "고추장불고기", menuPrice: "8,500원", rating: 4.7, reviewCount: 1890, deliveryTime: "20~35분", deliveryFee: "0원", distance: "372m", benefitType: "ypx_free", badges: ["lowest", "specialpoint", "ranking"] },
+    { shopName: "서브웨이 서초점", thumbSrc: getShopImage("sandwitch_1"), logoSrc: getShopLogo("subway"), menuLabel: "에그마요", menuPrice: "6,900원", rating: 4.8, reviewCount: 1523, deliveryTime: "25~40분", deliveryFee: "0원", distance: "0.8km", benefitType: "ypx_free", badges: ["lowest", "specialpoint"] },
+    { shopName: "맘스터치 강남역점", thumbSrc: getShopImage("burger_1"), logoSrc: getShopLogo("moms"), menuLabel: "싸이버거", menuPrice: "5,900원", rating: 4.5, reviewCount: 892, deliveryTime: "30~45분", deliveryFee: "1,000원", distance: "1.5km", badges: ["discount"] },
+    { shopName: "피자헛 역삼점", thumbSrc: getShopImage("pizza_1"), logoSrc: getShopLogo("pizzahut"), menuLabel: "슈퍼슈프림", menuPrice: "24,900원", rating: 4.2, reviewCount: 456, deliveryTime: "35~50분", deliveryFee: "0원", distance: "2.1km", benefitType: "single_discount", badges: ["ranking"] },
+    { shopName: "교촌치킨 서초점", thumbSrc: getShopImage("chiken_1"), logoSrc: getShopLogo("kyochon"), menuLabel: "허니콤보", menuPrice: "19,000원", rating: 4.6, reviewCount: 2103, deliveryTime: "40~55분", deliveryFee: "2,000원", distance: "1.2km", badges: ["lowest"] },
+    { shopName: "BHC 강남점", thumbSrc: getShopImage("chiken_2"), logoSrc: getShopLogo("bhc"), menuLabel: "뿌링클", menuPrice: "18,000원", rating: 4.4, reviewCount: 731, deliveryTime: "35~50분", deliveryFee: "1,500원", distance: "0.5km", isAd: true, badges: ["specialpoint"] },
+    { shopName: "본도시락 역삼역", thumbSrc: getShopImage("hansik_1"), logoSrc: getShopLogo("bon"), menuLabel: "고추장불고기", menuPrice: "8,500원", rating: 4.7, reviewCount: 1890, deliveryTime: "20~35분", deliveryFee: "0원", distance: "372m", benefitType: "ypx_free", badges: ["lowest", "specialpoint", "ranking"] },
   ];
 
   return (
