@@ -100,7 +100,7 @@ export function ReorderCard({
 
         {/* 주문횟수 · 배달시간 · 거리 · 최소주문 */}
         <div style={{ fontSize: 12, color: "#333", display: "flex", gap: 4, alignItems: "center", flexWrap: "wrap" }}>
-          {orderCount && <span>{orderCount}</span>}
+          {orderCount && <span style={{ fontWeight: 700 }}>{orderCount}</span>}
           <span style={{ width: 3, height: 3, borderRadius: 1.5, background: "#ccc" }} />
           <span>{deliveryTime}</span>
           <span style={{ width: 3, height: 3, borderRadius: 1.5, background: "#ccc" }} />
