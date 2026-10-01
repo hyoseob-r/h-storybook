@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { metaTokens } from "../tokens";
+import { BenefitBadge } from "./Badge.jsx";
 
 // ─── YDS 2.0 VerticalLauncher (리뉴얼-2026) ────────────────────────────────
 // Figma: 리뉴얼-2026 > vertical_launcher (node 4917:373717)
@@ -50,17 +51,8 @@ export function VLauncherItem({
         </span>
       </button>
       {badge && (
-        <div style={{
-          position: "absolute", top: -7, left: 0,
-          maxWidth: 70, boxShadow: SHADOW,
-        }}>
-          <span style={{
-            display: "inline-flex", alignItems: "center", justifyContent: "center",
-            background: "transparent", border: "none",
-            borderRadius: 9, padding: "1px 4px",
-            fontSize: 10, fontWeight: 700, color: "#FA0050",
-            lineHeight: "14px", whiteSpace: "nowrap",
-          }}>{badge}</span>
+        <div style={{ position: "absolute", top: -7, left: 0 }}>
+          <BenefitBadge label={badge} />
         </div>
       )}
     </div>

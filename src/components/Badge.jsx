@@ -18,6 +18,26 @@ export function AdBadge({ style: customStyle }) {
   );
 }
 
+// ── 혜택뱃지 (Figma: node 3518:56728) ────────────────────────────────────────
+// 흰 배경 + #e5e5e5 보더 0.5px + shadow level_1 + rounded 9
+// 텍스트: 10b, primary(#FA0050), center, maxWidth 70
+// 사용처: VerticalLauncher, FoodCategory, QCSwimlane, ShopListCard 위 할인 라벨
+const BENEFIT_BADGE_SHADOW = "0px 0px 2px rgba(25,48,64,0.08), 0px 1px 8px rgba(25,48,64,0.1)";
+export function BenefitBadge({ label = "3,000원 할인" }) {
+  return (
+    <div style={{ maxWidth: 70, boxShadow: BENEFIT_BADGE_SHADOW }}>
+      <span style={{
+        display: "inline-flex", alignItems: "center", justifyContent: "center",
+        background: "#fff", border: "0.5px solid #e5e5e5",
+        borderRadius: 9, padding: "1px 4px",
+        fontSize: 10, fontWeight: 700, color: "#FA0050",
+        lineHeight: "14px", whiteSpace: "nowrap",
+        textAlign: "center", overflow: "hidden", textOverflow: "ellipsis",
+      }}>{label}</span>
+    </div>
+  );
+}
+
 const BADGE_SIZES = {
   small: { height: 18, fontSize: 10, lineHeight: 14, iconSize: 12, px: 4, labelPx: 2, gap: 2, radius: metaTokens.radius.meta_r1 },
   medium: { height: 22, fontSize: 12, lineHeight: 16, iconSize: 16, px: 4, labelPx: 2, gap: 2, radius: metaTokens.radius.meta_r1 },

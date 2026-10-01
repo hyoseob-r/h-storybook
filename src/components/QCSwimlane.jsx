@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { metaTokens } from "../tokens";
 import { YdsIcon } from "../icons.jsx";
+import { BenefitBadge } from "./Badge.jsx";
 
 // ─── YDS 2.0 QC Swimlane (퀵커머스 스윔레인, 리뉴얼-2026) ─────────────────
 // Figma: 리뉴얼-2026 > QC swimlane (node 4917:373715)
@@ -45,17 +46,8 @@ function QCItem({ id, label, bgColor = "#f2f2f2", logoSrc = null, badge = null, 
           </div>
           {/* 뱃지 */}
           {badge && (
-            <div style={{
-              position: "absolute", top: -4, left: "50%", transform: "translateX(-50%)",
-              maxWidth: 70, boxShadow: SHADOW, zIndex: 1,
-            }}>
-              <span style={{
-                display: "inline-flex", alignItems: "center", justifyContent: "center",
-                background: "transparent", border: "none",
-                borderRadius: 9, padding: "1px 4px",
-                fontSize: 10, fontWeight: 700, color: "#FA0050",
-                lineHeight: "14px", whiteSpace: "nowrap",
-              }}>{badge}</span>
+            <div style={{ position: "absolute", top: -4, left: "50%", transform: "translateX(-50%)", zIndex: 1 }}>
+              <BenefitBadge label={badge} />
             </div>
           )}
         </div>

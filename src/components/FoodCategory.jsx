@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { metaTokens } from "../tokens";
 import { getAllFoodCategories } from "../tabLogos";
+import { BenefitBadge } from "./Badge.jsx";
 
 // ─── YDS 2.0 FoodCategory Swimlane (리뉴얼-2026) ───────────────────────────
 // Figma: 리뉴얼-2026 > food Category (node 4917:373716)
@@ -74,17 +75,8 @@ function CategoryItem({ id, label, isBrand = false, badge = null, onClick }) {
           )}
         </div>
         {badge && (
-          <div style={{
-            position: "absolute", top: -4, left: "50%", transform: "translateX(-50%)",
-            maxWidth: 70, boxShadow: SHADOW,
-          }}>
-            <span style={{
-              display: "inline-flex", alignItems: "center", justifyContent: "center",
-              background: "transparent", border: "none",
-              borderRadius: 9, padding: "1px 4px",
-              fontSize: 10, fontWeight: 700, color: "#FA0050",
-              lineHeight: "14px", whiteSpace: "nowrap",
-            }}>{badge}</span>
+          <div style={{ position: "absolute", top: -4, left: "50%", transform: "translateX(-50%)" }}>
+            <BenefitBadge label={badge} />
           </div>
         )}
       </div>
