@@ -173,7 +173,7 @@ export function ReorderRow({ title = "재주문 숏컷", children }) {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 16px 12px" }}>
         <span style={{ fontSize: 18, fontWeight: 700, color: "#333" }}>{title}</span>
       </div>
-      <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingLeft: 16, paddingBottom: 16, scrollbarWidth: "none" }}>
+      <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingLeft: 16, paddingBottom: 16, scrollbarWidth: "none" }}>
         {children}
       </div>
     </div>
