@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { metaTokens } from "../tokens";
 import { YdsIcon } from "../icons.jsx";
 import { SingleBadge, GroupBadge, LogoBadge, AdBadge } from "./Badge.jsx";
@@ -72,15 +72,36 @@ function MenuThumbnailRow({ shopId, onTransition }) {
   const anchorX = useRef(0);
   const triggered = useRef(false);
 
+  // 마우스 드래그 → 가로 스크롤 (모바일 터치 시뮬레이션)
+  const isDragging = useRef(false);
+  const dragStartX = useRef(0);
+  const dragStartScroll = useRef(0);
+
   const onPointerDown = useCallback((e) => {
-    anchorX.current = e.touches ? e.touches[0].clientX : e.clientX;
+    const x = e.touches ? e.touches[0].clientX : e.clientX;
+    anchorX.current = x;
     triggered.current = false;
+
+    // 마우스 드래그 스크롤 시작
+    if (!e.touches && scrollRef.current) {
+      isDragging.current = true;
+      dragStartX.current = x;
+      dragStartScroll.current = scrollRef.current.scrollLeft;
+      e.preventDefault();
+    }
   }, []);
 
   const onPointerMove = useCallback((e) => {
     const el = scrollRef.current;
     if (!el) return;
     const x = e.touches ? e.touches[0].clientX : e.clientX;
+
+    // 마우스 드래그 스크롤
+    if (!e.touches && isDragging.current) {
+      const dx = x - dragStartX.current;
+      el.scrollLeft = dragStartScroll.current - dx;
+    }
+
     const remaining = el.scrollWidth - el.scrollLeft - el.clientWidth;
     const atEnd = remaining < 2;
 
@@ -91,14 +112,11 @@ function MenuThumbnailRow({ shopId, onTransition }) {
 
     if (pulling.current) {
       const rawPull = Math.max(0, anchorX.current - x);
-      // 러버밴드: 80px raw → progress 1.0
       const progress = Math.min(1, rawPull / 80);
       setPullProgress(progress);
 
-      // progress >= 1 + 아직 트리거 안 됨 → 전환
       if (progress >= 1 && !triggered.current) {
         triggered.current = true;
-        // 웹에서 햅틱 시도 (지원 시)
         if (navigator.vibrate) navigator.vibrate(10);
         if (onTransition) onTransition();
       }
@@ -111,6 +129,7 @@ function MenuThumbnailRow({ shopId, onTransition }) {
   }, [onTransition]);
 
   const onPointerUp = useCallback(() => {
+    isDragging.current = false;
     setPullProgress(0);
     pulling.current = false;
     triggered.current = false;
@@ -139,7 +158,7 @@ function MenuThumbnailRow({ shopId, onTransition }) {
           display: "flex", alignItems: "center",
           overflowX: "auto", scrollbarWidth: "none",
           WebkitOverflowScrolling: "touch",
-          paddingLeft: 16,
+          paddingLeft: 16, cursor: "grab",
         }}
       >
         {/* 메뉴 썸네일들 */}
