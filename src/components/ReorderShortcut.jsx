@@ -47,13 +47,20 @@ export function ReorderCard({
   const banner = BENEFIT_PRESETS[benefitType];
 
   return (
-    <div style={{ width: CARD_WIDTH, height: 300, flexShrink: 0, fontFamily: "Pretendard, Roboto, sans-serif", display: "flex", flexDirection: "column" }}>
+    <div style={{
+      width: CARD_WIDTH, height: 300, flexShrink: 0,
+      fontFamily: "Pretendard, Roboto, sans-serif",
+      display: "flex", flexDirection: "column",
+      borderRadius: 20, overflow: "hidden",
+      background: "#fff",
+      boxShadow: "0px 0px 2px rgba(25,48,64,0.08), 0px 1px 8px rgba(25,48,64,0.1)",
+    }}>
       {/* Thumbnail 270x124 + red badge 겹침 */}
       <div style={{ width: CARD_WIDTH, height: 130, position: "relative", flexShrink: 0 }}>
         <div style={{
-          width: CARD_WIDTH, height: 124, borderRadius: 12, overflow: "hidden",
+          width: CARD_WIDTH, height: 124,
+          borderRadius: "12px 12px 0 0", overflow: "hidden",
           background: "#f2f2f2", position: "relative",
-          border: "1px solid rgba(0,0,0,0.04)",
         }}>
           {thumbSrc && <img src={thumbSrc} alt={shopName} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />}
           {logoSrc && (
@@ -134,12 +141,13 @@ export function ReorderCard({
 
       {/* caption + labelbutton — 바텀 정렬 */}
       <div style={{ marginTop: "auto", flexShrink: 0 }}>
-        {/* gradient 구분선 — 좌우 스트레치 */}
-        <img
-          src="/assets/ui-elements/gradient_divider.png"
-          alt=""
-          style={{ width: "100%", height: "auto", display: "block" }}
-        />
+        {/* gradient 구분선 — Figma 원본 radial gradient */}
+        <div style={{
+          width: "100%", height: 12,
+          backgroundImage: "url('/assets/ui-elements/gradient_divider.png')",
+          backgroundSize: "100% 100%",
+          backgroundRepeat: "no-repeat",
+        }} />
         {/* LabelButton / text */}
         <div
           onClick={onReorder}
