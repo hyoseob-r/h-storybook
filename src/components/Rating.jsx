@@ -10,8 +10,11 @@ const RATING_SIZES = {
   medium: { starSize: 16, fontSize: 14, lineHeight: 19, gap: 4 },
 };
 
+// 별점 아이콘 — 전역 단일 소스 (ic_item_star)
+// 색상 변경 시 여기만 수정하면 모든 Rating 컴포넌트에 일괄 적용
+const STAR_ICON_SRC = "/assets/badge-icons/ic_item_star.svg";
 function StarIcon({ size = 16 }) {
-  return <YdsIcon name="benefit" size={size} color="#FFCB2E" />;
+  return <img src={STAR_ICON_SRC} alt="★" style={{ width: size, height: size, display: "block", flexShrink: 0 }} />;
 }
 
 export function RatingCompact({ grade = 4.8, total = 1234, size = "small" }) {
