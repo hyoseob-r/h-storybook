@@ -44,6 +44,8 @@ const ROW2_CATEGORIES = [
   { id: "night", label: "야식" },
 ];
 
+// Figma: category_grobalhome (72 x 76)
+// top(72x56) > img_3D_new(48x48 at x:12,y:4) + label(h:20,y:56) + badge(72x16,y:0)
 function CategoryItem({ id, label, isBrand = false, badge = null, onClick }) {
   const categories = getAllFoodCategories();
   const catAsset = categories.find(c => c.id === id);
@@ -51,40 +53,36 @@ function CategoryItem({ id, label, isBrand = false, badge = null, onClick }) {
 
   return (
     <div onClick={onClick} style={{
-      display: "flex", flexDirection: "column", alignItems: "center",
-      width: 72, flexShrink: 0, borderRadius: 12, cursor: "pointer",
+      width: 72, height: 76, flexShrink: 0, position: "relative",
+      cursor: "pointer", borderRadius: 12,
     }}>
-      <div style={{
-        width: "100%", height: 56, display: "flex", alignItems: "center", justifyContent: "center",
-        padding: "4px 0", position: "relative",
-      }}>
-        <div style={{
-          width: 48, height: 48, borderRadius: 12, overflow: "hidden",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          background: isBrand ? "transparent" : "transparent",
-        }}>
-          {imgSrc ? (
-            <img src={imgSrc} alt={label} style={{ width: 48, height: 48, objectFit: "contain" }} />
-          ) : (
-            <div style={{
-              width: 48, height: 48, borderRadius: 12,
-              background: "#f2f2f2",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 10, color: "#ccc",
-            }}>{label.charAt(0)}</div>
-          )}
+      {/* badge — 최상단 y:0 */}
+      {badge && (
+        <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", zIndex: 1 }}>
+          <BenefitBadge label={badge} />
         </div>
-        {badge && (
-          <div style={{ position: "absolute", top: -4, left: "50%", transform: "translateX(-50%)" }}>
-            <BenefitBadge label={badge} />
-          </div>
+      )}
+
+      {/* top — 72x56 */}
+      <div style={{ width: 72, height: 56, display: "flex", alignItems: "center", justifyContent: "center", padding: "4px 12px" }}>
+        {imgSrc ? (
+          <img src={imgSrc} alt={label} style={{ width: 48, height: 48, borderRadius: 12, objectFit: "contain" }} />
+        ) : (
+          <div style={{
+            width: 48, height: 48, borderRadius: 12,
+            background: "#f2f2f2",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 10, color: "#ccc",
+          }}>{label.charAt(0)}</div>
         )}
       </div>
+
+      {/* label — h:20 y:56 */}
       <div style={{
         height: 20, display: "flex", alignItems: "center", justifyContent: "center",
       }}>
         <span style={{
-          fontSize: 14, fontWeight: 400, color: "#333",
+          fontSize: 14, fontWeight: 400, color: "#333", lineHeight: "19px",
           overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
         }}>{label}</span>
       </div>
