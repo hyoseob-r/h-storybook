@@ -159,7 +159,7 @@ function MenuThumbnailRow({ shopId, onTransition }) {
             borderRadius: 12, overflow: "hidden",
             border: "1px solid rgba(0,0,0,0.04)",
             cursor: "pointer",
-            marginLeft: i > 0 ? 8 : 0,
+            marginLeft: i > 0 ? 2 : 0,
           }}>
             <img src={menu.url} alt={menu.label || menu.id}
               style={{ ...imageStyle(148, 118, 0), display: "block" }} />
