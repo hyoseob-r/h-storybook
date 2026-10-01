@@ -138,6 +138,19 @@ export const YDS_ICONS = {
 
 export const ICON_NAMES = Object.keys(YDS_ICONS);
 
+// ── 리뷰 별점 아이콘 ─────────────────────────────────────────────────────────
+export const STAR_ICON = {
+  "ic_item_star": {
+    label: "리뷰 별점",
+    vb: "0 0 12 12",
+    svg: (size) => (
+      <svg width={size} height={size} viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path fillRule="evenodd" clipRule="evenodd" d="M6.29156 0.274049L8.0598 3.55623L11.728 4.22381C11.9871 4.27086 12.0902 4.58764 11.908 4.77824L9.33272 7.47439L9.83166 11.1691C9.86664 11.4302 9.59739 11.6261 9.35999 11.5117L6.00012 9.89574L2.64 11.5117C2.4026 11.6261 2.13335 11.4302 2.16857 11.1691L2.66727 7.47439L0.091994 4.77824C-0.0901618 4.58764 0.0128587 4.27086 0.27222 4.22381L3.94019 3.55623L5.70867 0.274049C5.83364 0.0419511 6.16635 0.0419511 6.29156 0.274049Z" fill="#FFCB2E"/>
+      </svg>
+    ),
+  },
+};
+
 // ── Badge Icons (멀티컬러 — 배지 전용 아이콘) ──────────────────────────────
 export const BADGE_ICONS = {
   "ic_lowest": {
@@ -223,6 +236,16 @@ export function YdsIcon({ name, size = 24, color = "#333333", style }) {
     return (
       <span style={{ display: "inline-flex", flexShrink: 0, ...style }}>
         {flatIcon.svg(size, color)}
+      </span>
+    );
+  }
+
+  // 리뷰 별점 아이콘
+  const starIcon = STAR_ICON[name];
+  if (starIcon) {
+    return (
+      <span style={{ display: "inline-flex", flexShrink: 0, ...style }}>
+        {starIcon.svg(size)}
       </span>
     );
   }
