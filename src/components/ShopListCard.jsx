@@ -28,7 +28,7 @@ function RedBenefitBanner({ items = [] }) {
       display: "flex", gap: 2, alignItems: "center", justifyContent: "center",
       height: 20, padding: "4px 6px",
       background: "#FA0050", borderRadius: 12,
-      overflow: "hidden", width: "100%", maxWidth: 300,
+      overflow: "hidden", width: "100%", maxWidth: 290, minWidth: 258,
     }}>
       {items.map((text, i) => (
         <span key={i} style={{ display: "flex", alignItems: "center", gap: 2 }}>
