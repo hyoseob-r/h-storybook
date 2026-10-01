@@ -24,7 +24,7 @@ import BottomNavSection from "./components/BottomNav.jsx";
 import StickyCTASection from "./components/StickyCTA.jsx";
 import ShopListCardSection from "./components/ShopListCard.jsx";
 import SwimlaneCardSection from "./components/SwimlaneCard.jsx";
-import ShortcutCardSection from "./components/ShortcutCard.jsx";
+// ShortcutCard 삭제됨 — VerticalLauncher로 대체
 import VerticalLauncherSection from "./components/VerticalLauncher.jsx";
 import FoodCategorySection from "./components/FoodCategory.jsx";
 import QCSwimlaneSection from "./components/QCSwimlane.jsx";
@@ -54,10 +54,8 @@ const NAV_SECTIONS = [
     { id: "stepper",   label: "NumericStepper", icon: "±" },
     { id: "stickycta", label: "StickyCTA",      icon: "▤" },
     { id: "bottomnav", label: "BottomNav",      icon: "▣" },
-    { id: "glassnav",  label: "Liquid Glass",   icon: "✦" },
     { id: "shoplist",  label: "ShopList Card",   icon: "☰" },
     { id: "swimlane",  label: "Swimlane Card",   icon: "◫" },
-    { id: "shortcut",  label: "Shortcut Card",   icon: "⊞" },
     { id: "vlauncher", label: "Vertical Launcher", icon: "⊟" },
     { id: "foodcat",   label: "Food Category",  icon: "🍽" },
     { id: "qcswimlane", label: "QC Swimlane",   icon: "🛒" },
@@ -75,6 +73,7 @@ const NAV_SECTIONS = [
     { id: "council",   label: "Council",   icon: "⚡" },
   ]},
   { label: "Tools", items: [
+    { id: "glassnav",  label: "Liquid Glass",  icon: "✦" },
     { id: "simulator", label: "Simulator", icon: "📱" },
     { id: "drafts",    label: "Drafts",    icon: "◈" },
     { id: "figma",     label: "Category",  icon: "✦" },
@@ -170,7 +169,6 @@ export default function App() {
     if (active === "stickycta")  return <StickyCTASection />;
     if (active === "shoplist")   return <ShopListCardSection />;
     if (active === "swimlane")   return <SwimlaneCardSection />;
-    if (active === "shortcut")   return <ShortcutCardSection />;
     if (active === "brandnew")   return <BrandnewBannerSection />;
     if (active === "discountbrand") return <DiscountBrandSwimlaneSection />;
     if (active === "assets")     return <AssetsSection />;
