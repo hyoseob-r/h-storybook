@@ -23,17 +23,26 @@ function QCItem({ label, assetOn, assetOff, badge, showBadge = true, onClick }) 
   return (
     <div onClick={onClick} style={{
       display: "flex", flexDirection: "column", alignItems: "center",
-      width: 72, flexShrink: 0, cursor: "pointer",
+      width: 70, flexShrink: 0, cursor: "pointer",
       fontFamily: "Pretendard, Roboto, sans-serif",
     }}>
-      {/* 이미지 영역 72x56 */}
-      <div style={{ width: 72, height: 56, position: "relative" }}>
-        {imgSrc && (
-          <img src={imgSrc} alt={label} style={{
-            width: 72, height: 56, objectFit: "contain",
-            display: "block",
-          }} />
+      {/* 이미지 + 뱃지 영역 */}
+      <div style={{ width: 70, position: "relative" }}>
+        {/* 혜택 뱃지 — 이미지 위 상단 중앙 */}
+        {hasBadge && (
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: -4, position: "relative", zIndex: 1 }}>
+            <BenefitBadge label={badge} />
+          </div>
         )}
+        {/* 이미지 72x56 → 70 맞춤 */}
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          {imgSrc && (
+            <img src={imgSrc} alt={label} style={{
+              width: 72, height: 56, objectFit: "contain",
+              display: "block",
+            }} />
+          )}
+        </div>
       </div>
       {/* 라벨 */}
       <span style={{
