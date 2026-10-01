@@ -112,7 +112,7 @@ export default function QCSwimlaneSection() {
 
       {/* Preview */}
       <div style={{ fontSize: 11, fontWeight: 700, color: "#999", marginBottom: 8 }}>Preview</div>
-      <div style={{ width: "100%", background: "#fff", borderRadius: 12, overflow: "hidden", border: "1px solid #e8e8e8" }}>
+      <div style={{ width: "100%", overflow: "hidden" }}>
         <QCSwimlaneRow badgeStates={badgeStates} />
       </div>
     </div>
