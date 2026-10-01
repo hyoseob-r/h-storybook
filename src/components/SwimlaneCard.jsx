@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { metaTokens } from "../tokens";
 import { YdsIcon } from "../icons.jsx";
-import { SingleBadge, GroupBadge, LogoBadge } from "./Badge.jsx";
+import { SingleBadge, GroupBadge, LogoBadge, AdBadge } from "./Badge.jsx";
 import { RatingCompact } from "./Rating.jsx";
 import { getShopLogo } from "../shopLogos";
 import { getShopImage, imageStyle } from "../shopImages";
@@ -96,13 +96,11 @@ export function SwimlaneCard({
           </div>
         )}
 
-        {/* AD label */}
+        {/* AD badge */}
         {isAd && (
-          <span style={{
-            position: "absolute", bottom: 6, left: 6,
-            fontSize: 9, color: "#fff", background: "rgba(0,0,0,0.12)",
-            padding: "2px 5px", borderRadius: 100, lineHeight: 1,
-          }}>AD</span>
+          <div style={{ position: "absolute", bottom: 6, left: 6 }}>
+            <AdBadge />
+          </div>
         )}
 
         {/* Inline border */}

@@ -6,6 +6,18 @@ import { YdsIcon } from "../icons.jsx";
 // Figma: 📌 Customer-Component > Badge
 // 스타일: 흰색 bg + gray100 보더 + outlined 스타일 (이전 filled 스타일에서 변경됨)
 
+// ── AD 뱃지 (이미지 기반, 전역 단일 소스) ────────────────────────────────────
+// 이 이미지가 교체되면 모든 컴포넌트에 동일하게 적용됨
+const AD_BADGE_SRC = "/assets/badge-icons/Tag_AD.png";
+export function AdBadge({ style: customStyle }) {
+  return (
+    <img src={AD_BADGE_SRC} alt="AD" style={{
+      height: 16, width: "auto", display: "block",
+      ...customStyle,
+    }} />
+  );
+}
+
 const BADGE_SIZES = {
   small: { height: 18, fontSize: 10, lineHeight: 14, iconSize: 12, px: 4, labelPx: 2, gap: 2, radius: metaTokens.radius.meta_r1 },
   medium: { height: 22, fontSize: 12, lineHeight: 16, iconSize: 16, px: 4, labelPx: 2, gap: 2, radius: metaTokens.radius.meta_r1 },

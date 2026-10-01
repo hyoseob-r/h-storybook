@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { metaTokens } from "../tokens";
 import { YdsIcon } from "../icons.jsx";
-import { SingleBadge, GroupBadge, LogoBadge } from "./Badge.jsx";
+import { SingleBadge, GroupBadge, LogoBadge, AdBadge } from "./Badge.jsx";
 import { RatingCompact } from "./Rating.jsx";
 import { getShopLogo } from "../shopLogos";
 import { getMenusByShop, getShopImage, imageStyle } from "../shopImages";
@@ -251,13 +251,6 @@ export function ShopListCard({
         {/* Logo — 36px (신규) */}
         <div style={{ flexShrink: 0, position: "relative" }}>
           <LogoBadge src={logoSrc} size={36} />
-          {isAd && (
-            <span style={{
-              position: "absolute", top: -4, right: -4,
-              fontSize: 9, color: "#fff", background: "rgba(0,0,0,0.12)",
-              padding: "2px 5px", borderRadius: 100, lineHeight: 1,
-            }}>AD</span>
-          )}
         </div>
 
         {/* Info */}
@@ -270,12 +263,7 @@ export function ShopListCard({
                 overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
               }}>{shopName}</span>
               <RatingCompact grade={rating} total={reviewCount} size="small" />
-              {isAd && (
-                <span style={{
-                  fontSize: 9, color: "#fff", background: "rgba(0,0,0,0.12)",
-                  padding: "3px 5px 2px", borderRadius: 100, lineHeight: 1, flexShrink: 0,
-                }}>AD</span>
-              )}
+              {isAd && <AdBadge />}
             </div>
 
             {/* 배달비 */}
