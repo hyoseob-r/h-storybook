@@ -134,11 +134,11 @@ export function ReorderCard({
 
       {/* caption + labelbutton — 바텀 정렬 */}
       <div style={{ marginTop: "auto", flexShrink: 0 }}>
-        {/* gradient 구분선 — 270x12, 좌우 스트레치 */}
+        {/* gradient 구분선 — 좌우 스트레치 */}
         <img
-          src="/assets/ui-elements/gradient_divider.svg"
+          src="/assets/ui-elements/gradient_divider.png"
           alt=""
-          style={{ width: "100%", height: 12, display: "block" }}
+          style={{ width: "100%", height: "auto", display: "block" }}
         />
         {/* LabelButton / text */}
         <div
