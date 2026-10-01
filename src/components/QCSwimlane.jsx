@@ -27,22 +27,20 @@ function QCItem({ label, assetOn, assetOff, badge, showBadge = true, onClick }) 
       fontFamily: "Pretendard, Roboto, sans-serif",
     }}>
       {/* 이미지 + 뱃지 영역 */}
-      <div style={{ width: 70, position: "relative" }}>
-        {/* 혜택 뱃지 — 이미지 위 상단 중앙 */}
+      <div style={{ width: 70, height: 56, position: "relative" }}>
+        {/* 이미지 72x56 */}
+        {imgSrc && (
+          <img src={imgSrc} alt={label} style={{
+            width: 72, height: 56, objectFit: "contain",
+            display: "block", position: "absolute", left: -1, top: 0,
+          }} />
+        )}
+        {/* 혜택 뱃지 — 이미지 상단 중앙 겹침 */}
         {hasBadge && (
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: -4, position: "relative", zIndex: 1 }}>
+          <div style={{ position: "absolute", top: -6, left: "50%", transform: "translateX(-50%)", zIndex: 1 }}>
             <BenefitBadge label={badge} />
           </div>
         )}
-        {/* 이미지 72x56 → 70 맞춤 */}
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          {imgSrc && (
-            <img src={imgSrc} alt={label} style={{
-              width: 72, height: 56, objectFit: "contain",
-              display: "block",
-            }} />
-          )}
-        </div>
       </div>
       {/* 라벨 */}
       <span style={{
