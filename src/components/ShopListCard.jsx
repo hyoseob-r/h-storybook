@@ -267,14 +267,15 @@ export function ShopListCard({
         {/* Info */}
         <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            {/* 가게명 + 별점 */}
+            {/* 가게명 + 별점 + AD */}
             <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
               <span style={{
                 fontSize: 18, fontWeight: 700, color: "#333", lineHeight: "24px",
                 overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                flex: "0 1 auto", minWidth: 0,
               }}>{shopName}</span>
               <RatingCompact grade={rating} total={reviewCount} size="small" />
-              {isAd && <AdBadge />}
+              {isAd && <span style={{ marginLeft: "auto", flexShrink: 0 }}><AdBadge /></span>}
             </div>
 
             {/* 배달비 */}
