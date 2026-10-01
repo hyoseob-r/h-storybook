@@ -47,9 +47,9 @@ export function ReorderCard({
   const banner = BENEFIT_PRESETS[benefitType];
 
   return (
-    <div style={{ width: CARD_WIDTH, flexShrink: 0, fontFamily: "Pretendard, Roboto, sans-serif" }}>
+    <div style={{ width: CARD_WIDTH, height: 300, flexShrink: 0, fontFamily: "Pretendard, Roboto, sans-serif", display: "flex", flexDirection: "column" }}>
       {/* Thumbnail 270x124 + red badge 겹침 */}
-      <div style={{ width: CARD_WIDTH, height: 130, position: "relative" }}>
+      <div style={{ width: CARD_WIDTH, height: 130, position: "relative", flexShrink: 0 }}>
         <div style={{
           width: CARD_WIDTH, height: 124, borderRadius: 12, overflow: "hidden",
           background: "#f2f2f2", position: "relative",
@@ -85,8 +85,8 @@ export function ReorderCard({
         )}
       </div>
 
-      {/* Info — 270x108 */}
-      <div style={{ padding: "6px 12px 0", display: "flex", flexDirection: "column", gap: 4 }}>
+      {/* Info */}
+      <div style={{ padding: "6px 12px 0", display: "flex", flexDirection: "column", gap: 4, flex: 1, minHeight: 0 }}>
         {/* 가게명 + 별점 */}
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <span style={{ fontSize: 16, fontWeight: 700, color: "#333", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
@@ -132,18 +132,26 @@ export function ReorderCard({
         )}
       </div>
 
-      {/* LabelButton — 바로 담기 */}
-      <div style={{ padding: "8px 12px 12px", position: "relative" }}>
+      {/* caption + labelbutton — 바텀 정렬 */}
+      <div style={{ marginTop: "auto", flexShrink: 0 }}>
+        {/* gradient 구분선 — 270x12, 좌우 스트레치 */}
         <div style={{
-          position: "absolute", top: -12, left: 0, right: 0, height: 12,
-          background: "linear-gradient(180deg, transparent 0%, #fff 100%)",
+          width: "100%", height: 12,
+          background: "linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 100%)",
         }} />
-        <button onClick={onReorder} style={{
-          width: "100%", height: 36, borderRadius: 8,
-          background: "#FA0050", border: "none", cursor: "pointer",
-          fontSize: 14, fontWeight: 700, color: "#fff",
-          fontFamily: "Pretendard, Roboto, sans-serif",
-        }}>배달 바로 담기</button>
+        {/* LabelButton / text */}
+        <div
+          onClick={onReorder}
+          style={{
+            width: "100%", height: 36, cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+        >
+          <span style={{
+            fontSize: 14, fontWeight: 700, color: "#333",
+            fontFamily: "Pretendard, Roboto, sans-serif",
+          }}>배달 바로 주문하기</span>
+        </div>
       </div>
     </div>
   );
