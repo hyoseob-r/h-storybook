@@ -202,23 +202,39 @@ export default function BadgeSection() {
         </div>
       </div>
 
-      {/* logoBadge */}
+
+      {/* benefitBadge (혜택뱃지) */}
       <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: "#333", marginBottom: 8 }}>logoBadge</div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <LogoBadge size={44} />
-          <LogoBadge size={64} />
-          <LogoBadge size={88} />
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#333", marginBottom: 8 }}>benefitBadge (혜택뱃지)</div>
+        <div style={{ fontSize: 11, color: "#999", marginBottom: 8 }}>흰 bg + #e5 보더 + shadow level_1 + r9 · 10b primary · maxWidth 70</div>
+        <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+          <BenefitBadge label="3,000원 할인" />
+          <BenefitBadge label="7% 할인" />
+          <BenefitBadge label="15,000원 할인" />
+          <BenefitBadge label="최대 7,000원" />
+          <BenefitBadge label="5% 할인" />
         </div>
       </div>
 
-      {/* iconBadge */}
+      {/* adBadge */}
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#333", marginBottom: 8 }}>adBadge (광고 뱃지)</div>
+        <div style={{ fontSize: 11, color: "#999", marginBottom: 8 }}>이미지 기반 전역 단일 소스 · Tag_AD.png 교체 시 전체 반영</div>
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <AdBadge />
+          <span style={{ fontSize: 11, color: "#ccc" }}>← Tag_AD.png</span>
+        </div>
+      </div>
+
+      {/* starIcon (별점) */}
       <div>
-        <div style={{ fontSize: 13, fontWeight: 700, color: "#333", marginBottom: 8 }}>iconBadge</div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <IconBadge iconName="information" size={24} />
-          <IconBadge iconName="heart" size={32} />
-          <IconBadge iconName="gift" size={40} bg="#FFE6EE" />
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#333", marginBottom: 8 }}>starIcon (리뷰 별점)</div>
+        <div style={{ fontSize: 11, color: "#999", marginBottom: 8 }}>이미지 기반 전역 단일 소스 · ic_item_star.svg 교체 시 전체 반영 · #FFCB2E</div>
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <img src="/assets/badge-icons/ic_item_star.svg" alt="★" style={{ width: 12, height: 12 }} />
+          <img src="/assets/badge-icons/ic_item_star.svg" alt="★" style={{ width: 16, height: 16 }} />
+          <img src="/assets/badge-icons/ic_item_star.svg" alt="★" style={{ width: 24, height: 24 }} />
+          <span style={{ fontSize: 11, color: "#ccc" }}>← ic_item_star.svg</span>
         </div>
       </div>
     </div>
