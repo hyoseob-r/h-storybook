@@ -141,24 +141,37 @@ export function TopBanner({
 }
 
 // ── Section (Storybook) ─────────────────────────────────────────────────────
+const controlStyle = {
+  padding: "16px 20px", background: "#fff", borderRadius: 12,
+  border: "1px solid #e8e8e8", marginBottom: 16,
+};
+
 export default function TopBannerSection() {
   const [theme, setTheme] = useState("dark");
 
+  const chipStyle = (active) => ({
+    padding: "4px 12px", borderRadius: 20,
+    border: `1.5px solid ${active ? "#0C74E4" : "#e0e0e0"}`,
+    background: active ? "#0C74E4" : "#fff",
+    color: active ? "#fff" : "#666",
+    fontSize: 10, cursor: "pointer",
+  });
+
   return (
     <div style={{ padding: "24px 0" }}>
-      <div style={{ display: "flex", gap: 8, marginBottom: 16, alignItems: "center" }}>
-        <span style={{ fontSize: 11, color: "#999" }}>Theme:</span>
-        <button onClick={() => setTheme("dark")}
-          style={{ padding: "4px 12px", borderRadius: 20, border: "1.5px solid #e0e0e0",
-            background: theme === "dark" ? "#333" : "#fff", color: theme === "dark" ? "#fff" : "#666",
-            fontSize: 10, cursor: "pointer" }}>Dark</button>
-        <button onClick={() => setTheme("light")}
-          style={{ padding: "4px 12px", borderRadius: 20, border: "1.5px solid #e0e0e0",
-            background: theme === "light" ? "#0C74E4" : "#fff", color: theme === "light" ? "#fff" : "#666",
-            fontSize: 10, cursor: "pointer" }}>Light</button>
+      {/* Controls */}
+      <div style={controlStyle}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: "#333", marginBottom: 10 }}>Options</div>
+        <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+          <span style={{ fontSize: 10, color: "#999", width: 70, flexShrink: 0 }}>Theme</span>
+          <button onClick={() => setTheme("dark")} style={chipStyle(theme === "dark")}>Dark</button>
+          <button onClick={() => setTheme("light")} style={chipStyle(theme === "light")}>Light</button>
+        </div>
       </div>
 
-      {/* Dark theme */}
+      {/* Preview */}
+      <div style={{ fontSize: 11, fontWeight: 700, color: "#999", marginBottom: 8 }}>Preview</div>
+
       <div style={{ marginBottom: 24 }}>
         <div style={{ fontSize: 11, color: "#999", marginBottom: 6 }}>promotion_area_1 — {theme} theme</div>
         <div style={{ width: "100%", borderRadius: 16, overflow: "hidden" }}>

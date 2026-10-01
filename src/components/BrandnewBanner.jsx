@@ -255,10 +255,23 @@ export function BrandnewCarousel({ banners = [], type = "color" }) {
 }
 
 // ── Section (Storybook) ─────────────────────────────────────────────────────
+const controlStyle = {
+  padding: "16px 20px", background: "#fff", borderRadius: 12,
+  border: "1px solid #e8e8e8", marginBottom: 16,
+};
+
 export default function BrandnewBannerSection() {
   const [selectedTheme, setSelectedTheme] = useState("blue");
   const [textInvert, setTextInvert] = useState(true);
   const [showSub, setShowSub] = useState(true);
+
+  const chipStyle = (active) => ({
+    padding: "4px 12px", borderRadius: 20,
+    border: `1.5px solid ${active ? "#0C74E4" : "#e0e0e0"}`,
+    background: active ? "#0C74E4" : "#fff",
+    color: active ? "#fff" : "#666",
+    fontSize: 10, cursor: "pointer",
+  });
 
   return (
     <div style={{ padding: "24px 0" }}>
@@ -266,18 +279,24 @@ export default function BrandnewBannerSection() {
       <div style={{ marginBottom: 40 }}>
         <h3 style={{ fontSize: 16, fontWeight: 700, color: "#333", marginBottom: 16 }}>Image Banner (brandnew banner)</h3>
 
-        <div style={{ display: "flex", gap: 8, marginBottom: 16, alignItems: "center" }}>
-          <span style={{ fontSize: 11, color: "#999" }}>Text color:</span>
-          <button onClick={() => setTextInvert(!textInvert)}
-            style={{ padding: "4px 12px", borderRadius: 20, border: "1.5px solid #e0e0e0",
-              background: textInvert ? "#333" : "#fff", color: textInvert ? "#fff" : "#333",
-              fontSize: 10, cursor: "pointer" }}>{textInvert ? "White" : "Black"}</button>
-          <span style={{ fontSize: 11, color: "#999", marginLeft: 8 }}>Subtitle:</span>
-          <button onClick={() => setShowSub(!showSub)}
-            style={{ padding: "4px 12px", borderRadius: 20, border: `1.5px solid ${showSub ? "#0C74E4" : "#e0e0e0"}`,
-              background: showSub ? "#0C74E4" : "#fff", color: showSub ? "#fff" : "#666",
-              fontSize: 10, cursor: "pointer" }}>{showSub ? "ON" : "OFF"}</button>
+        {/* Controls */}
+        <div style={controlStyle}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#333", marginBottom: 10 }}>Options</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+              <span style={{ fontSize: 10, color: "#999", width: 70, flexShrink: 0 }}>Text color</span>
+              <button onClick={() => setTextInvert(true)} style={chipStyle(textInvert)}>White</button>
+              <button onClick={() => setTextInvert(false)} style={chipStyle(!textInvert)}>Black</button>
+            </div>
+            <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+              <span style={{ fontSize: 10, color: "#999", width: 70, flexShrink: 0 }}>Subtitle</span>
+              <button onClick={() => setShowSub(!showSub)} style={chipStyle(showSub)}>{showSub ? "ON" : "OFF"}</button>
+            </div>
+          </div>
         </div>
+
+        {/* Preview */}
+        <div style={{ fontSize: 11, fontWeight: 700, color: "#999", marginBottom: 8 }}>Preview</div>
 
         {/* full indicator */}
         <div style={{ width: "100%", marginBottom: 16 }}>
@@ -317,20 +336,27 @@ export default function BrandnewBannerSection() {
       <div style={{ marginBottom: 40 }}>
         <h3 style={{ fontSize: 16, fontWeight: 700, color: "#333", marginBottom: 16 }}>Color Theme Banner</h3>
 
-        <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
-          <span style={{ fontSize: 11, color: "#999", marginRight: 4 }}>Theme:</span>
-          {BANNER_THEMES.map(t => (
-            <button key={t.id} onClick={() => setSelectedTheme(t.id)}
-              style={{
-                width: 28, height: 28, borderRadius: 8,
-                background: t.bannerBg,
-                border: selectedTheme === t.id ? `2px solid ${t.badgeColor}` : "2px solid transparent",
-                cursor: "pointer",
-              }}
-              title={t.id}
-            />
-          ))}
+        {/* Controls */}
+        <div style={controlStyle}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#333", marginBottom: 10 }}>Options</div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+            <span style={{ fontSize: 10, color: "#999", marginRight: 4 }}>Theme</span>
+            {BANNER_THEMES.map(t => (
+              <button key={t.id} onClick={() => setSelectedTheme(t.id)}
+                style={{
+                  width: 28, height: 28, borderRadius: 8,
+                  background: t.bannerBg,
+                  border: selectedTheme === t.id ? `2px solid ${t.badgeColor}` : "2px solid transparent",
+                  cursor: "pointer",
+                }}
+                title={t.id}
+              />
+            ))}
+          </div>
         </div>
+
+        {/* Preview */}
+        <div style={{ fontSize: 11, fontWeight: 700, color: "#999", marginBottom: 8 }}>Preview</div>
 
         <div style={{ width: "100%", marginBottom: 16 }}>
           <BrandnewBanner
