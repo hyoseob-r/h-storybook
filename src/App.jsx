@@ -143,6 +143,7 @@ export default function App() {
   const [active, setActive] = useState("colors");
   const [pendingDraft, setPendingDraft] = useState(null);
   const [componentCount, setComponentCount] = useState(0);
+  const [previewWidth, setPreviewWidth] = useState(0); // 0 = auto (제한 없음)
 
   useEffect(() => {
     fetchComponents()
@@ -222,11 +223,45 @@ export default function App() {
       {/* Main */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "16px 28px", borderBottom: "1px solid #e5e5e5", background: "#ffffff", flexShrink: 0 }}>
-          <div style={{ fontSize: "18px", fontWeight: 700, color: "#111111" }}>{titles[active]}</div>
-          <div style={{ fontSize: "11px", color: "#aaaaaa", marginTop: "3px" }}>{subtitles[active]}</div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div>
+              <div style={{ fontSize: "18px", fontWeight: 700, color: "#111111" }}>{titles[active]}</div>
+              <div style={{ fontSize: "11px", color: "#aaaaaa", marginTop: "3px" }}>{subtitles[active]}</div>
+            </div>
+            {/* 해상도(가로) 컨트롤 */}
+            <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
+              {[0, 320, 360, 390, 428, 768].map(w => (
+                <button key={w} onClick={() => setPreviewWidth(w)}
+                  style={{
+                    padding: "3px 8px", borderRadius: 12,
+                    border: `1px solid ${previewWidth === w ? "#0C74E4" : "#e0e0e0"}`,
+                    background: previewWidth === w ? "#0C74E4" : "#fff",
+                    color: previewWidth === w ? "#fff" : "#888",
+                    fontSize: 10, cursor: "pointer", whiteSpace: "nowrap",
+                  }}>{w === 0 ? "Auto" : `${w}px`}</button>
+              ))}
+              <input
+                type="number" placeholder="px"
+                value={previewWidth || ""}
+                onChange={e => setPreviewWidth(Number(e.target.value) || 0)}
+                style={{
+                  width: 56, padding: "3px 6px", borderRadius: 8,
+                  border: "1px solid #e0e0e0", fontSize: 10, color: "#333",
+                  textAlign: "center",
+                }}
+              />
+            </div>
+          </div>
         </div>
-        <div style={{ flex: 1, overflowY: "auto", padding: "28px", scrollbarWidth: "thin", scrollbarColor: "#e5e5e5 transparent" }}>
-          {renderContent()}
+        <div style={{ flex: 1, overflowY: "auto", overflowX: "auto", padding: "28px", scrollbarWidth: "thin", scrollbarColor: "#e5e5e5 transparent" }}>
+          <div style={{
+            width: previewWidth > 0 ? previewWidth : "100%",
+            maxWidth: previewWidth > 0 ? previewWidth : "none",
+            margin: previewWidth > 0 ? "0 auto" : 0,
+            overflow: "hidden",
+          }}>
+            {renderContent()}
+          </div>
         </div>
       </div>
 
