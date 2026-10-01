@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { metaTokens } from "../tokens";
 import { getAllFoodCategories } from "../tabLogos";
 import { BenefitBadge } from "./Badge.jsx";
@@ -91,6 +91,26 @@ function CategoryItem({ id, label, isBrand = false, badge = null, onClick }) {
 }
 
 export function FoodCategorySwimlane({ row1 = ROW1_CATEGORIES, row2 = ROW2_CATEGORIES }) {
+  const scrollRef = useRef(null);
+  const [scrollRatio, setScrollRatio] = useState(0);
+
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    setScrollRatio(maxScroll > 0 ? el.scrollLeft / maxScroll : 0);
+  }, []);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) el.addEventListener("scroll", handleScroll, { passive: true });
+    return () => el?.removeEventListener("scroll", handleScroll);
+  }, [handleScroll]);
+
+  const TRACK_W = 56;
+  const THUMB_W = 24;
+  const thumbLeft = (TRACK_W - THUMB_W) * scrollRatio;
+
   return (
     <div style={{
       background: "#fff",
@@ -98,7 +118,7 @@ export function FoodCategorySwimlane({ row1 = ROW1_CATEGORIES, row2 = ROW2_CATEG
       fontFamily: "Pretendard, Roboto, sans-serif",
       position: "relative",
     }}>
-      <div style={{
+      <div ref={scrollRef} style={{
         display: "flex", gap: 12, overflowX: "auto", scrollbarWidth: "none",
       }}>
         {/* 좌측 세로배너 */}
@@ -122,10 +142,14 @@ export function FoodCategorySwimlane({ row1 = ROW1_CATEGORIES, row2 = ROW2_CATEG
         </div>
       </div>
 
-      {/* Scroll indicator */}
+      {/* Scroll indicator — 스크롤 위치 연동 */}
       <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
-        <div style={{ width: 56, height: 4, borderRadius: 360, background: "rgba(0,0,0,0.08)", overflow: "hidden" }}>
-          <div style={{ width: 24, height: 4, borderRadius: 360, background: "#333" }} />
+        <div style={{ width: TRACK_W, height: 4, borderRadius: 360, background: "rgba(0,0,0,0.08)", position: "relative" }}>
+          <div style={{
+            width: THUMB_W, height: 4, borderRadius: 360, background: "#333",
+            position: "absolute", left: thumbLeft, top: 0,
+            transition: "left 0.05s ease-out",
+          }} />
         </div>
       </div>
 
