@@ -51,85 +51,78 @@ const DEFAULT_BOTTOM_BADGES = [
   { text: "위생안심", colorStyle: "gray" },
 ];
 
-// ── 메뉴 썸네일 가로 스크롤 + auto_transition (pull-to-transition) ───────────
-// Wolf 앱 레퍼런스 — 풀투리프레시와 동일한 인터랙션:
-// 1. 스크롤 끝까지 닿으면 네이티브 스크롤 멈춤
-// 2. 거기서 더 당기면 컨텐츠가 왼쪽으로 밀리면서 버튼이 28→56 커짐
-// 3. 임계(threshold)까지 당기면 → 화면 전환 (onTransition)
-// 4. 임계 전에 놓으면 → 원래 위치 + 원래 크기로 스냅백
-// 5. 임계에 닿았어도 → 스냅백 후 전환
-const BTN_AREA = 56;
+// ── 메뉴 썸네일 가로 스크롤 + auto_transition ────────────────────────────────
+// 실제 상용 Swift 코드(InteractionViewAllButtonView.swift) 기반 구현:
+// - minButtonSize: 28, maxButtonSize: 48
+// - leftMargin: 16 (Spacing.s7), trailingMargin: 4
+// - 전체 버튼 영역: leftMargin(16) + maxButtonSize(48) + trailingMargin(4) = 68
+// - 버튼: 28 + (48-28) * pullProgress, .leading 정렬
+// - pullProgress >= 1 + 드래그 중 → 햅틱 + 화면전환
 const BTN_MIN = 28;
-const BTN_MAX = 56;
-const THUMB_BTN_GAP = 36;
-const PULL_THRESHOLD = 80; // 이만큼 당기면 전환
+const BTN_MAX = 48;
+const LEFT_MARGIN = 16;
+const TRAILING_MARGIN = 4;
+const BTN_AREA_W = LEFT_MARGIN + BTN_MAX + TRAILING_MARGIN; // 68
 
 function MenuThumbnailRow({ shopId, onTransition }) {
   const menus = getMenusByShop(shopId);
   const scrollRef = useRef(null);
-  const [pullOffset, setPullOffset] = useState(0); // 실제 당긴 px
+  const [pullProgress, setPullProgress] = useState(0); // 0~1
   const pulling = useRef(false);
   const anchorX = useRef(0);
+  const triggered = useRef(false);
 
-  // 터치/마우스 시작
   const onPointerDown = useCallback((e) => {
-    const x = e.touches ? e.touches[0].clientX : e.clientX;
-    anchorX.current = x;
+    anchorX.current = e.touches ? e.touches[0].clientX : e.clientX;
+    triggered.current = false;
   }, []);
 
-  // 터치/마우스 이동
   const onPointerMove = useCallback((e) => {
     const el = scrollRef.current;
     if (!el) return;
     const x = e.touches ? e.touches[0].clientX : e.clientX;
-
-    // 네이티브 스크롤이 끝에 도달했는지 체크
     const remaining = el.scrollWidth - el.scrollLeft - el.clientWidth;
     const atEnd = remaining < 2;
 
     if (atEnd && !pulling.current) {
-      // 끝에 닿은 순간 — 앵커 잡기
       pulling.current = true;
       anchorX.current = x;
     }
 
     if (pulling.current) {
       const rawPull = Math.max(0, anchorX.current - x);
-      // 러버밴드 저항 — 많이 당길수록 점점 무거워짐
-      const dampened = PULL_THRESHOLD * (1 - Math.exp(-rawPull / PULL_THRESHOLD));
-      setPullOffset(dampened);
+      // 러버밴드: 80px raw → progress 1.0
+      const progress = Math.min(1, rawPull / 80);
+      setPullProgress(progress);
+
+      // progress >= 1 + 아직 트리거 안 됨 → 전환
+      if (progress >= 1 && !triggered.current) {
+        triggered.current = true;
+        // 웹에서 햅틱 시도 (지원 시)
+        if (navigator.vibrate) navigator.vibrate(10);
+        if (onTransition) onTransition();
+      }
     }
 
-    // 끝에서 벗어나면 (오른쪽으로 되돌아가면) pull 해제
     if (!atEnd && pulling.current) {
       pulling.current = false;
-      setPullOffset(0);
+      setPullProgress(0);
     }
-  }, []);
+  }, [onTransition]);
 
-  // 터치/마우스 끝 — 스냅백
   const onPointerUp = useCallback(() => {
-    const didReachThreshold = pullOffset >= PULL_THRESHOLD * 0.95;
-    // 스냅백: 당긴 거리 + 스크롤 위치 복원
-    setPullOffset(0);
+    setPullProgress(0);
     pulling.current = false;
-    // 스크롤도 끝 위치로 복원
+    triggered.current = false;
     if (scrollRef.current) {
       const el = scrollRef.current;
       el.scrollTo({ left: el.scrollWidth - el.clientWidth, behavior: "smooth" });
     }
-    if (didReachThreshold && onTransition) {
-      setTimeout(() => onTransition(), 300);
-    }
-  }, [pullOffset, onTransition]);
+  }, []);
 
   if (!menus || menus.length === 0) return null;
 
-  const progress = Math.min(1, pullOffset / PULL_THRESHOLD);
-  const btnSize = BTN_MIN + progress * (BTN_MAX - BTN_MIN);
-  const btnRadius = 10 + progress * 10;
-  const iconSize = 16 + progress * 16;
-  const btnBorder = 1.3 + progress * 1.3;
+  const btnSize = BTN_MIN + (BTN_MAX - BTN_MIN) * pullProgress;
 
   return (
     <div style={{ width: "100%", overflow: "hidden" }}>
@@ -147,8 +140,6 @@ function MenuThumbnailRow({ shopId, onTransition }) {
           overflowX: "auto", scrollbarWidth: "none",
           WebkitOverflowScrolling: "touch",
           paddingLeft: 16,
-          transform: pullOffset > 0 ? `translateX(-${pullOffset}px)` : "none",
-          transition: pullOffset > 0 ? "none" : "transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
         }}
       >
         {/* 메뉴 썸네일들 */}
@@ -178,22 +169,23 @@ function MenuThumbnailRow({ shopId, onTransition }) {
           </div>
         ))}
 
-        {/* gap 36px + 버튼 영역 56x56 고정 */}
+        {/* 버튼 영역: leftMargin(16) + maxBtn(48) + trailing(4) = 68, .leading 정렬 */}
         <div style={{
-          flexShrink: 0, marginLeft: THUMB_BTN_GAP,
-          width: BTN_AREA, height: BTN_AREA,
-          display: "flex", alignItems: "center", justifyContent: "flex-start",
+          flexShrink: 0,
+          width: BTN_AREA_W, height: BTN_MAX,
+          display: "flex", alignItems: "center",
+          paddingLeft: LEFT_MARGIN, paddingRight: TRAILING_MARGIN,
         }}>
           <div onClick={onTransition} style={{
-            display: "flex", alignItems: "center", justifyContent: "center",
             width: btnSize, height: btnSize,
-            borderRadius: btnRadius,
+            borderRadius: 10,
             background: "#f6f6f6",
-            border: `${btnBorder}px solid #e5e5e5`,
+            border: "1.3px solid #e5e5e5",
+            display: "flex", alignItems: "center", justifyContent: "center",
             cursor: "pointer",
-            transition: pullOffset > 0 ? "none" : "all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+            transition: pullProgress > 0 ? "none" : "all 0.3s ease-out",
           }}>
-            <YdsIcon name="chevron_right_s" size={iconSize} color="#999" />
+            <YdsIcon name="chevron_right_s" size={btnSize * 0.57} color="#999" />
           </div>
         </div>
       </div>
