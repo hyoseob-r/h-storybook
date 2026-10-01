@@ -210,12 +210,12 @@ export function SwimlaneRow({
 // ── Section (Storybook) ─────────────────────────────────────────────────────
 export default function SwimlaneCardSection() {
   const sampleShops = [
-    { shopName: "서브웨이 서초점", thumbSrc: getShopImage("sandwitch_1"), logoSrc: getShopLogo("subway"), menuLabel: "에그마요", menuPrice: "6,900원", rating: 4.8, reviewCount: 1523, deliveryTime: "25~40분", deliveryFee: "0원", distance: "0.8km", benefitType: "ypx_free", badges: ["lowest", "specialpoint"] },
-    { shopName: "맘스터치 강남역점", thumbSrc: getShopImage("burger_1"), logoSrc: getShopLogo("moms"), menuLabel: "싸이버거", menuPrice: "5,900원", rating: 4.5, reviewCount: 892, deliveryTime: "30~45분", deliveryFee: "1,000원", distance: "1.5km", badges: ["discount"] },
-    { shopName: "피자헛 역삼점", thumbSrc: getShopImage("pizza_1"), logoSrc: getShopLogo("pizzahut"), menuLabel: "슈퍼슈프림", menuPrice: "24,900원", rating: 4.2, reviewCount: 456, deliveryTime: "35~50분", deliveryFee: "0원", distance: "2.1km", benefitType: "single_discount", badges: ["ranking"] },
-    { shopName: "교촌치킨 서초점", thumbSrc: getShopImage("chiken_1"), logoSrc: getShopLogo("kyochon"), menuLabel: "허니콤보", menuPrice: "19,000원", rating: 4.6, reviewCount: 2103, deliveryTime: "40~55분", deliveryFee: "2,000원", distance: "1.2km", badges: ["lowest"] },
-    { shopName: "BHC 강남점", thumbSrc: getShopImage("chiken_2"), logoSrc: getShopLogo("bhc"), menuLabel: "뿌링클", menuPrice: "18,000원", rating: 4.4, reviewCount: 731, deliveryTime: "35~50분", deliveryFee: "1,500원", distance: "0.5km", isAd: true, badges: ["specialpoint"] },
-    { shopName: "본도시락 역삼역", thumbSrc: getShopImage("hansik_1"), logoSrc: getShopLogo("bon"), menuLabel: "고추장불고기", menuPrice: "8,500원", rating: 4.7, reviewCount: 1890, deliveryTime: "20~35분", deliveryFee: "0원", distance: "372m", benefitType: "ypx_free", badges: ["lowest", "specialpoint", "ranking"] },
+    { shopName: "서브웨이 서초점", thumbSrc: getShopImage("sandwitch_1"), logoSrc: getShopLogo("subway"), rating: 4.8, reviewCount: 1523, deliveryTime: "25~40분", deliveryFee: "0원", distance: "0.8km", benefitType: "ypx_free", badges: ["lowest", "specialpoint"] },
+    { shopName: "맘스터치 강남역점", thumbSrc: getShopImage("burger_1"), rating: 4.5, reviewCount: 892, deliveryTime: "30~45분", deliveryFee: "1,000원", distance: "1.5km", badges: ["discount"] },
+    { shopName: "피자헛 역삼점", thumbSrc: getShopImage("pizza_1"), logoSrc: getShopLogo("pizzahut"), rating: 4.2, reviewCount: 456, deliveryTime: "35~50분", deliveryFee: "0원", distance: "2.1km", benefitType: "single_discount", badges: ["ranking"] },
+    { shopName: "교촌치킨 서초점", thumbSrc: getShopImage("chiken_1"), rating: 4.6, reviewCount: 2103, deliveryTime: "40~55분", deliveryFee: "2,000원", distance: "1.2km", badges: ["lowest"] },
+    { shopName: "BHC 강남점", thumbSrc: getShopImage("chiken_2"), logoSrc: getShopLogo("bhc"), rating: 4.4, reviewCount: 731, deliveryTime: "35~50분", deliveryFee: "1,500원", distance: "0.5km", isAd: true, badges: ["specialpoint"] },
+    { shopName: "본도시락 역삼역", thumbSrc: getShopImage("hansik_1"), logoSrc: getShopLogo("bon"), rating: 4.7, reviewCount: 1890, deliveryTime: "20~35분", deliveryFee: "0원", distance: "372m", benefitType: "ypx_free", badges: ["lowest", "specialpoint", "ranking"] },
   ];
 
   return (
