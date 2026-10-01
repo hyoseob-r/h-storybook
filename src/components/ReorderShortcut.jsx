@@ -93,7 +93,7 @@ export function ReorderCard({
       </div>
 
       {/* Info */}
-      <div style={{ padding: "6px 12px 0", display: "flex", flexDirection: "column", gap: 4, flex: 1, minHeight: 0 }}>
+      <div style={{ padding: "6px 12px 0", display: "flex", flexDirection: "column", gap: 4, flex: "1 0 0", minHeight: 0, overflow: "hidden" }}>
         {/* 가게명 + 별점 */}
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <span style={{ fontSize: 16, fontWeight: 700, color: "#333", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
