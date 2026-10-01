@@ -27,7 +27,7 @@ export function StickyCTA({
 }) {
   return (
     <div style={{
-      width: 360, borderRadius: `${metaTokens.radius.meta_r5}px ${metaTokens.radius.meta_r5}px 0 0`,
+      width: "100%", borderRadius: `${metaTokens.radius.meta_r5}px ${metaTokens.radius.meta_r5}px 0 0`,
       overflow: "hidden",
       boxShadow: "0 -1px 8px rgba(25,48,64,0.10), 0 0 2px rgba(25,48,64,0.08)",
       fontFamily: "Pretendard, Roboto, sans-serif",
@@ -121,10 +121,10 @@ export default function StickyCTASection() {
       <div style={{ marginTop: 32 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: "#333", marginBottom: 12 }}>PriceButton variants</div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <div style={{ width: 200 }}><PriceButton label="23,900원 담기" /></div>
-          <div style={{ width: 200 }}><PriceButton label="버튼" strikePrice="25,000" /></div>
-          <div style={{ width: 200 }}><PriceButton label="버튼" countBadge={3} /></div>
-          <div style={{ width: 200 }}><PriceButton label="품절" disabled /></div>
+          <div style={{ width: "100%", maxWidth: 200 }}><PriceButton label="23,900원 담기" /></div>
+          <div style={{ width: "100%", maxWidth: 200 }}><PriceButton label="버튼" strikePrice="25,000" /></div>
+          <div style={{ width: "100%", maxWidth: 200 }}><PriceButton label="버튼" countBadge={3} /></div>
+          <div style={{ width: "100%", maxWidth: 200 }}><PriceButton label="품절" disabled /></div>
         </div>
       </div>
     </div>
