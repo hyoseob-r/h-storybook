@@ -70,14 +70,6 @@ export function QCSwimlaneRow({ items = QC_ITEMS }) {
       <div style={{ display: "flex", gap: 4, alignItems: "center", flexShrink: 0 }}>
         {items.map((item, i) => <QCItem key={item.id || i} {...item} />)}
       </div>
-      {/* auto_transition */}
-      <div style={{
-        width: 28, height: 28, borderRadius: 10, flexShrink: 0,
-        background: "#f6f6f6", border: "1.3px solid #e5e5e5",
-        display: "flex", alignItems: "center", justifyContent: "center",
-      }}>
-        <YdsIcon name="chevron_right_s" size={16} color="#999" />
-      </div>
     </div>
   );
 }
