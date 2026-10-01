@@ -104,11 +104,11 @@ export default function GlobalHomeSection() {
 
           {/* 2. Vertical Launcher */}
           <VerticalLauncherRow items={[
-            { id: "yogiplus", icon: "point", label: "요기더+적립" },
-            { id: "takeout", icon: "receipt", label: "포장", badge: "7% 할인" },
-            { id: "gift", icon: "gift", label: "선물하기" },
-            { id: "rank", icon: "ic_bpr", label: "할인랭킹" },
-            { id: "robot", icon: "house", label: "로봇배달" },
+            { id: "yogiplus", img: "VerticalLauncher_44x44_요기더적립.png", label: "요기더+적립" },
+            { id: "takeout", img: "VerticalLauncher_44x44_포장주문.png", label: "포장", badge: "7% 할인" },
+            { id: "gift", img: "VerticalLauncher_44x44_선물하기.png", label: "선물하기" },
+            { id: "rank", img: "VerticalLauncher_44x44_할인랭킹.png", label: "할인랭킹" },
+            { id: "robot", img: "VerticalLauncher_44x44_로봇배달.png", label: "로봇배달" },
           ]} />
 
           {/* 2.5. Food Category */}
