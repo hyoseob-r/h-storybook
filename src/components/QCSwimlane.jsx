@@ -51,7 +51,7 @@ function QCItem({ id, label, bgColor = "#f2f2f2", logoSrc = null, badge = null, 
             }}>
               <span style={{
                 display: "inline-flex", alignItems: "center", justifyContent: "center",
-                background: "#fff", border: "0.5px solid #e5e5e5",
+                background: "transparent", border: "none",
                 borderRadius: 9, padding: "1px 4px",
                 fontSize: 10, fontWeight: 700, color: "#FA0050",
                 lineHeight: "14px", whiteSpace: "nowrap",
