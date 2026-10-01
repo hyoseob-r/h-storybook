@@ -25,16 +25,16 @@ export function AdBadge({ style: customStyle }) {
 const BENEFIT_BADGE_SHADOW = "0px 0px 2px rgba(25,48,64,0.08), 0px 1px 8px rgba(25,48,64,0.1)";
 export function BenefitBadge({ label = "3,000원 할인" }) {
   return (
-    <div style={{ maxWidth: 70, boxShadow: BENEFIT_BADGE_SHADOW }}>
-      <span style={{
-        display: "inline-flex", alignItems: "center", justifyContent: "center",
-        background: "#fff", border: "0.5px solid #e5e5e5",
-        borderRadius: 9, padding: "1px 4px",
-        fontSize: 10, fontWeight: 700, color: "#FA0050",
-        lineHeight: "14px", whiteSpace: "nowrap",
-        textAlign: "center", overflow: "hidden", textOverflow: "ellipsis",
-      }}>{label}</span>
-    </div>
+    <span style={{
+      display: "inline-flex", alignItems: "center", justifyContent: "center",
+      maxWidth: 70,
+      background: "#fff", border: "0.5px solid #e5e5e5",
+      borderRadius: 9, padding: "1px 4px",
+      boxShadow: BENEFIT_BADGE_SHADOW,
+      fontSize: 10, fontWeight: 700, color: "#FA0050",
+      lineHeight: "14px", whiteSpace: "nowrap",
+      textAlign: "center", overflow: "hidden", textOverflow: "ellipsis",
+    }}>{label}</span>
   );
 }
 
