@@ -111,7 +111,7 @@ export function SwimlaneCard({
       {banner && (
         <div style={{
           display: "flex", gap: 2, alignItems: "center", justifyContent: "center",
-          height: 20, padding: "4px 6px", marginTop: -10,
+          height: 20, padding: "4px 6px", marginTop: -10, marginLeft: 4, marginRight: 4,
           background: "#FA0050", borderRadius: 12,
           overflow: "hidden", position: "relative", zIndex: 1,
         }}>
