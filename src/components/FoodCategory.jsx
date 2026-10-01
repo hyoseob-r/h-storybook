@@ -142,7 +142,7 @@ export default function FoodCategorySection() {
     <div style={{ padding: "24px 0" }}>
       <div style={{ marginBottom: 24 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: "#333", marginBottom: 12 }}>FoodCategory Swimlane (390px)</div>
-        <div style={{ width: 390, borderRadius: 0, overflow: "hidden" }}>
+        <div style={{ width: "100%", borderRadius: 0, overflow: "hidden" }}>
           <FoodCategorySwimlane />
         </div>
       </div>

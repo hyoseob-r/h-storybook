@@ -161,7 +161,7 @@ export default function TopBannerSection() {
       {/* Dark theme */}
       <div style={{ marginBottom: 24 }}>
         <div style={{ fontSize: 11, color: "#999", marginBottom: 6 }}>promotion_area_1 — {theme} theme</div>
-        <div style={{ width: 390, borderRadius: 16, overflow: "hidden" }}>
+        <div style={{ width: "100%", borderRadius: 16, overflow: "hidden" }}>
           <TopBanner
             theme={theme}
             bgColor={theme === "dark" ? "#1a1a2e" : "#E8F0FF"}
@@ -181,7 +181,7 @@ export default function TopBannerSection() {
           { bg: "#FFE6EE", theme: "light", title: "선착순 특가" },
           { bg: "#E8F5E9", theme: "light", title: "네이버 멤버십" },
         ].map((v, i) => (
-          <div key={i} style={{ width: 390, borderRadius: 16, overflow: "hidden", marginBottom: 12 }}>
+          <div key={i} style={{ width: "100%", borderRadius: 16, overflow: "hidden", marginBottom: 12 }}>
             <TopBanner bgColor={v.bg} theme={v.theme} title={v.title} subtitle="오늘만 이 가격!" showSearch={false} />
           </div>
         ))}

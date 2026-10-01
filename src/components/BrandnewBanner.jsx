@@ -280,7 +280,7 @@ export default function BrandnewBannerSection() {
         </div>
 
         {/* full indicator */}
-        <div style={{ width: 390, marginBottom: 16 }}>
+        <div style={{ width: "100%", marginBottom: 16 }}>
           <div style={{ fontSize: 11, color: "#999", marginBottom: 6 }}>텍스트 O · 서브텍스트 {showSub ? "O" : "X"} · {textInvert ? "white" : "black"} · indicator: full</div>
           <BrandnewImageBanner
             bgColor="#1a1a2e"
@@ -293,7 +293,7 @@ export default function BrandnewBannerSection() {
         </div>
 
         {/* short indicator */}
-        <div style={{ width: 390, marginBottom: 16 }}>
+        <div style={{ width: "100%", marginBottom: 16 }}>
           <div style={{ fontSize: 11, color: "#999", marginBottom: 6 }}>텍스트 O · 서브텍스트 X · indicator: short</div>
           <BrandnewImageBanner
             bgColor="#1a1a2e"
@@ -304,7 +304,7 @@ export default function BrandnewBannerSection() {
         </div>
 
         {/* 텍스트 X */}
-        <div style={{ width: 390 }}>
+        <div style={{ width: "100%" }}>
           <div style={{ fontSize: 11, color: "#999", marginBottom: 6 }}>텍스트 X (이미지만)</div>
           <BrandnewImageBanner
             bgColor="#2d1b4e"
@@ -332,7 +332,7 @@ export default function BrandnewBannerSection() {
           ))}
         </div>
 
-        <div style={{ width: 390, marginBottom: 16 }}>
+        <div style={{ width: "100%", marginBottom: 16 }}>
           <BrandnewBanner
             themeId={selectedTheme}
             title="선착순 특가"
@@ -344,7 +344,7 @@ export default function BrandnewBannerSection() {
 
         {/* All 10 themes */}
         <div style={{ fontSize: 13, fontWeight: 700, color: "#333", marginBottom: 12 }}>All 10 Themes</div>
-        <div style={{ width: 390, display: "flex", flexDirection: "column", gap: 12 }}>
+        <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 12 }}>
           {BANNER_THEMES.map(t => (
             <BrandnewBanner
               key={t.id}
@@ -361,7 +361,7 @@ export default function BrandnewBannerSection() {
       {/* ── Carousel ── */}
       <div>
         <h3 style={{ fontSize: 16, fontWeight: 700, color: "#333", marginBottom: 16 }}>Carousel</h3>
-        <div style={{ width: 390 }}>
+        <div style={{ width: "100%" }}>
           <BrandnewCarousel banners={[
             { themeId: "blue", title: "선착순 특가", subtitle: "오늘만 이 가격!", fixedBadges: ["lowest", "specialpoint"] },
             { themeId: "green", title: "네이버 멤버십", subtitle: "최대 10% 적립 혜택", fixedBadges: ["specialpoint"], customBadges: ["네이버페이"] },

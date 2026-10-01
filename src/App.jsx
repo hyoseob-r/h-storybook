@@ -256,9 +256,12 @@ export default function App() {
         <div style={{ flex: 1, overflowY: "auto", overflowX: "auto", padding: "28px", scrollbarWidth: "thin", scrollbarColor: "#e5e5e5 transparent" }}>
           <div style={{
             width: previewWidth > 0 ? previewWidth : "100%",
-            maxWidth: previewWidth > 0 ? previewWidth : "none",
             margin: previewWidth > 0 ? "0 auto" : 0,
-            overflow: "hidden",
+            background: previewWidth > 0 ? "#fff" : "transparent",
+            borderRadius: previewWidth > 0 ? 12 : 0,
+            boxShadow: previewWidth > 0 ? "0 0 0 1px #e5e5e5" : "none",
+            overflow: "visible",
+            "--preview-width": previewWidth > 0 ? `${previewWidth}px` : "100%",
           }}>
             {renderContent()}
           </div>

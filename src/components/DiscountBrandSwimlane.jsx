@@ -157,7 +157,7 @@ export default function DiscountBrandSwimlaneSection() {
       {/* Full component */}
       <div style={{ marginBottom: 32 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: "#333", marginBottom: 12 }}>DiscountBrandSwimlane (3 pages)</div>
-        <div style={{ width: 390, background: "#fff", borderRadius: 12, padding: 16 }}>
+        <div style={{ width: "100%", background: "#fff", borderRadius: 12, padding: 16 }}>
           <DiscountBrandSwimlane brands={SAMPLE_BRANDS} />
         </div>
       </div>
@@ -165,7 +165,7 @@ export default function DiscountBrandSwimlaneSection() {
       {/* Individual BrandCard */}
       <div style={{ marginBottom: 32 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: "#333", marginBottom: 12 }}>BrandCard variants</div>
-        <div style={{ width: 390, background: "#fff", borderRadius: 12, padding: "8px 16px" }}>
+        <div style={{ width: "100%", background: "#fff", borderRadius: 12, padding: "8px 16px" }}>
           <BrandCard shopName="교촌치킨" logoSrc={getShopLogo("kyochon")} benefit="최대 3,000원 할인" badges={["lowest"]} />
           <BrandCard shopName="BBQ 치킨" logoSrc={getShopLogo("bbq")} benefit="2,000원 즉시할인" badges={["specialpoint"]} />
           <BrandCard shopName="청년피자" logoSrc={getShopLogo("youngman")} benefit="최대 5,000원 할인 + 최대 15% 적립" badges={["lowest", "specialpoint", "menu_discount"]} />
@@ -175,7 +175,7 @@ export default function DiscountBrandSwimlaneSection() {
       {/* Without auto transition */}
       <div>
         <div style={{ fontSize: 13, fontWeight: 700, color: "#333", marginBottom: 12 }}>Without auto transition</div>
-        <div style={{ width: 390, background: "#fff", borderRadius: 12, padding: 16 }}>
+        <div style={{ width: "100%", background: "#fff", borderRadius: 12, padding: 16 }}>
           <DiscountBrandSwimlane
             title="지금 핫한 브랜드"
             brands={SAMPLE_BRANDS.slice(0, 6)}

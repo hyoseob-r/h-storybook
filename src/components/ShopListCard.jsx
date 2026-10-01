@@ -356,7 +356,7 @@ export default function ShopListCardSection() {
       </div>
 
       {/* Demo cards */}
-      <div style={{ width: 390, background: "#fff", borderRadius: 12, padding: "0", overflow: "hidden" }}>
+      <div style={{ width: "100%", background: "#fff", borderRadius: 12, padding: "0", overflow: "hidden" }}>
         <ShopListCard
           shopName="본도시락-역삼역"
           shopId="hansik_1"

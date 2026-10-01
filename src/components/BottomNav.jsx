@@ -131,7 +131,7 @@ export function OrderStatusBar({ status = "ordered", shopName = "서브웨이-�
 export function BottomNavNew({ activeTab = "home", onTabChange, floatingBar = null }) {
   return (
     <div style={{
-      display: "flex", flexDirection: "column", gap: 12, width: 390,
+      display: "flex", flexDirection: "column", gap: 12, width: "100%",
       paddingTop: 16, paddingBottom: 20,
       background: "linear-gradient(to bottom, rgba(251,250,249,0) 0%, rgba(251,250,249,0.92) 100%)",
     }}>
@@ -166,7 +166,7 @@ export default function BottomNavSection() {
       </div>
 
       {/* Preview */}
-      <div style={{ background: "#f5f5f5", borderRadius: 16, padding: "40px 0 0", width: 390, margin: "0 auto", overflow: "hidden" }}>
+      <div style={{ background: "#f5f5f5", borderRadius: 16, padding: "40px 0 0", width: "100%", margin: "0 auto", overflow: "hidden" }}>
         <div style={{ height: 200, display: "flex", alignItems: "center", justifyContent: "center", color: "#ccc", fontSize: 13 }}>
           (화면 콘텐츠 영역)
         </div>

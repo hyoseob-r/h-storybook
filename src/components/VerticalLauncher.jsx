@@ -78,7 +78,7 @@ export default function VerticalLauncherSection() {
     <div style={{ padding: "24px 0" }}>
       <div style={{ marginBottom: 24 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: "#333", marginBottom: 12 }}>VerticalLauncher Row</div>
-        <div style={{ width: 390, background: "transparent", borderRadius: 12, overflow: "hidden" }}>
+        <div style={{ width: "100%", background: "transparent", borderRadius: 12, overflow: "hidden" }}>
           <VerticalLauncherRow items={[
             { id: "yogiplus", img: "VerticalLauncher_44x44_요기더적립.png", label: "요기더+적립" },
             { id: "takeout", img: "VerticalLauncher_44x44_포장주문.png", label: "포장", badge: "7% 할인" },

@@ -220,13 +220,13 @@ export default function SwimlaneCardSection() {
 
   return (
     <div style={{ padding: "24px 0" }}>
-      <div style={{ marginBottom: 32, width: 390, background: "#fff", borderRadius: 12, padding: 16, overflow: "hidden" }}>
+      <div style={{ marginBottom: 32, width: "100%", background: "#fff", borderRadius: 12, padding: 16, overflow: "hidden" }}>
         <SwimlaneRow title="이 가게 어때요?">
           {sampleShops.map((s, i) => <SwimlaneCard key={i} {...s} />)}
         </SwimlaneRow>
       </div>
 
-      <div style={{ width: 390, background: "#fff", borderRadius: 12, padding: 16, overflow: "hidden" }}>
+      <div style={{ width: "100%", background: "#fff", borderRadius: 12, padding: 16, overflow: "hidden" }}>
         <SwimlaneRow title="골라먹는 재미">
           {sampleShops.slice(0, 4).map((s, i) => (
             <SwimlaneCard key={i} {...s} benefitType="single_cashback" badges={["cashback", "discount"]} />
