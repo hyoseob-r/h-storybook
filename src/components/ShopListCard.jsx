@@ -288,7 +288,10 @@ export function ShopListCard({
 
           {/* 하단 뱃지 lane — 혜택뱃지는 secondary(파란색) */}
           {badges.length > 0 && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+            <div style={{
+              display: "flex", flexWrap: "wrap", gap: 4,
+              maxHeight: 40, overflow: "hidden", // 2줄 제한 (18px * 2 + gap 4)
+            }}>
               {badges.map((badge, i) => (
                 <SingleBadge
                   key={i}
