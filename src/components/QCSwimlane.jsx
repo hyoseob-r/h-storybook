@@ -37,7 +37,7 @@ function QCItem({ label, assetOn, assetOff, badge, showBadge = true, onClick }) 
         )}
         {/* 혜택 뱃지 — 이미지 상단 중앙 겹침 */}
         {hasBadge && (
-          <div style={{ position: "absolute", top: -6, left: "50%", transform: "translateX(-50%)", zIndex: 1 }}>
+          <div style={{ position: "absolute", top: -4, left: "50%", transform: "translateX(-50%)", zIndex: 1 }}>
             <BenefitBadge label={badge} />
           </div>
         )}
