@@ -187,7 +187,7 @@ export function SwimlaneRow({
   return (
     <div style={{ fontFamily: "Pretendard, Roboto, sans-serif" }}>
       {/* Section header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 0 12px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 16px 12px" }}>
         <span style={{ fontSize: 18, fontWeight: 700, color: "#333" }}>{title}</span>
         {showMore && (
           <button style={{ display: "flex", alignItems: "center", gap: 2, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
@@ -198,7 +198,7 @@ export function SwimlaneRow({
       </div>
       {/* Scrollable row */}
       <div style={{
-        display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4,
+        display: "flex", gap: 8, overflowX: "auto", paddingLeft: 16, paddingBottom: 16,
         scrollbarWidth: "none",
       }}>
         {children}
@@ -220,13 +220,13 @@ export default function SwimlaneCardSection() {
 
   return (
     <div style={{ padding: "24px 0" }}>
-      <div style={{ marginBottom: 32, width: "100%", background: "#fff", borderRadius: 12, padding: 16, overflow: "hidden" }}>
+      <div style={{ marginBottom: 32, width: "100%", background: "#fff", overflow: "hidden" }}>
         <SwimlaneRow title="이 가게 어때요?">
           {sampleShops.map((s, i) => <SwimlaneCard key={i} {...s} />)}
         </SwimlaneRow>
       </div>
 
-      <div style={{ width: "100%", background: "#fff", borderRadius: 12, padding: 16, overflow: "hidden" }}>
+      <div style={{ width: "100%", background: "#fff", overflow: "hidden" }}>
         <SwimlaneRow title="골라먹는 재미">
           {sampleShops.slice(0, 4).map((s, i) => (
             <SwimlaneCard key={i} {...s} benefitType="single_cashback" badges={["cashback", "discount"]} />

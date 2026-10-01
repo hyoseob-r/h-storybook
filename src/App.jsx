@@ -264,7 +264,7 @@ export default function App() {
               background: previewWidth > 0 ? "#fff" : "transparent",
               borderRadius: previewWidth > 0 ? 12 : 0,
               boxShadow: previewWidth > 0 ? "0 0 0 1px #e5e5e5" : "none",
-              overflow: "visible",
+              overflow: previewWidth > 0 ? "hidden" : "visible",
               touchAction: "pan-y",
               cursor: "default",
             }}

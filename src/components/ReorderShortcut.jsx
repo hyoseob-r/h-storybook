@@ -153,10 +153,10 @@ export function ReorderCard({
 export function ReorderRow({ title = "재주문 숏컷", children }) {
   return (
     <div style={{ fontFamily: "Pretendard, Roboto, sans-serif" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 0 12px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 16px 12px" }}>
         <span style={{ fontSize: 18, fontWeight: 700, color: "#333" }}>{title}</span>
       </div>
-      <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4, scrollbarWidth: "none" }}>
+      <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingLeft: 16, paddingBottom: 16, scrollbarWidth: "none" }}>
         {children}
       </div>
     </div>
@@ -167,7 +167,7 @@ export function ReorderRow({ title = "재주문 숏컷", children }) {
 export default function ReorderShortcutSection() {
   return (
     <div style={{ padding: "24px 0" }}>
-      <div style={{ width: "100%", background: "#fff", borderRadius: 12, padding: 16, overflow: "hidden" }}>
+      <div style={{ width: "100%", background: "#fff", overflow: "hidden" }}>
         <ReorderRow title="재주문 숏컷">
           <ReorderCard shopName="본도시락-역삼역" thumbSrc={getShopImage("hansik_1")} logoSrc={getShopLogo("bon")} rating={4.8} reviewCount={1567} deliveryFee="0원" orderCount="3회 주문" previousMenu="고추장불고기x1, 된장찌개x1" benefitType="ypx_free" badges={["lowest", "specialpoint"]} />
           <ReorderCard shopName="교촌치킨 서초점" thumbSrc={getShopImage("chiken_1")} rating={4.6} reviewCount={2103} deliveryFee="2,000원" orderCount="5회 주문" previousMenu="허니콤보x1, 레드콤보x1, 콜라1.25Lx1" benefitType="single_discount" badges={["discount"]} />
