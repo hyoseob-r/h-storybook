@@ -11,8 +11,7 @@ const QC_ITEMS = [
   { id: "grocery",       label: "장보기/쇼핑",   assetOn: "grocery_badge_on.png",       assetOff: "grocery_badge_off.png",       badge: "최대 5,000원" },
   { id: "free_delivery", label: "무료배달위크",   assetOn: "free_delivery_badge_on.png", assetOff: "free_delivery_badge_off.png", badge: "무료배달" },
   { id: "yogiconv",      label: "요편의점",       assetOn: "yogiconv_badge_on.png",      assetOff: "yogiconv_badge_off.png",      badge: "최대 7,000원" },
-  { id: "conv_pickup",   label: "편의점픽업",     assetOn: "conv_pickup_badge_on.png",   assetOff: null,                          badge: "최대 8,000원" },
-  { id: "conv_takeout",  label: "편의점포장",     assetOn: null,                         assetOff: "conv_takeout_badge_off.png",  badge: null },
+  { id: "conv",           label: "편의점",         assetOn: "conv_pickup_badge_on.png",   assetOff: "conv_takeout_badge_off.png",  badge: "최대 8,000원" },
 ];
 
 function QCItem({ label, assetOn, assetOff, badge, showBadge = true, onClick }) {
