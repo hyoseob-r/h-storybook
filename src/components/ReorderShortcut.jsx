@@ -42,9 +42,11 @@ export function ReorderCard({
   benefitType = "none",
   badges = [],
   isAd = false,
+  orderType = "delivery", // "delivery" | "takeout"
   onReorder,
 }) {
   const banner = BENEFIT_PRESETS[benefitType];
+  const buttonLabel = orderType === "takeout" ? "포장 바로 주문하기" : "배달 바로 주문하기";
 
   return (
     <div style={{
@@ -161,7 +163,7 @@ export function ReorderCard({
             <span style={{
               fontSize: 14, fontWeight: 700, lineHeight: "19px", color: "#333",
               fontFamily: "Pretendard, Roboto, sans-serif",
-            }}>배달 바로 주문하기</span>
+            }}>{buttonLabel}</span>
           </div>
         </div>
       </div>
@@ -190,8 +192,9 @@ export default function ReorderShortcutSection() {
       <div style={{ width: "100%", background: "#fff", overflow: "hidden" }}>
         <ReorderRow title="재주문 숏컷">
           <ReorderCard shopName="본도시락-역삼역" thumbSrc={getShopImage("hansik_1")} logoSrc={getShopLogo("bon")} rating={4.8} reviewCount={1567} deliveryFee="0원" orderCount="3회 주문" previousMenu="고추장불고기x1, 된장찌개x1" benefitType="ypx_free" badges={["lowest", "specialpoint"]} />
-          <ReorderCard shopName="교촌치킨 서초점" thumbSrc={getShopImage("chiken_1")} rating={4.6} reviewCount={2103} deliveryFee="2,000원" orderCount="5회 주문" previousMenu="허니콤보x1, 레드콤보x1, 콜라1.25Lx1" benefitType="single_discount" badges={["discount"]} />
+          <ReorderCard shopName="교촌치킨 서초점" thumbSrc={getShopImage("chiken_1")} rating={4.6} reviewCount={2103} deliveryFee="2,000원" orderCount="5회 주문" previousMenu="허니콤보x1, 레드콤보x1, 콜라1.25Lx1" benefitType="single_discount" badges={["discount"]} orderType="takeout" />
           <ReorderCard shopName="서브웨이 서초점" thumbSrc={getShopImage("sandwitch_1")} logoSrc={getShopLogo("subway")} rating={4.5} reviewCount={892} deliveryFee="0원" orderCount="8회 주문" previousMenu="에그마요x2, 쿠키x1" badges={["cashback"]} />
+          <ReorderCard shopName="맘스터치 강남점" thumbSrc={getShopImage("chiken_2")} logoSrc={getShopLogo("moms")} rating={4.3} reviewCount={738} deliveryFee="0원" orderCount="4회 주문" previousMenu="싸이버거x2, 감자튀김x1" benefitType="single_cashback" orderType="takeout" />
           <ReorderCard shopName="피자헛 역삼점" thumbSrc={getShopImage("pizza_1")} logoSrc={getShopLogo("pizzahut")} rating={4.2} reviewCount={456} deliveryFee="0원" orderCount="2회 주문" previousMenu="슈퍼슈프림 라지x1" isAd />
         </ReorderRow>
       </div>
