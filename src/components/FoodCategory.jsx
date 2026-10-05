@@ -140,6 +140,8 @@ export function FoodCategorySwimlane({ row1 = ROW1_CATEGORIES, row2 = ROW2_CATEG
             {row2.map((cat, i) => <CategoryItem key={cat.id || i} {...cat} />)}
           </div>
         </div>
+        {/* 우측 끝 여백 */}
+        <div style={{ width: 16, flexShrink: 0 }} />
       </div>
 
       {/* Scroll indicator — 스크롤 위치 연동 */}
