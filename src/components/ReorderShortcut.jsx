@@ -116,7 +116,7 @@ export function ReorderCard({
           <span>{deliveryTime}</span>
           <span style={{ width: 3, height: 3, borderRadius: 1.5, background: "#ccc" }} />
           <span>{distance}</span>
-          {minOrder && (
+          {minOrder && orderType !== "takeout" && (
             <>
               <span style={{ width: 3, height: 3, borderRadius: 1.5, background: "#ccc" }} />
               <span>최소 {minOrder}</span>
