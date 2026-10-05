@@ -148,18 +148,21 @@ export function ReorderCard({
           backgroundSize: "100% 100%",
           backgroundRepeat: "no-repeat",
         }} />
-        {/* LabelButton / text */}
-        <div
-          onClick={onReorder}
-          style={{
-            width: "100%", height: 36, cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}
-        >
-          <span style={{
-            fontSize: 14, fontWeight: 700, lineHeight: "19px", color: "#333",
-            fontFamily: "Pretendard, Roboto, sans-serif",
-          }}>배달 바로 주문하기</span>
+        {/* LabelButton / text — padding 12좌우 4상하, 246 Fill x 36 */}
+        <div style={{ padding: "4px 12px" }}>
+          <div
+            onClick={onReorder}
+            style={{
+              width: "100%", height: 36, cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              borderRadius: 8,
+            }}
+          >
+            <span style={{
+              fontSize: 14, fontWeight: 700, lineHeight: "19px", color: "#333",
+              fontFamily: "Pretendard, Roboto, sans-serif",
+            }}>배달 바로 주문하기</span>
+          </div>
         </div>
       </div>
     </div>
