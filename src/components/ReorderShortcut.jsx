@@ -84,8 +84,8 @@ export function ReorderCard({
           }}>
             {banner.items.map((text, i) => (
               <span key={i} style={{ display: "flex", alignItems: "center", gap: 2 }}>
-                {i > 0 && <span style={{ fontSize: 11, fontWeight: 700, color: "#fff" }}>+</span>}
-                <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", whiteSpace: "nowrap" }}>{text}</span>
+                {i > 0 && <span style={{ fontSize: 11, fontWeight: 700, lineHeight: "15px", color: "#fff" }}>+</span>}
+                <span style={{ fontSize: 11, fontWeight: 700, lineHeight: "15px", color: "#fff", whiteSpace: "nowrap" }}>{text}</span>
               </span>
             ))}
           </div>
@@ -96,17 +96,17 @@ export function ReorderCard({
       <div style={{ padding: "6px 12px 0", display: "flex", flexDirection: "column", gap: 4, flex: "1 0 0", minHeight: 0, overflow: "hidden" }}>
         {/* 가게명 + 별점 */}
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          <span style={{ fontSize: 16, fontWeight: 700, color: "#333", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
+          <span style={{ fontSize: 16, fontWeight: 700, lineHeight: "22px", color: "#333", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
             {shopName}
           </span>
           <RatingCompact grade={rating} total={reviewCount} size="small" />
         </div>
 
         {/* 배달비 */}
-        <div style={{ fontSize: 12, fontWeight: 700, color: "#333" }}>배달비 {deliveryFee}</div>
+        <div style={{ fontSize: 12, fontWeight: 700, lineHeight: "16px", color: "#333" }}>배달비 {deliveryFee}</div>
 
         {/* 주문횟수 · 배달시간 · 거리 · 최소주문 */}
-        <div style={{ fontSize: 12, color: "#333", display: "flex", gap: 4, alignItems: "center", flexWrap: "wrap" }}>
+        <div style={{ fontSize: 12, lineHeight: "16px", color: "#333", display: "flex", gap: 4, alignItems: "center", flexWrap: "wrap" }}>
           {orderCount && <span style={{ fontWeight: 700 }}>{orderCount}</span>}
           <span style={{ width: 3, height: 3, borderRadius: 1.5, background: "#ccc" }} />
           <span>{deliveryTime}</span>
@@ -122,7 +122,7 @@ export function ReorderCard({
 
         {/* 이전 주문 메뉴 */}
         {previousMenu && (
-          <div style={{ fontSize: 12, color: "#999", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <div style={{ fontSize: 12, lineHeight: "16px", color: "#999", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {previousMenu}
           </div>
         )}
@@ -157,7 +157,7 @@ export function ReorderCard({
           }}
         >
           <span style={{
-            fontSize: 14, fontWeight: 700, color: "#333",
+            fontSize: 14, fontWeight: 700, lineHeight: "19px", color: "#333",
             fontFamily: "Pretendard, Roboto, sans-serif",
           }}>배달 바로 주문하기</span>
         </div>
@@ -171,7 +171,7 @@ export function ReorderRow({ title = "재주문 숏컷", children }) {
   return (
     <div style={{ fontFamily: "Pretendard, Roboto, sans-serif" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 16px 12px" }}>
-        <span style={{ fontSize: 18, fontWeight: 700, color: "#333" }}>{title}</span>
+        <span style={{ fontSize: 18, fontWeight: 700, lineHeight: "24px", color: "#333" }}>{title}</span>
       </div>
       <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingLeft: 16, paddingBottom: 16, scrollbarWidth: "none" }}>
         {children}
