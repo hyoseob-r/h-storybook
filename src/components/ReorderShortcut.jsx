@@ -104,8 +104,10 @@ export function ReorderCard({
           <RatingCompact grade={rating} total={reviewCount} size="small" />
         </div>
 
-        {/* 배달비 */}
-        <div style={{ fontSize: 12, fontWeight: 700, lineHeight: "16px", color: "#333" }}>배달비 {deliveryFee}</div>
+        {/* 배달비 — 포장이면 숨김 */}
+        {orderType !== "takeout" && (
+          <div style={{ fontSize: 12, fontWeight: 700, lineHeight: "16px", color: "#333" }}>배달비 {deliveryFee}</div>
+        )}
 
         {/* 주문횟수 · 배달시간 · 거리 · 최소주문 */}
         <div style={{ fontSize: 12, lineHeight: "16px", color: "#333", display: "flex", gap: 4, alignItems: "center", flexWrap: "wrap" }}>
