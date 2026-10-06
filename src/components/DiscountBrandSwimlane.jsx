@@ -128,7 +128,7 @@ export function DiscountBrandSwimlane({
             ))}
           </div>
         ))}
-        <div style={{ minWidth: 1, paddingRight: 16, flexShrink: 0 }} aria-hidden />
+        <div style={{ minWidth: 40, flexShrink: 0 }} aria-hidden />
       </div>
 
       {/* Page indicator dots */}
