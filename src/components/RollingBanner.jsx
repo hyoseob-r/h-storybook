@@ -129,11 +129,13 @@ export function RollingBanner({
       cursor: onClick ? "pointer" : "default",
       fontFamily: "Pretendard, Roboto, sans-serif",
     }} onClick={onClick}>
-      {/* 배경 이미지 */}
+      {/* 배경 이미지 — 높이 고정, 원본 비율 유지 */}
       <img src={imageSrc} alt="" style={{
-        position: "absolute", inset: 0,
-        width: "100%", height: "100%",
-        objectFit: "cover", objectPosition: imgPosition,
+        position: "absolute", top: 0, bottom: 0,
+        height: "100%",
+        ...(isFullImg
+          ? { left: "50%", transform: "translateX(-50%)" }
+          : { right: 0 }),
       }} />
 
       {/* 풀이미지: 텍스트/뱃지/커스텀뱃지 전부 숨김 */}
