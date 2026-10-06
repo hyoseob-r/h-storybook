@@ -109,21 +109,19 @@ export function DiscountBrandSwimlane({
         display: "flex", gap: 16,
         overflowX: "auto", scrollSnapType: "x mandatory",
         scrollbarWidth: "none", WebkitOverflowScrolling: "touch",
+        paddingLeft: 16, paddingRight: 16,
       }}>
         {pages.map((pageItems, pi) => (
           <div key={pi} style={{
             width: "calc(100% - 56px)",
             flexShrink: 0, scrollSnapAlign: "start",
             display: "flex", flexDirection: "column",
-            marginLeft: pi === 0 ? 16 : 0,
           }}>
             {pageItems.map((brand, i) => (
               <BrandCard key={`${pi}-${i}`} {...brand} />
             ))}
           </div>
         ))}
-        {/* 우측 끝 여백 */}
-        <div style={{ width: 16, flexShrink: 0 }} />
       </div>
 
       {/* Page indicator dots */}
