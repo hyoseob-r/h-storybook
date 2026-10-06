@@ -225,6 +225,8 @@ export default function RollingBannerSection() {
   const [theme, setTheme] = useState("blue");
   const [showBadges, setShowBadges] = useState(true);
   const [showCustomBadge, setShowCustomBadge] = useState(true);
+  const [useCustomBg, setUseCustomBg] = useState(false);
+  const [customBgColor, setCustomBgColor] = useState("#1a1a2e");
 
   const chipStyle = (active) => ({
     padding: "4px 12px", borderRadius: 20,
@@ -284,6 +286,28 @@ export default function RollingBannerSection() {
               CustomBadge {showCustomBadge ? "ON" : "OFF"}
             </button>
           </div>
+          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+            <span style={{ fontSize: 10, color: "#999", width: 60, flexShrink: 0 }}>BgColor</span>
+            <button onClick={() => setUseCustomBg(!useCustomBg)} style={chipStyle(useCustomBg)}>
+              커스텀 배경색 {useCustomBg ? "ON" : "OFF"}
+            </button>
+            {useCustomBg && (
+              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <input
+                  type="color"
+                  value={customBgColor}
+                  onChange={e => setCustomBgColor(e.target.value)}
+                  style={{ width: 24, height: 24, border: "1px solid #ddd", borderRadius: 6, cursor: "pointer", padding: 0 }}
+                />
+                <input
+                  type="text"
+                  value={customBgColor}
+                  onChange={e => setCustomBgColor(e.target.value)}
+                  style={{ width: 70, fontSize: 10, padding: "4px 6px", border: "1px solid #ddd", borderRadius: 6, fontFamily: "monospace" }}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -294,6 +318,7 @@ export default function RollingBannerSection() {
           bannerType={bannerType}
           variant={variant}
           theme={theme}
+          bgColor={useCustomBg ? customBgColor : null}
           title1="매일 하루종일 특가"
           title2="+최대 5% 적립까지!"
           description="멈추지 않는 선착순 할인!"
