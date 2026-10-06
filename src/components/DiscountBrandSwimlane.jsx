@@ -104,15 +104,16 @@ export function DiscountBrandSwimlane({
     <div style={{ fontFamily: "Pretendard, Roboto, sans-serif" }}>
       <SectionHeader title={title} showArrow onClick={onMoreClick} />
 
-      {/* 캐러셀 — 스와이프 가능 */}
+      {/* 캐러셀 — 스와이프 가능, 다음 페이지 살짝 보임 */}
       <div ref={scrollRef} style={{
-        display: "flex", gap: 12,
+        display: "flex", gap: 16,
         overflowX: "auto", scrollSnapType: "x mandatory",
         scrollbarWidth: "none", WebkitOverflowScrolling: "touch",
+        padding: "0 16px",
       }}>
         {pages.map((pageItems, pi) => (
           <div key={pi} style={{
-            width: "calc(100%)", minWidth: 260, maxWidth: 316,
+            width: "calc(100% - 56px)",
             flexShrink: 0, scrollSnapAlign: "start",
             display: "flex", flexDirection: "column",
           }}>
