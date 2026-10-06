@@ -8,10 +8,10 @@ import { YdsIcon } from "../icons.jsx";
 const SHADOW_LEVEL1_V2 = "0px 0px 2px rgba(25,48,64,0.08), 0px 1px 8px rgba(25,48,64,0.1)";
 
 const TREND_ICONS = {
-  up: "/assets/search-icons/ic_arrow_up.svg",
-  down: "/assets/search-icons/ic_arrow_down.svg",
-  dash: "/assets/search-icons/ic_dash.svg",
-  new: "/assets/search-icons/ic_new.svg",
+  up: "/assets/search-icons/ic_arrow_up.png",
+  down: "/assets/search-icons/ic_arrow_down.png",
+  dash: "/assets/search-icons/ic_dash.png",
+  new: "/assets/search-icons/ic_new.png",
 };
 
 export function SearchBar({
