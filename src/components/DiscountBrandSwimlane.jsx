@@ -115,13 +115,13 @@ export function DiscountBrandSwimlane({
         overflowX: "auto", scrollSnapType: "x mandatory",
         scrollPaddingLeft: 16,
         scrollbarWidth: "none", WebkitOverflowScrolling: "touch",
-        paddingLeft: 16,
       }}>
         {pages.map((pageItems, pi) => (
           <div key={pi} style={{
             width: "calc(100% - 56px)",
             flexShrink: 0, scrollSnapAlign: "start",
             display: "flex", flexDirection: "column",
+            ...(pi === 0 ? { marginLeft: 16 } : {}),
           }}>
             {pageItems.map((brand, i) => (
               <BrandCard key={`${pi}-${i}`} {...brand} />
