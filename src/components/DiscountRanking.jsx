@@ -217,7 +217,7 @@ export function DiscountRankingRow({
           {/* 하단: 프로모션 이미지 */}
           {promoImageSrc && (
             <div style={{
-              width: 130, height: 130, borderRadius: 12, overflow: "hidden",
+              width: "100%", height: 148, borderRadius: 12, overflow: "hidden",
               background: "#e0edf9",
             }}>
               <img src={promoImageSrc} alt="프로모션" style={{
@@ -298,7 +298,7 @@ export default function DiscountRankingSection() {
         }}>
           <DiscountRankingRow
             cards={SAMPLE_CARDS}
-            promoImageSrc="/assets/menu-images/hansik_1_menu_02.png"
+            promoImageSrc="/assets/banners/discount_ranking_hero.png"
           />
         </div>
       </div>
