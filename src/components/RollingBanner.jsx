@@ -109,11 +109,14 @@ export function RollingBanner({
   description = "멈추지 않는 선착순 할인!",
   badges = [],
   customBadgeLabel = "선착순",
+  textColor = "black", // "black" | "white"
   bannerSrc = null,
   onClick,
 }) {
   const t = getTheme(theme);
   const isFullImg = bannerType === "fullimg";
+  const titleColor = textColor === "white" ? "#fff" : "#111";
+  const descColor = textColor === "white" ? "rgba(255,255,255,0.8)" : "#333";
   const imageSrc = bannerSrc || BANNER_IMAGES[bannerType] || BANNER_IMAGES.nukki2;
 
   // 에셋 정렬: 누끼1/2 → 우측, 풀이미지 → 센터
@@ -170,7 +173,7 @@ export function RollingBanner({
           }}>
             <div style={{
               fontSize: 19, fontWeight: 700, lineHeight: "24px",
-              color: "#111",
+              color: titleColor,
               fontFamily: "'YOGIYO Sans', Pretendard, sans-serif",
             }}>
               {title1}
@@ -178,7 +181,7 @@ export function RollingBanner({
             {title2 && (
               <div style={{
                 fontSize: 19, fontWeight: 700, lineHeight: "24px",
-                color: "#111",
+                color: titleColor,
                 fontFamily: "'YOGIYO Sans', Pretendard, sans-serif",
               }}>
                 {title2}
@@ -187,7 +190,7 @@ export function RollingBanner({
             {description && (
               <div style={{
                 fontSize: 12, fontWeight: 400, lineHeight: "16px",
-                color: "#333",
+                color: descColor,
                 marginTop: 4,
                 fontFamily: "Pretendard, Roboto, sans-serif",
               }}>
@@ -227,6 +230,7 @@ export default function RollingBannerSection() {
   const [showCustomBadge, setShowCustomBadge] = useState(true);
   const [useCustomBg, setUseCustomBg] = useState(false);
   const [customBgColor, setCustomBgColor] = useState("#1a1a2e");
+  const [textColor, setTextColor] = useState("black");
 
   const chipStyle = (active) => ({
     padding: "4px 12px", borderRadius: 20,
@@ -287,6 +291,16 @@ export default function RollingBannerSection() {
             </button>
           </div>
           <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+            <span style={{ fontSize: 10, color: "#999", width: 60, flexShrink: 0 }}>Text</span>
+            {["black", "white"].map(c => (
+              <button key={c} onClick={() => setTextColor(c)} style={{
+                ...chipStyle(textColor === c),
+                ...(c === "white" && textColor !== c ? { background: "#fff", color: "#333", border: "1.5px solid #e0e0e0" } : {}),
+                ...(c === "white" && textColor === c ? { background: "#333", color: "#fff" } : {}),
+              }}>{c === "black" ? "Black" : "White"}</button>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
             <span style={{ fontSize: 10, color: "#999", width: 60, flexShrink: 0 }}>BgColor</span>
             <button onClick={() => setUseCustomBg(!useCustomBg)} style={chipStyle(useCustomBg)}>
               커스텀 배경색 {useCustomBg ? "ON" : "OFF"}
@@ -319,6 +333,7 @@ export default function RollingBannerSection() {
           variant={variant}
           theme={theme}
           bgColor={useCustomBg ? customBgColor : null}
+          textColor={textColor}
           title1="매일 하루종일 특가"
           title2="+최대 5% 적립까지!"
           description="멈추지 않는 선착순 할인!"
