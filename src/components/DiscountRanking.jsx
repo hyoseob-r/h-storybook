@@ -246,7 +246,7 @@ const SAMPLE_CARDS = [
   {
     thumbSrc: "/assets/menu-images/hansik_1_menu_01.png",
     shopName: "한솥도시락",
-    shopLogoSrc: getShopLogo("hansot"),
+    shopLogoSrc: "/assets/badge-icons/ypx_symbol.png",
     menuName: "제육볶음 도시락",
     discountRate: "63",
     salePrice: "5,500",
@@ -259,7 +259,7 @@ const SAMPLE_CARDS = [
   {
     thumbSrc: "/assets/menu-images/chiken_1_menu_01.png",
     shopName: "교촌치킨",
-    shopLogoSrc: getShopLogo("kyochon"),
+    shopLogoSrc: "/assets/badge-icons/ypx_symbol.png",
     menuName: "교촌 허니오리지날",
     discountRate: "45",
     salePrice: "11,500",
@@ -272,7 +272,7 @@ const SAMPLE_CARDS = [
   {
     thumbSrc: "/assets/menu-images/burger_1_menu_01.png",
     shopName: "맥도날드",
-    shopLogoSrc: getShopLogo("mcdonalds"),
+    shopLogoSrc: "/assets/badge-icons/ypx_symbol.png",
     menuName: "빅맥 세트",
     discountRate: "30",
     salePrice: "6,300",
