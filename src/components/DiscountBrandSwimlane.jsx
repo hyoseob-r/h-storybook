@@ -44,15 +44,21 @@ export function BrandCard({
         <span style={{ position: "absolute", inset: 0, borderRadius: "inherit", border: `1px solid ${metaTokens.colors.alpha.a_black50}`, pointerEvents: "none" }} />
       </div>
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 4, height: 18 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 4, height: 18, overflow: "hidden" }}>
           <span style={{
             fontSize: 12, fontWeight: 400, color: "#333",
             overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+            flex: "0 1 auto", minWidth: 0,
           }}>{shopName}</span>
           {badges.map((badgeKey, i) => {
             const preset = BRAND_BADGE_PRESETS[badgeKey];
             if (!preset) return null;
-            return <SingleBadge key={i} text={preset.text} colorStyle={preset.colorStyle} size="small" showLeftIcon={preset.showLeftIcon} leftIconName={preset.leftIconName} />;
+            const isLast = i === badges.length - 1;
+            return (
+              <span key={i} style={{ flexShrink: isLast ? 1 : 0, minWidth: isLast ? 0 : "auto", overflow: isLast ? "hidden" : "visible" }}>
+                <SingleBadge text={preset.text} colorStyle={preset.colorStyle} size="small" showLeftIcon={preset.showLeftIcon} leftIconName={preset.leftIconName} />
+              </span>
+            );
           })}
         </div>
         <div style={{ fontSize: 14, fontWeight: 700, color: "#333" }}>{benefit}</div>
