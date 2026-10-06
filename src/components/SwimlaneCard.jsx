@@ -55,75 +55,78 @@ export function SwimlaneCard({
       width: CARD_WIDTH, flexShrink: 0,
       fontFamily: "Pretendard, Roboto, sans-serif",
     }}>
-      {/* Thumbnail */}
-      <div style={{
-        width: CARD_WIDTH, height: THUMB_HEIGHT, borderRadius: metaTokens.radius.meta_r4,
-        overflow: "hidden", background: "#f2f2f2", position: "relative",
-      }}>
-        {thumbSrc ? (
-          <img src={thumbSrc} alt={shopName} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
-        ) : (
-          <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <span style={{ fontSize: 32, color: "#ddd" }}>🍽</span>
-          </div>
-        )}
-
-        {/* 메뉴 라벨 오버레이 (상단) */}
-        {menuLabel && (
-          <div style={{
-            position: "absolute", top: 0, left: 0, right: 0,
-            padding: "8px 8px 16px",
-            background: "linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.35) 59%, transparent 100%)",
-          }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#fff", lineHeight: "16px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {menuLabel}
-            </div>
-            {menuPrice && (
-              <div style={{ fontSize: 12, fontWeight: 400, color: "#fff", lineHeight: "16px" }}>
-                {menuPrice}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* 로고 오버레이 (좌상단 48px) */}
-        {logoSrc && (
-          <div style={{
-            position: "absolute", top: 6, left: 6,
-            width: 48, height: 48, borderRadius: 400, overflow: "hidden",
-            border: `1px solid ${metaTokens.colors.alpha.a_black50}`,
-          }}>
-            <img src={logoSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          </div>
-        )}
-
-        {/* AD badge */}
-        {isAd && (
-          <div style={{ position: "absolute", bottom: 6, left: 6 }}>
-            <AdBadge />
-          </div>
-        )}
-
-        {/* Inline border */}
-        <span style={{ position: "absolute", inset: 0, borderRadius: "inherit", border: `1px solid rgba(0,0,0,0.04)`, pointerEvents: "none" }} />
-      </div>
-
-      {/* 빨간 혜택 배너 */}
-      {banner && (
+      {/* Thumbnail + 배너 wrapper — 고정 높이로 텍스트 위치 통일 */}
+      <div style={{ width: CARD_WIDTH, height: THUMB_HEIGHT + 10, position: "relative" }}>
         <div style={{
-          display: "flex", gap: 2, alignItems: "center", justifyContent: "center",
-          height: 20, padding: "4px 6px", marginTop: -10, marginLeft: 4, marginRight: 4,
-          background: "#FA0050", borderRadius: 12,
-          overflow: "hidden", position: "relative", zIndex: 1,
+          width: CARD_WIDTH, height: THUMB_HEIGHT, borderRadius: metaTokens.radius.meta_r4,
+          overflow: "hidden", background: "#f2f2f2", position: "absolute", top: 0, left: 0,
         }}>
-          {banner.items.map((text, i) => (
-            <span key={i} style={{ display: "flex", alignItems: "center", gap: 2 }}>
-              {i > 0 && <span style={{ fontSize: 11, fontWeight: 700, color: "#fff" }}>+</span>}
-              <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", whiteSpace: "nowrap" }}>{text}</span>
-            </span>
-          ))}
+          {thumbSrc ? (
+            <img src={thumbSrc} alt={shopName} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
+          ) : (
+            <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ fontSize: 32, color: "#ddd" }}>🍽</span>
+            </div>
+          )}
+
+          {/* 메뉴 라벨 오버레이 (상단) */}
+          {menuLabel && (
+            <div style={{
+              position: "absolute", top: 0, left: 0, right: 0,
+              padding: "8px 8px 16px",
+              background: "linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.35) 59%, transparent 100%)",
+            }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#fff", lineHeight: "16px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {menuLabel}
+              </div>
+              {menuPrice && (
+                <div style={{ fontSize: 12, fontWeight: 400, color: "#fff", lineHeight: "16px" }}>
+                  {menuPrice}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 로고 오버레이 (좌상단 48px) */}
+          {logoSrc && (
+            <div style={{
+              position: "absolute", top: 6, left: 6,
+              width: 48, height: 48, borderRadius: 400, overflow: "hidden",
+              border: `1px solid ${metaTokens.colors.alpha.a_black50}`,
+            }}>
+              <img src={logoSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            </div>
+          )}
+
+          {/* AD badge */}
+          {isAd && (
+            <div style={{ position: "absolute", bottom: 6, left: 6 }}>
+              <AdBadge />
+            </div>
+          )}
+
+          {/* Inline border */}
+          <span style={{ position: "absolute", inset: 0, borderRadius: "inherit", border: `1px solid rgba(0,0,0,0.04)`, pointerEvents: "none" }} />
         </div>
-      )}
+
+        {/* 빨간 혜택 배너 — 이미지 하단에 겹침 (absolute) */}
+        {banner && (
+          <div style={{
+            position: "absolute", bottom: 0, left: 4, right: 4,
+            display: "flex", gap: 2, alignItems: "center", justifyContent: "center",
+            height: 20, padding: "4px 6px",
+            background: "#FA0050", borderRadius: 12,
+            overflow: "hidden", zIndex: 1,
+          }}>
+            {banner.items.map((text, i) => (
+              <span key={i} style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                {i > 0 && <span style={{ fontSize: 11, fontWeight: 700, lineHeight: "15px", color: "#fff" }}>+</span>}
+                <span style={{ fontSize: 11, fontWeight: 700, lineHeight: "15px", color: "#fff", whiteSpace: "nowrap" }}>{text}</span>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Info */}
       <div style={{ padding: "4px 6px 0", display: "flex", flexDirection: "column", gap: 4 }}>
