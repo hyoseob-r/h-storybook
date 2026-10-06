@@ -130,7 +130,7 @@ export function RollingBanner({
       overflow: "hidden",
       background: bgColor || t.bannerBg,
       borderRadius: variant === "card" ? 12 : 0,
-      margin: variant === "card" ? "0 16px" : 0,
+      margin: variant === "card" ? "8px 16px" : "8px 0",
       cursor: onClick ? "pointer" : "default",
       fontFamily: "Pretendard, Roboto, sans-serif",
     }} onClick={onClick}>
