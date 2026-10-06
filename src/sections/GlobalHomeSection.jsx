@@ -4,6 +4,7 @@ import { VerticalLauncherRow } from "../components/VerticalLauncher.jsx";
 import { FoodCategorySwimlane } from "../components/FoodCategory.jsx";
 import { QCSwimlaneRow } from "../components/QCSwimlane.jsx";
 import { ShopListCard } from "../components/ShopListCard.jsx";
+import { SwimlaneCard, SwimlaneRow } from "../components/SwimlaneCard.jsx";
 import { RollingBanner } from "../components/RollingBanner.jsx";
 import { DiscountBrandSwimlane } from "../components/DiscountBrandSwimlane.jsx";
 import { ReorderCard, ReorderRow } from "../components/ReorderShortcut.jsx";
@@ -71,7 +72,22 @@ const QC_PRODUCTS = [
 
 // ── BTF 섹션 정의 ──────────────────────────────────────────────────────────
 
+const SWIMLANE_SHOPS = [
+  { shopName: "본도시락-역삼역점", thumbSrc: getShopImage("hansik_1"), logoSrc: getShopLogo("bon"), rating: 4.8, reviewCount: 1567, deliveryTime: "30~45분", deliveryFee: "0원", distance: "372m", benefitType: "ypx_free", badges: ["lowest", "specialpoint"], bottomBadges: [{ text: "스페셜적립", colorStyle: "gray", showLeftIcon: true, leftIconName: "ic_specialpoint" }, { text: "한식 할인 1위", colorStyle: "gray", showLeftIcon: true, leftIconName: "ic_bpr" }, { text: "카카오페이 n% 쿠폰", colorStyle: "secondary" }, { text: "위생안심", colorStyle: "gray" }, { text: "신규", colorStyle: "gray" }] },
+  { shopName: "교촌치킨 서초점", thumbSrc: getShopImage("chiken_1"), logoSrc: getShopLogo("kyochon"), rating: 4.6, reviewCount: 2103, deliveryTime: "40~55분", deliveryFee: "2,000원", distance: "1.2km", badges: ["discount"] },
+  { shopName: "서브웨이 서초점", thumbSrc: getShopImage("sandwitch_1"), logoSrc: getShopLogo("subway"), rating: 4.5, reviewCount: 892, deliveryTime: "25~40분", deliveryFee: "0원", distance: "0.8km", benefitType: "ypx_free", badges: ["specialpoint"] },
+  { shopName: "피자헛 역삼점", thumbSrc: getShopImage("pizza_1"), logoSrc: getShopLogo("pizzahut"), rating: 4.2, reviewCount: 456, deliveryTime: "35~50분", deliveryFee: "0원", distance: "2.1km", benefitType: "single_discount", isAd: true },
+];
+
 const BTF_SECTIONS = [
+  {
+    id: "swimlane", label: "맞춤 추천 가게",
+    render: () => (
+      <SwimlaneRow title="고객님 맞춤 추천 가게">
+        {SWIMLANE_SHOPS.map((s, i) => <SwimlaneCard key={i} {...s} />)}
+      </SwimlaneRow>
+    ),
+  },
   {
     id: "reorder", label: "재주문 숏컷",
     render: () => (
