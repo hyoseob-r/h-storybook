@@ -159,7 +159,7 @@ const SAMPLE_BRANDS = [
   { shopName: "서브웨이", logoSrc: getShopLogo("subway"), benefit: "최대 5,000원 할인 + 최대 15% 적립", badges: ["lowest", "specialpoint"] },
   { shopName: "맘스터치", logoSrc: getShopLogo("moms"), benefit: "무료배달", badges: ["menu_discount"] },
   { shopName: "맥도날드", logoSrc: getShopLogo("mcdonalds"), benefit: "배달비 0원" },
-  { shopName: "청년피자", logoSrc: getShopLogo("youngman"), benefit: "최대 5,000원 할인 + 최대 15% 적립", badges: ["lowest", "specialpoint", "menu_discount"] },
+  { shopName: "청년피자", logoSrc: getShopLogo("youngman"), benefit: "최대 5,000원 할인 + 최대 15% 적립", badges: ["lowest", "specialpoint", "menu_discount", "recommend"] },
 ];
 
 export default function DiscountBrandSwimlaneSection() {
