@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { TopBanner } from "../components/TopBanner.jsx";
 import { VerticalLauncherRow } from "../components/VerticalLauncher.jsx";
 import { FoodCategorySwimlane } from "../components/FoodCategory.jsx";
@@ -179,9 +179,33 @@ function OrderPanel({ order, onReorder }) {
 
 // ── GlobalHome ──────────────────────────────────────────────────────────────
 
+// TopBanner 높이 (StatusBar 59 + TopNav 56 + ContentsArea 100 + SearchBar ~68)
+const BANNER_CONTENT_TOP = 115; // StatusBar + TopNav 높이 (헤더가 끝나는 지점)
+const BANNER_END = 280;         // 탑배너 전체가 지나가는 대략적 높이
+const SCROLLED_TRUE_THRESHOLD = 600; // 더 내려갔을 때
+
 export default function GlobalHomeSection() {
   const [theme, setTheme] = useState("dark");
   const [btfOrder, setBtfOrder] = useState(BTF_SECTIONS);
+  const [headerState, setHeaderState] = useState("top");
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const handleScroll = () => {
+      const y = el.scrollTop;
+      if (y < BANNER_CONTENT_TOP) {
+        setHeaderState("top");
+      } else if (y < SCROLLED_TRUE_THRESHOLD) {
+        setHeaderState("scrolled-false");
+      } else {
+        setHeaderState("scrolled-true");
+      }
+    };
+    el.addEventListener("scroll", handleScroll, { passive: true });
+    return () => el.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
     <div style={{ padding: "24px 0" }}>
@@ -209,7 +233,24 @@ export default function GlobalHomeSection() {
         background: GLOBAL_HOME_BG,
         position: "relative",
       }}>
-        <div style={{
+        {/* Sticky 헤더 — 스크롤 시 상단 고정 */}
+        {headerState !== "top" && (
+          <div style={{
+            position: "absolute", top: 0, left: 0, right: 0, zIndex: 10,
+          }}>
+            <TopBanner
+              theme="light"
+              bgColor="transparent"
+              headerState={headerState}
+              cartfilled={false}
+              showSearch={false}
+              leftSrc={null}
+              rightSrc={null}
+            />
+          </div>
+        )}
+
+        <div ref={scrollRef} style={{
           width: "100%", height: "100%",
           overflowY: "auto", overflowX: "hidden",
           scrollbarWidth: "none",
@@ -223,6 +264,7 @@ export default function GlobalHomeSection() {
             bgImage="/assets/banners/topbanner_bg.png"
             leftSrc="/assets/banners/topbanner_left.png"
             rightSrc="/assets/banners/topbanner_right.png"
+            headerState="top"
           />
 
           {/* 2. Vertical Launcher */}
