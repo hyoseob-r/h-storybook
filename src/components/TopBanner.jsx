@@ -208,31 +208,36 @@ function TopNavHeader({ theme = "dark", top = true, scrolled = false, cartfilled
 function ContentsArea({ leftSrc = null, rightSrc = null }) {
   return (
     <div style={{
-      height: CONTENTS_H, padding: "0 20px",
-      display: "flex", alignItems: "center", justifyContent: "space-between",
+      height: CONTENTS_H,
       position: "relative",
+      overflow: "hidden",
     }}>
-      {/* Left — 이미지 (180x100), 좌측 정렬 */}
-      <div style={{ width: 180, height: CONTENTS_H, flexShrink: 0, display: "flex", alignItems: "center", position: "relative", zIndex: 1 }}>
-        {leftSrc ? (
-          <img src={leftSrc} alt="" style={{ height: "100%", objectFit: "contain", objectPosition: "left center" }} />
-        ) : (
-          <div style={{ width: 180, height: "100%", borderRadius: 8, background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>Left</span>
-          </div>
-        )}
-      </div>
+      {/* Left — 좌측 여백 20px, 좌측 정렬 */}
+      {leftSrc && (
+        <img src={leftSrc} alt="" style={{
+          position: "absolute", left: 20, top: 0,
+          height: "100%", objectFit: "contain", objectPosition: "left center",
+          zIndex: 1,
+        }} />
+      )}
+      {!leftSrc && (
+        <div style={{ position: "absolute", left: 20, top: 0, width: 180, height: "100%", borderRadius: 8, background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>Left</span>
+        </div>
+      )}
 
-      {/* Right — 이미지 (140x100), 우측 정렬, 겹침 가능 */}
-      <div style={{ width: 140, height: CONTENTS_H, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
-        {rightSrc ? (
-          <img src={rightSrc} alt="" style={{ height: "100%", objectFit: "contain", objectPosition: "right center" }} />
-        ) : (
-          <div style={{ width: 135, height: 97, borderRadius: 8, background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>Right</span>
-          </div>
-        )}
-      </div>
+      {/* Right — 우측 여백 20px, 우측 정렬, Left와 겹침 가능 */}
+      {rightSrc && (
+        <img src={rightSrc} alt="" style={{
+          position: "absolute", right: 20, top: 0,
+          height: "100%", objectFit: "contain", objectPosition: "right center",
+        }} />
+      )}
+      {!rightSrc && (
+        <div style={{ position: "absolute", right: 20, top: 0, width: 135, height: "100%", borderRadius: 8, background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>Right</span>
+        </div>
+      )}
     </div>
   );
 }
