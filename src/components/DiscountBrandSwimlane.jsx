@@ -108,10 +108,10 @@ export function DiscountBrandSwimlane({
       <div ref={scrollRef} style={{
         display: "flex", gap: 16,
         overflowX: "auto", scrollSnapType: "x mandatory",
+        scrollPaddingLeft: 16,
         scrollbarWidth: "none", WebkitOverflowScrolling: "touch",
+        paddingLeft: 16, paddingRight: 16,
       }}>
-        {/* 좌측 여백 */}
-        <div style={{ width: 0, paddingLeft: 16, flexShrink: 0 }} />
         {pages.map((pageItems, pi) => (
           <div key={pi} style={{
             width: "calc(100% - 56px)",
@@ -123,8 +123,6 @@ export function DiscountBrandSwimlane({
             ))}
           </div>
         ))}
-        {/* 우측 여백 */}
-        <div style={{ width: 0, paddingRight: 16, flexShrink: 0 }} />
       </div>
 
       {/* Page indicator dots */}
