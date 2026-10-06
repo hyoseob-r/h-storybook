@@ -186,7 +186,7 @@ export function ReorderRow({ title = "재주문 숏컷", children }) {
   return (
     <div style={{ fontFamily: "Pretendard, Roboto, sans-serif" }}>
       <SectionHeader title={title} showArrow={false} />
-      <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingLeft: 16, paddingBottom: 16, scrollbarWidth: "none" }}>
+      <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingLeft: 16, paddingTop: 16, paddingBottom: 16, scrollbarWidth: "none" }}>
         {children}
       </div>
     </div>
