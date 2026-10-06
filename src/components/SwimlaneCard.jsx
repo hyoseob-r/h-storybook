@@ -194,7 +194,7 @@ export function SwimlaneRow({
       <SectionHeader title={title} showArrow={showMore} />
       {/* Scrollable row */}
       <div style={{
-        display: "flex", gap: 8, overflowX: "auto", paddingLeft: 16, paddingBottom: 16,
+        display: "flex", gap: 8, overflowX: "auto", paddingLeft: 16,
         scrollbarWidth: "none",
       }}>
         {children}
