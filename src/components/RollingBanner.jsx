@@ -34,7 +34,7 @@ function getTheme(themeId) {
 }
 
 // ── BannerBadge (상단 좌측 — 어두운 배경 + 흰 텍스트) ────────────────────────
-function BannerBadge({ icon, text, small = false }) {
+function BannerBadge({ icon, text, small = false, bgColor = "#153274" }) {
   const fontSize = small ? 11 : 12;
   const lineHeight = small ? "15px" : "16px";
   const padding = small ? "2px 6px" : "2px 8px";
@@ -43,7 +43,7 @@ function BannerBadge({ icon, text, small = false }) {
     <span style={{
       display: "inline-flex", alignItems: "center", gap: 2,
       padding,
-      background: "#153274",
+      background: bgColor,
       borderRadius: "0 0 4px 4px",
       overflow: "hidden", whiteSpace: "nowrap",
     }}>
@@ -143,6 +143,7 @@ export function RollingBanner({
                   icon={b.icon}
                   text={b.text}
                   small={b.small}
+                  bgColor={t.badgeColor}
                 />
               ))}
             </div>
