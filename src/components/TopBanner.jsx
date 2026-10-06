@@ -205,48 +205,31 @@ function TopNavHeader({ theme = "dark", top = true, scrolled = false, cartfilled
 }
 
 // ── ContentsArea ─────────────────────────────────────────────────────────────
-function ContentsArea({ title = "주문할 때마다\n포인트 적립", subtitle = "혜택 확인하기", theme = "dark", kvSrc = null }) {
-  const textColor = theme === "dark" ? "#fff" : "#333";
-  const subColor = theme === "dark" ? "rgba(255,255,255,0.7)" : "#666";
-  const titleLines = title.split("\n");
-
+function ContentsArea({ leftSrc = null, rightSrc = null }) {
   return (
     <div style={{
       height: CONTENTS_H, padding: "0 20px",
       display: "flex", alignItems: "center", justifyContent: "space-between",
       position: "relative",
     }}>
-      {/* Left — 텍스트 영역 (180px) */}
-      <div style={{ width: 180, flexShrink: 0, display: "flex", flexDirection: "column", gap: 4, justifyContent: "center", height: "100%", position: "relative", zIndex: 1 }}>
-        <div style={{
-          fontSize: 20, fontWeight: 700, color: textColor, lineHeight: "26px",
-          letterSpacing: "-0.6px",
-          fontFamily: "'YOGIYO Sans', Pretendard, sans-serif",
-        }}>
-          {titleLines.map((line, i) => <div key={i}>{line}</div>)}
-        </div>
-        {subtitle && (
-          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <span style={{ fontSize: 12, fontWeight: 400, lineHeight: "16px", color: subColor }}>{subtitle}</span>
-            <YdsIcon name="chevron_right_s" size={18} color={subColor} />
+      {/* Left — 이미지 (180x100), 좌측 정렬 */}
+      <div style={{ width: 180, height: CONTENTS_H, flexShrink: 0, display: "flex", alignItems: "center", position: "relative", zIndex: 1 }}>
+        {leftSrc ? (
+          <img src={leftSrc} alt="" style={{ height: "100%", objectFit: "contain", objectPosition: "left center" }} />
+        ) : (
+          <div style={{ width: 180, height: "100%", borderRadius: 8, background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>Left</span>
           </div>
         )}
       </div>
 
-      {/* Right — KV 이미지 영역 (140px), 겹침 가능 */}
-      <div style={{
-        width: 140, height: CONTENTS_H, flexShrink: 0,
-        display: "flex", flexDirection: "column", alignItems: "flex-end", justifyContent: "center",
-      }}>
-        {kvSrc ? (
-          <img src={kvSrc} alt="" style={{ width: 135, height: 97, objectFit: "contain", objectPosition: "right center" }} />
+      {/* Right — 이미지 (140x100), 우측 정렬, 겹침 가능 */}
+      <div style={{ width: 140, height: CONTENTS_H, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
+        {rightSrc ? (
+          <img src={rightSrc} alt="" style={{ height: "100%", objectFit: "contain", objectPosition: "right center" }} />
         ) : (
-          <div style={{
-            width: 135, height: 97, borderRadius: 12,
-            background: theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            <span style={{ fontSize: 11, color: textColor, opacity: 0.3 }}>KV</span>
+          <div style={{ width: 135, height: 97, borderRadius: 8, background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>Right</span>
           </div>
         )}
       </div>
@@ -271,11 +254,10 @@ export function TopBanner({
   bgColor = "#1a1a2e",
   bgImage = null,
   theme = "dark",
-  title = "주문할 때마다\n포인트 적립",
-  subtitle = "혜택 확인하기",
+  leftSrc = null,
+  rightSrc = null,
   address = "서울 강남구 역삼동",
   showSearch = true,
-  kvSrc = null,
   // 헤더 상태
   headerState = "top", // "top" | "scrolled-false" | "scrolled-true"
   cartfilled = false,
@@ -310,7 +292,7 @@ export function TopBanner({
           cartfilled={cartfilled}
           address={address}
         />
-        <ContentsArea title={title} subtitle={subtitle} theme={isTop ? theme : "light"} kvSrc={kvSrc} />
+        <ContentsArea leftSrc={leftSrc} rightSrc={rightSrc} />
         {showSearch && <SearchBar />}
         <div style={{ height: SAFETY_BOTTOM }} />
       </div>
@@ -394,28 +376,13 @@ export default function TopBannerSection() {
           <TopBanner
             theme={theme}
             bgColor={theme === "dark" ? "#1a1a2e" : "#E8F0FF"}
-            title="매일 하루종일 특가"
-            subtitle="멈추지 않는 선착순 할인!"
+            bgImage="/assets/banners/topbanner_bg_sample.png"
+            leftSrc="/assets/banners/topbanner_left.png"
+            rightSrc="/assets/banners/topbanner_right.png"
             headerState={effectiveState}
             cartfilled={cartfilled}
           />
         </div>
-      </div>
-
-      {/* Variants */}
-      <div style={{ fontSize: 11, color: "#999", marginBottom: 6 }}>color variants</div>
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-        {[
-          { bg: "#1a1a2e", theme: "dark", title: "무한적립" },
-          { bg: "#2d1b4e", theme: "dark", title: "브랜드위크" },
-          { bg: "#0C3B5C", theme: "dark", title: "요기패스X" },
-          { bg: "#FFE6EE", theme: "light", title: "선착순 특가" },
-          { bg: "#E8F5E9", theme: "light", title: "네이버 멤버십" },
-        ].map((v, i) => (
-          <div key={i} style={{ width: "100%", borderRadius: 16, overflow: "hidden", marginBottom: 12 }}>
-            <TopBanner bgColor={v.bg} theme={v.theme} title={v.title} subtitle="오늘만 이 가격!" showSearch={false} />
-          </div>
-        ))}
       </div>
     </div>
   );
