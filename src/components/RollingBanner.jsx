@@ -5,14 +5,14 @@ import { YdsIcon } from "../icons.jsx";
 // Figma spec: brandnew banner — node 13739:583526
 // 390 x 128 고정, overflow hidden
 // 3가지 유형:
-//   type1: 라이트 배경 + 우측 오브젝트, 좌측 텍스트
-//   type2: 투명/흰 배경 + 우측 음식 누끼, 좌측 텍스트
-//   type3: 어두운 풀이미지, 텍스트 이미지에 포함 (오버레이 불필요)
+//   nukki1: 누끼 이미지 (음식 등) — 에셋 우측 정렬
+//   nukki2: 누끼 이미지 (오브젝트+배경) — 에셋 우측 정렬
+//   fullimg: 풀이미지 (텍스트 포함) — 에셋 센터 정렬, 텍스트/뱃지 숨김
 
 const BANNER_IMAGES = {
-  type1: "/assets/banners/banner_type1_fullimg_text.png",
-  type2: "/assets/banners/banner_type2_nukki.png",
-  type3: "/assets/banners/banner_type3_fullimg_notext.png",
+  nukki1: "/assets/banners/banner_type2_nukki.png",
+  nukki2: "/assets/banners/banner_type1_fullimg_text.png",
+  fullimg: "/assets/banners/banner_type3_fullimg_notext.png",
 };
 
 // ── 컬러 테마 10종 (Figma theme_3차 26.06.05) ──────────────────────────────
@@ -100,7 +100,7 @@ function CustomBadge({ label, bgColor = "#DFEFFF", textColor = "#2D509C" }) {
 // RollingBanner — 메인 컴포넌트
 // ═══════════════════════════════════════════════════════════════════════════════
 export function RollingBanner({
-  bannerType = "type1",
+  bannerType = "nukki2",
   theme = "blue",
   bgColor = null,
   title1 = "매일 하루종일 특가",
@@ -112,27 +112,30 @@ export function RollingBanner({
   onClick,
 }) {
   const t = getTheme(theme);
-  const isType3 = bannerType === "type3";
-  const imageSrc = bannerSrc || BANNER_IMAGES[bannerType] || BANNER_IMAGES.type1;
+  const isFullImg = bannerType === "fullimg";
+  const imageSrc = bannerSrc || BANNER_IMAGES[bannerType] || BANNER_IMAGES.nukki2;
+
+  // 에셋 정렬: 누끼1/2 → 우측, 풀이미지 → 센터
+  const imgPosition = isFullImg ? "center" : "right center";
 
   return (
     <div style={{
       position: "relative",
-      width: 390, height: 128,
+      width: "100%", height: 128,
       overflow: "hidden",
-      background: bgColor || (isType3 ? "#1a1a2e" : t.bannerBg),
+      background: bgColor || (isFullImg ? "#1a1a2e" : t.bannerBg),
       cursor: onClick ? "pointer" : "default",
       fontFamily: "Pretendard, Roboto, sans-serif",
     }} onClick={onClick}>
-      {/* 배경 이미지 (전체 커버) */}
+      {/* 배경 이미지 */}
       <img src={imageSrc} alt="" style={{
         position: "absolute", inset: 0,
         width: "100%", height: "100%",
-        objectFit: "cover", objectPosition: "center",
+        objectFit: "cover", objectPosition: imgPosition,
       }} />
 
-      {/* type3: 이미지만 표시, 텍스트/뱃지 숨김 */}
-      {!isType3 && (
+      {/* 풀이미지: 텍스트/뱃지/커스텀뱃지 전부 숨김 */}
+      {!isFullImg && (
         <>
           {/* 상단 좌측: BannerBadge 그룹 */}
           {badges.length > 0 && (
@@ -187,11 +190,11 @@ export function RollingBanner({
               </div>
             )}
           </div>
+
+          {/* 우상단: CustomBadge — 테마 색상 */}
+          {customBadgeLabel && <CustomBadge label={customBadgeLabel} bgColor={t.customBadgeBg} textColor={t.customBadgeText} />}
         </>
       )}
-
-      {/* 우상단: CustomBadge — 테마 색상 적용 (type3에선 숨김) */}
-      {!isType3 && customBadgeLabel && <CustomBadge label={customBadgeLabel} bgColor={t.customBadgeBg} textColor={t.customBadgeText} />}
     </div>
   );
 }
@@ -212,7 +215,7 @@ const DEMO_BADGES = [
 const THEME_IDS = ["red", "orange", "yellow", "green", "cyan", "blue", "pink", "purple", "brown", "gray"];
 
 export default function RollingBannerSection() {
-  const [bannerType, setBannerType] = useState("type1");
+  const [bannerType, setBannerType] = useState("nukki2");
   const [theme, setTheme] = useState("blue");
   const [showBadges, setShowBadges] = useState(true);
   const [showCustomBadge, setShowCustomBadge] = useState(true);
@@ -244,9 +247,9 @@ export default function RollingBannerSection() {
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <div style={{ display: "flex", gap: 4, alignItems: "center", flexWrap: "wrap" }}>
             <span style={{ fontSize: 10, color: "#999", width: 60, flexShrink: 0 }}>Type</span>
-            {["type1", "type2", "type3"].map(t => (
+            {["nukki1", "nukki2", "fullimg"].map(t => (
               <button key={t} onClick={() => setBannerType(t)} style={chipStyle(bannerType === t)}>
-                {t === "type1" ? "풀이미지+텍스트" : t === "type2" ? "누끼" : "풀이미지"}
+                {t === "nukki1" ? "누끼1" : t === "nukki2" ? "누끼2" : "풀이미지"}
               </button>
             ))}
           </div>
@@ -288,26 +291,26 @@ export default function RollingBannerSection() {
       <div style={{ fontSize: 14, fontWeight: 700, color: "#333", marginBottom: 16 }}>All 3 Types</div>
 
       <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 11, color: "#999", marginBottom: 6 }}>Type 1 — 풀이미지+텍스트</div>
+        <div style={{ fontSize: 11, color: "#999", marginBottom: 6 }}>누끼1 — 음식 누끼, 에셋 우측 정렬</div>
         <RollingBanner
-          bannerType="type1" theme="blue"
-          title1="매일 하루종일 특가" title2="+최대 5% 적립까지!" description="멈추지 않는 선착순 할인!"
-          badges={DEMO_BADGES} customBadgeLabel="선착순"
-        />
-      </div>
-
-      <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 11, color: "#999", marginBottom: 6 }}>Type 2 — 누끼</div>
-        <RollingBanner
-          bannerType="type2" theme="pink"
+          bannerType="nukki1" theme="pink"
           title1="오늘의 추천 메뉴" title2="신선한 재료로 만든" description="매일 새로운 메뉴를 만나보세요"
           badges={[{ icon: "ic_lowest_flat", text: "배달앱 최저가" }]} customBadgeLabel="추천"
         />
       </div>
 
       <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 11, color: "#999", marginBottom: 6 }}>Type 3 — 풀이미지 (no text)</div>
-        <RollingBanner bannerType="type3" customBadgeLabel={null} />
+        <div style={{ fontSize: 11, color: "#999", marginBottom: 6 }}>누끼2 — 오브젝트+배경, 에셋 우측 정렬</div>
+        <RollingBanner
+          bannerType="nukki2" theme="blue"
+          title1="매일 하루종일 특가" title2="+최대 5% 적립까지!" description="멈추지 않는 선착순 할인!"
+          badges={DEMO_BADGES} customBadgeLabel="선착순"
+        />
+      </div>
+
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: 11, color: "#999", marginBottom: 6 }}>풀이미지 — 텍스트 포함 이미지, 센터 정렬</div>
+        <RollingBanner bannerType="fullimg" customBadgeLabel={null} />
       </div>
     </div>
   );
