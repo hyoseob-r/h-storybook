@@ -110,7 +110,7 @@ export function DiscountBrandSwimlane({
         overflowX: "auto", scrollSnapType: "x mandatory",
         scrollPaddingLeft: 16,
         scrollbarWidth: "none", WebkitOverflowScrolling: "touch",
-        paddingLeft: 16, paddingRight: 16,
+        paddingLeft: 16,
       }}>
         {pages.map((pageItems, pi) => (
           <div key={pi} style={{
@@ -123,6 +123,7 @@ export function DiscountBrandSwimlane({
             ))}
           </div>
         ))}
+        <div style={{ minWidth: 1, paddingRight: 16, flexShrink: 0 }} aria-hidden />
       </div>
 
       {/* Page indicator dots */}
