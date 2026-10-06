@@ -126,6 +126,7 @@ export function RollingBanner({
       overflow: "hidden",
       background: bgColor || (isFullImg ? "#1a1a2e" : t.bannerBg),
       borderRadius: variant === "card" ? 12 : 0,
+      margin: variant === "card" ? "0 16px" : 0,
       cursor: onClick ? "pointer" : "default",
       fontFamily: "Pretendard, Roboto, sans-serif",
     }} onClick={onClick}>
