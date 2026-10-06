@@ -238,13 +238,22 @@ export default function GlobalHomeSection() {
           overflowY: "auto", overflowX: "hidden",
           scrollbarWidth: "none",
         }}>
-          {/* Sticky 헤더 — 배너 지나면 나타남 */}
-          {headerState !== "top" && (
-            <div style={{
-              position: "sticky", top: 0, zIndex: 10,
-              background: headerState === "scrolled-true"
+          {/* 단일 Sticky 헤더 — 스크롤에 따라 스타일만 변경 */}
+          <div style={{
+            position: "sticky", top: 0, zIndex: 10,
+            background: headerState === "top"
+              ? "transparent"
+              : headerState === "scrolled-true"
                 ? "linear-gradient(to bottom, rgba(248,248,248,0.96), #f8f8f8)"
                 : "linear-gradient(to bottom, rgba(251,250,249,0.96), rgba(251,250,249,0))",
+            transition: "all 0.25s ease",
+            marginBottom: -115,
+            pointerEvents: headerState === "top" ? "none" : "auto",
+          }}>
+            <div style={{
+              opacity: headerState === "top" ? 0 : 1,
+              transition: "opacity 0.25s ease",
+              pointerEvents: headerState === "top" ? "none" : "auto",
             }}>
               <StatusBar theme="light" />
               <TopNavHeader
@@ -254,11 +263,11 @@ export default function GlobalHomeSection() {
                 cartfilled={false}
               />
             </div>
-          )}
+          </div>
 
           {/* ═══ ATF (고정 순서) ═══ */}
 
-          {/* 1. TopBanner (배너 콘텐츠만 — 헤더는 sticky로 분리) */}
+          {/* 1. TopBanner (헤더 포함 — top 상태 전용) */}
           <TopBanner
             theme={theme}
             bgColor={theme === "dark" ? "#1a1a2e" : "#E8F0FF"}
