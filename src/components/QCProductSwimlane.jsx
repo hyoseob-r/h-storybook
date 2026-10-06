@@ -51,24 +51,23 @@ export function QCProductCard({
           pointerEvents: "none",
         }} />
 
-        {/* 좌상단: 19세 뱃지 또는 프로모 뱃지 */}
+        {/* 우상단: 19세 뱃지 */}
         {isAdult && (
           <div style={{
-            position: "absolute", top: 6, left: 6,
-            width: 25, height: 25,
-            borderRadius: 4, overflow: "hidden",
-            background: "#333", display: "flex", alignItems: "center", justifyContent: "center",
+            position: "absolute", top: 8, right: 8,
+            width: 28, height: 28,
           }}>
-            <span style={{ fontSize: 10, fontWeight: 700, color: "#fff", lineHeight: "14px" }}>19</span>
+            <YdsIcon name="ic_19_circle" size={28} />
           </div>
         )}
+        {/* 좌상단: 프로모 뱃지 */}
         {!isAdult && promoBadge && (
           <div style={{
-            position: "absolute", top: 6, left: 6,
+            position: "absolute", top: 8, left: 8,
             background: "#05947f",
             borderRadius: 2,
-            padding: "2px 6px",
-            display: "flex", alignItems: "center",
+            padding: "3px 6px",
+            display: "flex", alignItems: "center", gap: 3,
           }}>
             <span style={{
               fontSize: 13, fontWeight: 700, lineHeight: "18px",
@@ -77,19 +76,19 @@ export function QCProductCard({
           </div>
         )}
 
-        {/* 우하단: 장바구니 버튼 */}
+        {/* 우하단: 장바구니 버튼 40x40 */}
         <button onClick={onAddCart} style={{
-          position: "absolute", bottom: 0, right: 0,
-          width: 44, height: 44,
-          borderRadius: "50%",
+          position: "absolute", bottom: 8, right: 8,
+          width: 40, height: 40,
+          borderRadius: 20,
           background: "#fff",
           border: "none",
-          boxShadow: "0 1px 8px rgba(25,48,64,0.10), 0 0 2px rgba(25,48,64,0.08)",
+          boxShadow: "0px 0px 2px rgba(25,48,64,0.08), 0px 1px 8px rgba(25,48,64,0.1)",
           display: "flex", alignItems: "center", justifyContent: "center",
           cursor: "pointer",
-          padding: 0,
+          padding: 8,
         }}>
-          <YdsIcon name="add_s" size={24} color="#333333" />
+          <YdsIcon name="add_s" size={24} color="#FA0050" />
         </button>
       </div>
 
