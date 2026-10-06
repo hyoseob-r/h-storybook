@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { metaTokens } from "../tokens";
 import { YdsIcon } from "../icons.jsx";
+import { SearchBar } from "./SearchBar.jsx";
 
 // ─── YDS 2.0 TopBanner (top_final) ─────────────────────────────────────────
 // Figma node 13767:322397 — top_final
@@ -242,15 +243,22 @@ function ContentsArea({ leftSrc = null, rightSrc = null }) {
   );
 }
 
-// ── SearchBar ────────────────────────────────────────────────────────────────
-function SearchBar() {
+// ── SearchBarContainer (흰 배경 라운드 영역 + search_bar_ranking) ────────────
+function SearchBarContainer() {
   return (
     <div style={{
-      height: 32, width: "100%",
+      width: "100%",
       background: "#fff",
       borderRadius: "32px 32px 0 0",
       padding: "16px 16px 8px",
-    }} />
+    }}>
+      <SearchBar
+        rank={1}
+        keyword="파리바게뜨"
+        trend="up"
+        bonusText="5,000원 할인"
+      />
+    </div>
   );
 }
 
@@ -297,7 +305,7 @@ export function TopBanner({
           address={address}
         />
         <ContentsArea leftSrc={leftSrc} rightSrc={rightSrc} />
-        {showSearch && <SearchBar />}
+        {showSearch && <SearchBarContainer />}
       </div>
     </div>
   );

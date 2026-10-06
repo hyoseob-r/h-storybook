@@ -36,6 +36,7 @@ import DiscountRankingSection from "./components/DiscountRanking.jsx";
 import QCProductSwimlaneSection from "./components/QCProductSwimlane.jsx";
 import MenuRecommendSwimlaneSection from "./components/MenuRecommendSwimlane.jsx";
 import GrocerySwimlaneSection from "./components/GrocerySwimlane.jsx";
+import SearchBarSection from "./components/SearchBar.jsx";
 
 // ── Navigation ───────────────────────────────────────────────────────────────
 
@@ -73,6 +74,7 @@ const NAV_SECTIONS = [
     { id: "qcproduct", label: "QC 상품", icon: "🛍" },
     { id: "menurecommend", label: "메뉴추천", icon: "🍴" },
     { id: "grocery", label: "장보기·쇼핑", icon: "🛒" },
+    { id: "searchbar", label: "SearchBar", icon: "🔍" },
   ]},
   { label: "Assets", items: [
     { id: "assets",    label: "Assets",    icon: "🖼" },
@@ -88,8 +90,8 @@ const NAV_SECTIONS = [
   ]},
 ];
 
-const titles = { assets: "Assets", "figma-code": "Figma → Code", "figma-live": "Figma Live", meta: "Meta Tokens", colors: "Color Tokens", typography: "Typography", spacing: "Spacing & Radius", elevation: "Elevation / Shadow", button: "Button", badge: "Badge", rating: "Rating", stepper: "NumericStepper", icons: "Icons", simulator: "Simulator", glassnav: "Liquid Glass Nav", shoplist: "ShopList Card", swimlane: "Swimlane Card", shortcut: "Shortcut Card", brandnew: "Rolling Banner", discountbrand: "할인 브랜드 스윔레인", topbanner: "TopBanner", vlauncher: "Vertical Launcher", foodcat: "Food Category", qcswimlane: "QC Swimlane", reorder: "Reorder Shortcut", globalhome: "Global Home", sectionheader: "SectionHeader", discountranking: "할인랭킹 스윔레인", qcproduct: "QC 상품 스윔레인", menurecommend: "메뉴추천 스윔레인", grocery: "장보기·쇼핑 스윔레인", drafts: "Drafts", figma: "Category" };
-const subtitles = { assets: "컴포넌트용 이미지 에셋 — 로고/사진/그래픽 관리", "figma-code": "Figma URL → YDS 2.0 React 컴포넌트 자동 생성", "figma-live": "alfred-agent 생성 컴포넌트 — Supabase 실시간 렌더링", meta: "YDS 2.0 Primitive Layer — Meta → Semantic → Component", colors: "YDS 2.0 Customer Token", typography: "Roboto 기반 타입 스케일", spacing: "스페이싱 및 보더 라디우스", elevation: "YDS 2.0 Elevation — Level 1 · 2 (normal & inverse)", button: "버튼 컴포넌트 — 멀티 플랫폼 코드", badge: "배지 컴포넌트 — single/group/offers/noti/logo/icon", rating: "별점 컴포넌트 — compact (starIcon + grade + total)", stepper: "수량 조절 — compact/default, elevated/outlined", stickycta: "하단 고정 CTA — PriceButton + NumericStepper", bottomnav: "하단 네비게이션 — pill glass nav + floating bars", icons: "YDS 2.0 System Icon — Figma 원본 기반", simulator: "iOS / Android 실시간 화면 시뮬레이션", glassnav: "OS 버전별 Glass Nav Bar — 호환성 + 코드 생성", shoplist: "가게 리스트 카드 — 로고 + 정보 + 혜택 배지", swimlane: "가로 스크롤 카드 — 썸네일 + 가게 정보", shortcut: "홈 상단 숏컷 — 아이콘 + 라벨 빠른 진입점", brandnew: "롤링 배너 — 3가지 유형 (풀이미지+텍스트 / 누끼 / 풀이미지)", discountbrand: "내 주변 할인중인 브랜드 — 3페이지 × 3아이템 스윔레인", topbanner: "글로벌홈 탑배너 — 배경+스테이터스바+탑네비+컨텐츠+검색", vlauncher: "버티컬 런처 — pill 버튼 가로 스윔레인 (요기더+적립, 포장, 선물하기...)", foodcat: "푸드 카테고리 — 2행 그리드 + 세로배너, 가로 스크롤", qcswimlane: "퀵커머스 스윔레인 — 장보기/편의점 서비스 런처 (70x68 원형)", reorder: "재주문 숏컷 — 이전 주문 메뉴 + 배달 바로 담기 (270x300)", globalhome: "글로벌홈 전체 화면 시뮬레이터 — 390x844 폰 프레임", sectionheader: "섹션 헤더 — 타이틀 + 좌측아이콘 + 우측화살표 (재사용)", discountranking: "할인랭킹 스윔레인 — 실시간 할인율 1위 메뉴 가로 스크롤", qcproduct: "QC 상품 스윔레인 — 2행x3열 상품 그리드 + 장바구니/프로모/할인 뱃지", menurecommend: "메뉴추천 스윔레인 — 추천 메뉴 카드 가로 스크롤 (148px 카드)", grocery: "우리동네 장보기·쇼핑 — 브랜드 원형 로고 + 뱃지 가로 스크롤 (72px 런처)", drafts: "Figma에서 가져온 컴포넌트 — 관리 및 시뮬레이터 연동", figma: "Figma에서 추출한 카테고리 컴포넌트 — 리뉴얼-2026" };
+const titles = { assets: "Assets", "figma-code": "Figma → Code", "figma-live": "Figma Live", meta: "Meta Tokens", colors: "Color Tokens", typography: "Typography", spacing: "Spacing & Radius", elevation: "Elevation / Shadow", button: "Button", badge: "Badge", rating: "Rating", stepper: "NumericStepper", icons: "Icons", simulator: "Simulator", glassnav: "Liquid Glass Nav", shoplist: "ShopList Card", swimlane: "Swimlane Card", shortcut: "Shortcut Card", brandnew: "Rolling Banner", discountbrand: "할인 브랜드 스윔레인", topbanner: "TopBanner", vlauncher: "Vertical Launcher", foodcat: "Food Category", qcswimlane: "QC Swimlane", reorder: "Reorder Shortcut", globalhome: "Global Home", sectionheader: "SectionHeader", discountranking: "할인랭킹 스윔레인", qcproduct: "QC 상품 스윔레인", menurecommend: "메뉴추천 스윔레인", grocery: "장보기·쇼핑 스윔레인", searchbar: "SearchBar", drafts: "Drafts", figma: "Category" };
+const subtitles = { assets: "컴포넌트용 이미지 에셋 — 로고/사진/그래픽 관리", "figma-code": "Figma URL → YDS 2.0 React 컴포넌트 자동 생성", "figma-live": "alfred-agent 생성 컴포넌트 — Supabase 실시간 렌더링", meta: "YDS 2.0 Primitive Layer — Meta → Semantic → Component", colors: "YDS 2.0 Customer Token", typography: "Roboto 기반 타입 스케일", spacing: "스페이싱 및 보더 라디우스", elevation: "YDS 2.0 Elevation — Level 1 · 2 (normal & inverse)", button: "버튼 컴포넌트 — 멀티 플랫폼 코드", badge: "배지 컴포넌트 — single/group/offers/noti/logo/icon", rating: "별점 컴포넌트 — compact (starIcon + grade + total)", stepper: "수량 조절 — compact/default, elevated/outlined", stickycta: "하단 고정 CTA — PriceButton + NumericStepper", bottomnav: "하단 네비게이션 — pill glass nav + floating bars", icons: "YDS 2.0 System Icon — Figma 원본 기반", simulator: "iOS / Android 실시간 화면 시뮬레이션", glassnav: "OS 버전별 Glass Nav Bar — 호환성 + 코드 생성", shoplist: "가게 리스트 카드 — 로고 + 정보 + 혜택 배지", swimlane: "가로 스크롤 카드 — 썸네일 + 가게 정보", shortcut: "홈 상단 숏컷 — 아이콘 + 라벨 빠른 진입점", brandnew: "롤링 배너 — 3가지 유형 (풀이미지+텍스트 / 누끼 / 풀이미지)", discountbrand: "내 주변 할인중인 브랜드 — 3페이지 × 3아이템 스윔레인", topbanner: "글로벌홈 탑배너 — 배경+스테이터스바+탑네비+컨텐츠+검색", vlauncher: "버티컬 런처 — pill 버튼 가로 스윔레인 (요기더+적립, 포장, 선물하기...)", foodcat: "푸드 카테고리 — 2행 그리드 + 세로배너, 가로 스크롤", qcswimlane: "퀵커머스 스윔레인 — 장보기/편의점 서비스 런처 (70x68 원형)", reorder: "재주문 숏컷 — 이전 주문 메뉴 + 배달 바로 담기 (270x300)", globalhome: "글로벌홈 전체 화면 시뮬레이터 — 390x844 폰 프레임", sectionheader: "섹션 헤더 — 타이틀 + 좌측아이콘 + 우측화살표 (재사용)", discountranking: "할인랭킹 스윔레인 — 실시간 할인율 1위 메뉴 가로 스크롤", qcproduct: "QC 상품 스윔레인 — 2행x3열 상품 그리드 + 장바구니/프로모/할인 뱃지", menurecommend: "메뉴추천 스윔레인 — 추천 메뉴 카드 가로 스크롤 (148px 카드)", grocery: "우리동네 장보기·쇼핑 — 브랜드 원형 로고 + 뱃지 가로 스크롤 (72px 런처)", searchbar: "검색바 — 인기 검색어 순위 + 트렌드 아이콘 + 보너스 텍스트", drafts: "Figma에서 가져온 컴포넌트 — 관리 및 시뮬레이터 연동", figma: "Figma에서 추출한 카테고리 컴포넌트 — 리뉴얼-2026" };
 
 // ── H World App Menu ─────────────────────────────────────────────────────────
 
@@ -191,6 +193,7 @@ export default function App() {
     if (active === "qcproduct") return <QCProductSwimlaneSection />;
     if (active === "menurecommend") return <MenuRecommendSwimlaneSection />;
     if (active === "grocery") return <GrocerySwimlaneSection />;
+    if (active === "searchbar") return <SearchBarSection />;
     if (active === "globalhome") return <GlobalHomeSection />;
     if (active === "drafts")     return <DraftsSection onUseInSimulator={draft => { setPendingDraft(draft); setActive("simulator"); }} />;
     if (active === "figma")      return <FigmaSection />;
