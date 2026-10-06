@@ -75,13 +75,11 @@ function CustomBadge({ label, bgColor = "#DFEFFF", textColor = "#2D509C" }) {
         borderWidth: "0 50px 50px 0",
         borderColor: `transparent ${bgColor} transparent transparent`,
       }} />
-      {/* 45도 회전 텍스트 — 테마 customBadgeText */}
+      {/* 45도 회전 텍스트 — 빗변 중앙 정렬 */}
       <span style={{
         position: "absolute",
-        top: 14,
-        right: 3,
-        transform: "rotate(45deg)",
-        transformOrigin: "center center",
+        top: "50%", right: "50%",
+        transform: "translate(50%, -50%) rotate(45deg)",
         fontSize: 12,
         fontWeight: 700,
         lineHeight: "22px",
