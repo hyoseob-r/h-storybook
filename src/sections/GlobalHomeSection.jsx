@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { TopBanner } from "../components/TopBanner.jsx";
 import { VerticalLauncherRow } from "../components/VerticalLauncher.jsx";
 import { FoodCategorySwimlane } from "../components/FoodCategory.jsx";
@@ -14,36 +14,15 @@ import { QCProductSwimlane } from "../components/QCProductSwimlane.jsx";
 import { getShopLogo } from "../shopLogos";
 import { getShopImage } from "../shopImages";
 
-// ─── Global Home Simulator ──────────────────────────────────────────────────
-
-// 글로벌홈 전용 배경색 토큰 (예외 처리, 한번에 수정 가능)
+// 글로벌홈 전용 배경색 토큰
 const GLOBAL_HOME_BG = "#f8f8f8";
 
+// ── 데이터 ─────────────────────────────────────────────────────────────────
+
 const SHOPLIST_CARDS = [
-  {
-    shopName: "본도시락-역삼역", shopId: "hansik_1", logoSrc: getShopLogo("bon"),
-    rating: 4.8, reviewCount: 1567, deliveryTime: "30~45분", deliveryFee: "1,900~2,900원",
-    distance: "372m", minOrder: "12,000원", benefitType: "ypx_free_delivery",
-    bottomBadges: [
-      { text: "배달앱 최저가", colorStyle: "gray", showLeftIcon: true, leftIconName: "ic_lowest" },
-      { text: "스페셜적립", colorStyle: "gray", showLeftIcon: true, leftIconName: "ic_specialpoint" },
-      { text: "1,000원 추가할인", colorStyle: "secondary" },
-    ],
-  },
-  {
-    shopName: "서브웨이 서초점", shopId: "sandwitch_1", logoSrc: getShopLogo("subway"),
-    rating: 4.5, reviewCount: 892, deliveryTime: "25~40분", deliveryFee: "0원~2,000원",
-    distance: "0.8km", minOrder: "10,000원", benefitType: "ypx_free_delivery",
-    bottomBadges: [
-      { text: "즉시할인", colorStyle: "secondary" },
-      { text: "최대 5% 적립", colorStyle: "secondary" },
-    ],
-  },
-  {
-    shopName: "피자헛 역삼점", shopId: "pizza_1", logoSrc: getShopLogo("pizzahut"),
-    rating: 4.2, reviewCount: 456, deliveryTime: "35~50분", deliveryFee: "0원",
-    distance: "2.1km", minOrder: "15,000원", benefitType: "single_discount", isAd: true,
-  },
+  { shopName: "본도시락-역삼역", shopId: "hansik_1", logoSrc: getShopLogo("bon"), rating: 4.8, reviewCount: 1567, deliveryTime: "30~45분", deliveryFee: "1,900~2,900원", distance: "372m", minOrder: "12,000원", benefitType: "ypx_free_delivery", bottomBadges: [{ text: "배달앱 최저가", colorStyle: "gray", showLeftIcon: true, leftIconName: "ic_lowest" }, { text: "스페셜적립", colorStyle: "gray", showLeftIcon: true, leftIconName: "ic_specialpoint" }, { text: "1,000원 추가할인", colorStyle: "secondary" }] },
+  { shopName: "서브웨이 서초점", shopId: "sandwitch_1", logoSrc: getShopLogo("subway"), rating: 4.5, reviewCount: 892, deliveryTime: "25~40분", deliveryFee: "0원~2,000원", distance: "0.8km", minOrder: "10,000원", benefitType: "ypx_free_delivery", bottomBadges: [{ text: "즉시할인", colorStyle: "secondary" }, { text: "최대 5% 적립", colorStyle: "secondary" }] },
+  { shopName: "피자헛 역삼점", shopId: "pizza_1", logoSrc: getShopLogo("pizzahut"), rating: 4.2, reviewCount: 456, deliveryTime: "35~50분", deliveryFee: "0원", distance: "2.1km", minOrder: "15,000원", benefitType: "single_discount", isAd: true },
 ];
 
 const BRAND_ITEMS = [
@@ -90,14 +69,95 @@ const QC_PRODUCTS = [
   { thumbSrc: getShopImage("sandwitch_1"), productName: "풀무원 두부 300g", price: "1,980" },
 ];
 
+// ── BTF 섹션 정의 ──────────────────────────────────────────────────────────
+
+const BTF_SECTIONS = [
+  {
+    id: "reorder", label: "재주문 숏컷",
+    render: () => (
+      <ReorderRow title="재주문 숏컷">
+        <ReorderCard shopName="본도시락-역삼역" thumbSrc={getShopImage("hansik_1")} logoSrc={getShopLogo("bon")} rating={4.8} reviewCount={1567} deliveryFee="0원" orderCount="3회 주문" previousMenu="고추장불고기x1, 된장찌개x1" benefitType="ypx_free" badges={["lowest", "specialpoint"]} />
+        <ReorderCard shopName="교촌치킨 서초점" thumbSrc={getShopImage("chiken_1")} rating={4.6} reviewCount={2103} orderCount="5회 주문" previousMenu="허니콤보x1, 레드콤보x1" benefitType="single_discount" badges={["discount"]} orderType="takeout" walkTime="3분" />
+        <ReorderCard shopName="서브웨이 서초점" thumbSrc={getShopImage("sandwitch_1")} logoSrc={getShopLogo("subway")} rating={4.5} reviewCount={892} deliveryFee="0원" orderCount="8회 주문" previousMenu="에그마요x2, 쿠키x1" badges={["cashback"]} />
+      </ReorderRow>
+    ),
+  },
+  {
+    id: "menuRecommend", label: "추천 메뉴",
+    render: () => <MenuRecommendRow title="추천 메뉴" cards={MENU_RECOMMEND_CARDS} />,
+  },
+  {
+    id: "discountBrand", label: "할인 브랜드",
+    render: () => <DiscountBrandSwimlane title="내 주변 할인중인 브랜드" brands={BRAND_ITEMS} />,
+  },
+  {
+    id: "discountRanking", label: "할인랭킹",
+    render: () => <DiscountRankingRow cards={RANKING_CARDS} promoImageSrc="/assets/banners/discount_ranking_hero.png" />,
+  },
+  {
+    id: "grocery", label: "장보기·쇼핑",
+    render: () => <GrocerySwimlane items={GROCERY_ITEMS} />,
+  },
+  {
+    id: "qcProduct", label: "QC 상품",
+    render: () => <QCProductSwimlane title="샤인머스캣 2천원 할인" subtitle="알고 먹으면 더 맛있는!" dateRange="2026.10.01~2026.10.15" products={QC_PRODUCTS} />,
+  },
+  {
+    id: "shoplist", label: "가게 리스트",
+    render: () => SHOPLIST_CARDS.map((card, i) => <ShopListCard key={i} {...card} showMenuThumbnails />),
+  },
+];
+
+// ── 순서 조정 패널 ─────────────────────────────────────────────────────────
+
+function OrderPanel({ order, onMove }) {
+  return (
+    <div style={{
+      padding: "8px 12px", background: "#fff", borderRadius: 12,
+      border: "1px solid #e8e8e8", marginBottom: 12,
+    }}>
+      <div style={{ fontSize: 10, fontWeight: 700, color: "#999", marginBottom: 6 }}>BTF 섹션 순서</div>
+      {order.map((sec, i) => (
+        <div key={sec.id} style={{
+          display: "flex", alignItems: "center", gap: 6,
+          padding: "4px 0", borderBottom: i < order.length - 1 ? "1px solid #f0f0f0" : "none",
+        }}>
+          <span style={{ fontSize: 10, color: "#bbb", width: 16, textAlign: "center" }}>{i + 1}</span>
+          <span style={{ flex: 1, fontSize: 11, fontWeight: 600, color: "#333" }}>{sec.label}</span>
+          <button
+            onClick={() => onMove(i, -1)}
+            disabled={i === 0}
+            style={{ width: 20, height: 20, border: "1px solid #ddd", borderRadius: 4, background: "#fff", cursor: i === 0 ? "not-allowed" : "pointer", fontSize: 10, color: i === 0 ? "#ddd" : "#333", padding: 0 }}
+          >▲</button>
+          <button
+            onClick={() => onMove(i, 1)}
+            disabled={i === order.length - 1}
+            style={{ width: 20, height: 20, border: "1px solid #ddd", borderRadius: 4, background: "#fff", cursor: i === order.length - 1 ? "not-allowed" : "pointer", fontSize: 10, color: i === order.length - 1 ? "#ddd" : "#333", padding: 0 }}
+          >▼</button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── GlobalHome ──────────────────────────────────────────────────────────────
 
 export default function GlobalHomeSection() {
   const [theme, setTheme] = useState("dark");
+  const [btfOrder, setBtfOrder] = useState(BTF_SECTIONS);
+
+  const moveSection = useCallback((index, direction) => {
+    const newOrder = [...btfOrder];
+    const target = index + direction;
+    if (target < 0 || target >= newOrder.length) return;
+    [newOrder[index], newOrder[target]] = [newOrder[target], newOrder[index]];
+    setBtfOrder(newOrder);
+  }, [btfOrder]);
 
   return (
     <div style={{ padding: "24px 0" }}>
-      {/* Theme toggle */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 16, alignItems: "center" }}>
+      {/* Controls */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 12, alignItems: "center" }}>
         <span style={{ fontSize: 11, color: "#999" }}>Header theme:</span>
         {["dark", "light"].map(t => (
           <button key={t} onClick={() => setTheme(t)}
@@ -108,6 +168,9 @@ export default function GlobalHomeSection() {
               fontSize: 10, cursor: "pointer" }}>{t}</button>
         ))}
       </div>
+
+      {/* BTF 순서 조정 */}
+      <OrderPanel order={btfOrder} onMove={moveSection} />
 
       {/* Phone frame */}
       <div style={{
@@ -122,6 +185,8 @@ export default function GlobalHomeSection() {
           overflowY: "auto", overflowX: "hidden",
           scrollbarWidth: "none",
         }}>
+          {/* ═══ ATF (고정 순서) ═══ */}
+
           {/* 1. TopBanner */}
           <TopBanner
             theme={theme}
@@ -140,14 +205,13 @@ export default function GlobalHomeSection() {
             { id: "robot", img: "VerticalLauncher_44x44_로봇배달.png", label: "로봇배달" },
           ]} />
 
-          {/* 3. Food Category — bg white + 상하 보더(gray50) */}
+          {/* 3. Food Category */}
           <div style={{ background: "#fff" }}>
             <FoodCategorySwimlane />
           </div>
 
           {/* 4. QC Swimlane (런처) */}
           <QCSwimlaneRow />
-
 
           {/* 5. RollingBanner */}
           <RollingBanner
@@ -161,34 +225,9 @@ export default function GlobalHomeSection() {
             customBadgeLabel="선착순"
           />
 
-
-          {/* 6. 재주문 숏컷 */}
-          <ReorderRow title="재주문 숏컷">
-            <ReorderCard shopName="본도시락-역삼역" thumbSrc={getShopImage("hansik_1")} logoSrc={getShopLogo("bon")} rating={4.8} reviewCount={1567} deliveryFee="0원" orderCount="3회 주문" previousMenu="고추장불고기x1, 된장찌개x1" benefitType="ypx_free" badges={["lowest", "specialpoint"]} />
-            <ReorderCard shopName="교촌치킨 서초점" thumbSrc={getShopImage("chiken_1")} rating={4.6} reviewCount={2103} orderCount="5회 주문" previousMenu="허니콤보x1, 레드콤보x1" benefitType="single_discount" badges={["discount"]} orderType="takeout" walkTime="3분" />
-            <ReorderCard shopName="서브웨이 서초점" thumbSrc={getShopImage("sandwitch_1")} logoSrc={getShopLogo("subway")} rating={4.5} reviewCount={892} deliveryFee="0원" orderCount="8회 주문" previousMenu="에그마요x2, 쿠키x1" badges={["cashback"]} />
-          </ReorderRow>
-
-          {/* 7. 메뉴 추천 */}
-          <MenuRecommendRow title="추천 메뉴" cards={MENU_RECOMMEND_CARDS} />
-
-          {/* 8. 할인 브랜드 캐러셀 */}
-          <DiscountBrandSwimlane title="내 주변 할인중인 브랜드" brands={BRAND_ITEMS} />
-
-
-          {/* 9. 할인랭킹 */}
-          <DiscountRankingRow cards={RANKING_CARDS} promoImageSrc="/assets/banners/discount_ranking_hero.png" />
-
-
-          {/* 10. 우리동네 장보기·쇼핑 */}
-          <GrocerySwimlane items={GROCERY_ITEMS} />
-
-          {/* 11. QC 상품 */}
-          <QCProductSwimlane title="샤인머스캣 2천원 할인" subtitle="알고 먹으면 더 맛있는!" dateRange="2026.10.01~2026.10.15" products={QC_PRODUCTS} />
-
-          {/* 12. ShopList Cards */}
-          {SHOPLIST_CARDS.map((card, i) => (
-            <ShopListCard key={i} {...card} showMenuThumbnails />
+          {/* ═══ BTF (순서 변경 가능) ═══ */}
+          {btfOrder.map(sec => (
+            <div key={sec.id}>{sec.render()}</div>
           ))}
 
           {/* Bottom spacer */}
