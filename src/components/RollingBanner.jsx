@@ -69,17 +69,17 @@ function CustomBadge({ label, bgColor = "#DFEFFF", textColor = "#2D509C" }) {
     }}>
       {/* 삼각형 배경 — 테마 customBadgeBg */}
       <div style={{
-        position: "absolute", top: -25, right: -25,
-        width: 50, height: 50,
-        background: bgColor,
-        transform: "rotate(45deg)",
-        transformOrigin: "center center",
+        position: "absolute", top: 0, right: 0,
+        width: 0, height: 0,
+        borderStyle: "solid",
+        borderWidth: "0 50px 50px 0",
+        borderColor: `transparent ${bgColor} transparent transparent`,
       }} />
       {/* 45도 회전 텍스트 — 테마 customBadgeText */}
       <span style={{
         position: "absolute",
-        top: 10,
-        right: 2,
+        top: 14,
+        right: 3,
         transform: "rotate(45deg)",
         transformOrigin: "center center",
         fontSize: 12,
