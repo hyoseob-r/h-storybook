@@ -205,33 +205,50 @@ function TopNavHeader({ theme = "dark", top = true, scrolled = false, cartfilled
 }
 
 // ── ContentsArea ─────────────────────────────────────────────────────────────
-function ContentsArea({ title = "매일 하루종일 특가", subtitle = "멈추지 않는 선착순 할인!", theme = "dark" }) {
+function ContentsArea({ title = "주문할 때마다\n포인트 적립", subtitle = "혜택 확인하기", theme = "dark", kvSrc = null }) {
   const textColor = theme === "dark" ? "#fff" : "#333";
   const subColor = theme === "dark" ? "rgba(255,255,255,0.7)" : "#666";
+  const titleLines = title.split("\n");
+
   return (
     <div style={{
       height: CONTENTS_H, padding: "0 20px",
-      display: "flex", alignItems: "center",
+      display: "flex", alignItems: "center", justifyContent: "space-between",
+      position: "relative",
     }}>
-      <div style={{ flex: 1 }}>
+      {/* Left — 텍스트 영역 (180px) */}
+      <div style={{ width: 180, flexShrink: 0, display: "flex", flexDirection: "column", gap: 4, justifyContent: "center", height: "100%", position: "relative", zIndex: 1 }}>
         <div style={{
-          fontSize: 22, fontWeight: 700, color: textColor, lineHeight: "28px",
+          fontSize: 20, fontWeight: 700, color: textColor, lineHeight: "26px",
+          letterSpacing: "-0.6px",
           fontFamily: "'YOGIYO Sans', Pretendard, sans-serif",
-        }}>{title}</div>
+        }}>
+          {titleLines.map((line, i) => <div key={i}>{line}</div>)}
+        </div>
         {subtitle && (
-          <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 4 }}>
-            <span style={{ fontSize: 13, color: subColor }}>{subtitle}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <span style={{ fontSize: 12, fontWeight: 400, lineHeight: "16px", color: subColor }}>{subtitle}</span>
             <YdsIcon name="chevron_right_s" size={18} color={subColor} />
           </div>
         )}
       </div>
+
+      {/* Right — KV 이미지 영역 (140px), 겹침 가능 */}
       <div style={{
-        width: 135, height: 97, borderRadius: 12,
-        background: theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        flexShrink: 0,
+        width: 140, height: CONTENTS_H, flexShrink: 0,
+        display: "flex", flexDirection: "column", alignItems: "flex-end", justifyContent: "center",
       }}>
-        <span style={{ fontSize: 11, color: textColor, opacity: 0.3 }}>KV</span>
+        {kvSrc ? (
+          <img src={kvSrc} alt="" style={{ width: 135, height: 97, objectFit: "contain", objectPosition: "right center" }} />
+        ) : (
+          <div style={{
+            width: 135, height: 97, borderRadius: 12,
+            background: theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <span style={{ fontSize: 11, color: textColor, opacity: 0.3 }}>KV</span>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -241,13 +258,11 @@ function ContentsArea({ title = "매일 하루종일 특가", subtitle = "멈추
 function SearchBar() {
   return (
     <div style={{
-      height: 32, margin: "0 16px",
-      background: "rgba(0,0,0,0.04)", borderRadius: 16,
-      display: "flex", alignItems: "center", padding: "0 12px", gap: 6,
-    }}>
-      <YdsIcon name="search" size={16} color="#999" />
-      <span style={{ fontSize: 13, color: "#999", fontFamily: "Pretendard, sans-serif" }}>뭐 먹을까? 메뉴나 가게를 검색해보세요</span>
-    </div>
+      height: 32, width: "100%",
+      background: "#fff",
+      borderRadius: "32px 32px 0 0",
+      padding: "16px 16px 8px",
+    }} />
   );
 }
 
@@ -256,11 +271,12 @@ export function TopBanner({
   bgColor = "#1a1a2e",
   bgImage = null,
   theme = "dark",
-  title = "매일 하루종일 특가",
-  subtitle = "멈추지 않는 선착순 할인!",
+  title = "주문할 때마다\n포인트 적립",
+  subtitle = "혜택 확인하기",
   address = "서울 강남구 역삼동",
   showSearch = true,
-  // 새 props (기본값: top=true 상태)
+  kvSrc = null,
+  // 헤더 상태
   headerState = "top", // "top" | "scrolled-false" | "scrolled-true"
   cartfilled = false,
 }) {
@@ -294,7 +310,7 @@ export function TopBanner({
           cartfilled={cartfilled}
           address={address}
         />
-        <ContentsArea title={title} subtitle={subtitle} theme={isTop ? theme : "light"} />
+        <ContentsArea title={title} subtitle={subtitle} theme={isTop ? theme : "light"} kvSrc={kvSrc} />
         {showSearch && <SearchBar />}
         <div style={{ height: SAFETY_BOTTOM }} />
       </div>
