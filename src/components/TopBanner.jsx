@@ -248,8 +248,6 @@ function SearchBarContainer() {
   return (
     <div style={{
       width: "100%",
-      background: "#fff",
-      borderRadius: "32px 32px 0 0",
       padding: "16px 16px 8px",
     }}>
       <SearchBar
