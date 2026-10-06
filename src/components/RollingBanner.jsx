@@ -63,7 +63,7 @@ function CustomBadge({ label, bgColor = "#DFEFFF", textColor = "#2D509C" }) {
   return (
     <div style={{
       position: "absolute", top: 0, right: 0,
-      width: 50, height: 50,
+      width: 40, height: 40,
       overflow: "hidden",
       pointerEvents: "none",
     }}>
@@ -72,14 +72,15 @@ function CustomBadge({ label, bgColor = "#DFEFFF", textColor = "#2D509C" }) {
         position: "absolute", top: 0, right: 0,
         width: 0, height: 0,
         borderStyle: "solid",
-        borderWidth: "0 50px 50px 0",
+        borderWidth: "0 40px 40px 0",
         borderColor: `transparent ${bgColor} transparent transparent`,
       }} />
-      {/* 45도 회전 텍스트 — 빗변 중앙 정렬 */}
+      {/* 45도 회전 텍스트 — 빗변 중앙, 텍스트 센터 정렬 */}
       <span style={{
         position: "absolute",
         top: "50%", right: "50%",
         transform: "translate(50%, -50%) rotate(45deg)",
+        textAlign: "center",
         fontSize: 12,
         fontWeight: 700,
         lineHeight: "14px",
