@@ -5,7 +5,7 @@ import { FoodCategorySwimlane } from "../components/FoodCategory.jsx";
 import { QCSwimlaneRow } from "../components/QCSwimlane.jsx";
 import { SwimlaneCard, SwimlaneRow } from "../components/SwimlaneCard.jsx";
 import { ShopListCard } from "../components/ShopListCard.jsx";
-import { BrandnewImageBanner } from "../components/BrandnewBanner.jsx";
+import { RollingBanner } from "../components/RollingBanner.jsx";
 import { DiscountBrandSwimlane } from "../components/DiscountBrandSwimlane.jsx";
 import { getShopLogo } from "../shopLogos";
 import { getShopImage } from "../shopImages";
@@ -121,15 +121,16 @@ export default function GlobalHomeSection() {
 
           <SectionDivider />
 
-          {/* 3. BrandnewBanner (이미지 배너) */}
+          {/* 3. RollingBanner (롤링 배너) */}
           <div style={{ padding: 16 }}>
-            <BrandnewImageBanner
-              bgColor="#2d1b4e"
-              title={"무한적립\n주문할수록 쌓여요"}
-              subtitle="최대 15% 적립"
-              textInvert
-              height={160}
-              indicatorVariant="full"
+            <RollingBanner
+              bannerType="type1"
+              bgColor="#8fc7ff"
+              title1="무한적립"
+              title2="주문할수록 쌓여요"
+              description="최대 15% 적립"
+              badges={[{ icon: "ic_specialpoint_flat", text: "스페셜적립" }]}
+              customBadgeLabel="선착순"
             />
           </div>
 
