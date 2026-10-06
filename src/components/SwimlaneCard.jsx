@@ -53,6 +53,7 @@ export function SwimlaneCard({
   return (
     <div style={{
       width: CARD_WIDTH, flexShrink: 0,
+      padding: "16px 0",
       fontFamily: "Pretendard, Roboto, sans-serif",
     }}>
       {/* Thumbnail + 배너 wrapper */}
