@@ -80,7 +80,7 @@ export function DiscountRankingCard({
       {/* 2. 랭킹 뱃지 */}
       {rankingBadge && (
         <div style={{ marginTop: 6 }}>
-          <SingleBadge text={rankingBadge} colorStyle="primary" size="small" />
+          <SingleBadge text={rankingBadge} colorStyle="gray" size="small" showLeftIcon leftIconName="ic_bpr" />
         </div>
       )}
 
@@ -186,7 +186,7 @@ export function DiscountRankingRow({
               color: "#333", marginBottom: 2,
               display: "flex", alignItems: "center", gap: 4,
             }}>
-              <span role="img" aria-label="crown" style={{ fontSize: 18 }}>👑</span>
+              <YdsIcon name="ic_bpr" size={24} />
               할인랭킹
             </div>
             <div style={{
