@@ -15,6 +15,24 @@ const BANNER_IMAGES = {
   type3: "/assets/banners/banner_type3_fullimg_notext.png",
 };
 
+// ── 컬러 테마 10종 (Figma theme_3차 26.06.05) ──────────────────────────────
+const BANNER_THEMES = [
+  { id: "red",    bannerBg: "#FFBCBC", kvBg: "#FFDBDB", badgeColor: "#D03021", customBadgeBg: "#FFE3E3", customBadgeText: "#D03021" },
+  { id: "orange", bannerBg: "#FFC47D", kvBg: "#FFE2D6", badgeColor: "#E26917", customBadgeBg: "#FFEEDE", customBadgeText: "#E26917" },
+  { id: "yellow", bannerBg: "#FFD874", kvBg: "#FFF3D6", badgeColor: "#D47C00", customBadgeBg: "#FFF2D2", customBadgeText: "#D47C00" },
+  { id: "green",  bannerBg: "#B0ECB0", kvBg: "#DFF6DF", badgeColor: "#168046", customBadgeBg: "#E3FFE3", customBadgeText: "#168046" },
+  { id: "cyan",   bannerBg: "#A6E3FF", kvBg: "#DBF5FF", badgeColor: "#095EAE", customBadgeBg: "#E2F7FF", customBadgeText: "#095EAE" },
+  { id: "blue",   bannerBg: "#A2D1FF", kvBg: "#DBEAFF", badgeColor: "#2D509C", customBadgeBg: "#DFEFFF", customBadgeText: "#2D509C" },
+  { id: "pink",   bannerBg: "#FFC3D6", kvBg: "#FFE1EB", badgeColor: "#D93759", customBadgeBg: "#FFE9F0", customBadgeText: "#D93759" },
+  { id: "purple", bannerBg: "#D5BFFF", kvBg: "#E9E9FF", badgeColor: "#5F3E9B", customBadgeBg: "#EFE7FF", customBadgeText: "#5F3E9B" },
+  { id: "brown",  bannerBg: "#ECCBAF", kvBg: "#F2E6F1", badgeColor: "#894D2D", customBadgeBg: "#FFF1E5", customBadgeText: "#894D2D" },
+  { id: "gray",   bannerBg: "#DADADA", kvBg: "#F2F2F2", badgeColor: "#4E4E4E", customBadgeBg: "#EFEFEF", customBadgeText: "#4E4E4E" },
+];
+
+function getTheme(themeId) {
+  return BANNER_THEMES.find(t => t.id === themeId) || BANNER_THEMES[5]; // default: blue
+}
+
 // ── BannerBadge (상단 좌측 — 어두운 배경 + 흰 텍스트) ────────────────────────
 function BannerBadge({ icon, text, small = false }) {
   const fontSize = small ? 11 : 12;
@@ -38,8 +56,8 @@ function BannerBadge({ icon, text, small = false }) {
   );
 }
 
-// ── CustomBadge (우상단 삼각형 — 45도 회전 텍스트) ──────────────────────────
-function CustomBadge({ label }) {
+// ── CustomBadge (우상단 삼각형 — 45도 회전 텍스트, 테마 색상) ────────────────
+function CustomBadge({ label, bgColor = "#DFEFFF", textColor = "#2D509C" }) {
   if (!label) return null;
 
   return (
@@ -49,15 +67,15 @@ function CustomBadge({ label }) {
       overflow: "hidden",
       pointerEvents: "none",
     }}>
-      {/* 삼각형 배경 */}
+      {/* 삼각형 배경 — 테마 customBadgeBg */}
       <div style={{
         position: "absolute", top: -25, right: -25,
         width: 50, height: 50,
-        background: "#fff",
+        background: bgColor,
         transform: "rotate(45deg)",
         transformOrigin: "center center",
       }} />
-      {/* 45도 회전 텍스트 */}
+      {/* 45도 회전 텍스트 — 테마 customBadgeText */}
       <span style={{
         position: "absolute",
         top: 10,
@@ -66,8 +84,8 @@ function CustomBadge({ label }) {
         transformOrigin: "center center",
         fontSize: 12,
         fontWeight: 700,
-        lineHeight: "16px",
-        color: "#2d509c",
+        lineHeight: "22px",
+        color: textColor,
         fontFamily: "'YOGIYO Sans', Pretendard, sans-serif",
         whiteSpace: "nowrap",
       }}>{label}</span>
@@ -80,7 +98,7 @@ function CustomBadge({ label }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 export function RollingBanner({
   bannerType = "type1",
-  bgColor = "#8fc7ff",
+  theme = "blue",
   title1 = "매일 하루종일 특가",
   title2 = "+최대 5% 적립까지!",
   description = "멈추지 않는 선착순 할인!",
@@ -89,6 +107,7 @@ export function RollingBanner({
   bannerSrc = null,
   onClick,
 }) {
+  const t = getTheme(theme);
   const isType3 = bannerType === "type3";
   const imageSrc = bannerSrc || BANNER_IMAGES[bannerType] || BANNER_IMAGES.type1;
 
@@ -97,7 +116,7 @@ export function RollingBanner({
       position: "relative",
       width: 390, height: 128,
       overflow: "hidden",
-      background: isType3 ? "#1a1a2e" : bgColor,
+      background: isType3 ? "#1a1a2e" : t.bannerBg,
       cursor: onClick ? "pointer" : "default",
       fontFamily: "Pretendard, Roboto, sans-serif",
     }} onClick={onClick}>
@@ -166,8 +185,8 @@ export function RollingBanner({
         </>
       )}
 
-      {/* 우상단: CustomBadge */}
-      {customBadgeLabel && <CustomBadge label={customBadgeLabel} />}
+      {/* 우상단: CustomBadge — 테마 색상 적용 */}
+      {customBadgeLabel && <CustomBadge label={customBadgeLabel} bgColor={t.customBadgeBg} textColor={t.customBadgeText} />}
     </div>
   );
 }
@@ -185,8 +204,11 @@ const DEMO_BADGES = [
   { icon: "ic_specialpoint_flat", text: "스페셜적립", small: true },
 ];
 
+const THEME_IDS = ["red", "orange", "yellow", "green", "cyan", "blue", "pink", "purple", "brown", "gray"];
+
 export default function RollingBannerSection() {
   const [bannerType, setBannerType] = useState("type1");
+  const [theme, setTheme] = useState("blue");
   const [showBadges, setShowBadges] = useState(true);
   const [showCustomBadge, setShowCustomBadge] = useState(true);
 
@@ -198,34 +220,57 @@ export default function RollingBannerSection() {
     fontSize: 10, cursor: "pointer",
   });
 
+  const themeChipStyle = (id) => {
+    const t = getTheme(id);
+    const active = theme === id;
+    return {
+      padding: "4px 10px", borderRadius: 20, cursor: "pointer",
+      border: active ? "2px solid #333" : "1.5px solid #e0e0e0",
+      background: t.bannerBg, color: t.badgeColor,
+      fontSize: 10, fontWeight: 700,
+    };
+  };
+
   return (
     <div style={{ padding: "24px 0" }}>
       {/* Controls */}
       <div style={controlStyle}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: "#333", marginBottom: 10 }}>Banner Type</div>
-        <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
-          {["type1", "type2", "type3"].map(t => (
-            <button key={t} onClick={() => setBannerType(t)} style={chipStyle(bannerType === t)}>
-              {t === "type1" ? "Type 1 (풀이미지+텍스트)" : t === "type2" ? "Type 2 (누끼)" : "Type 3 (풀이미지)"}
+        <div style={{ fontSize: 11, fontWeight: 700, color: "#333", marginBottom: 10 }}>Options</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div style={{ display: "flex", gap: 4, alignItems: "center", flexWrap: "wrap" }}>
+            <span style={{ fontSize: 10, color: "#999", width: 60, flexShrink: 0 }}>Type</span>
+            {["type1", "type2", "type3"].map(t => (
+              <button key={t} onClick={() => setBannerType(t)} style={chipStyle(bannerType === t)}>
+                {t === "type1" ? "풀이미지+텍스트" : t === "type2" ? "누끼" : "풀이미지"}
+              </button>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 4, alignItems: "center", flexWrap: "wrap" }}>
+            <span style={{ fontSize: 10, color: "#999", width: 60, flexShrink: 0 }}>Theme</span>
+            {THEME_IDS.map(id => (
+              <button key={id} onClick={() => setTheme(id)} style={themeChipStyle(id)}>
+                {id}
+              </button>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+            <span style={{ fontSize: 10, color: "#999", width: 60, flexShrink: 0 }}>Toggle</span>
+            <button onClick={() => setShowBadges(!showBadges)} style={chipStyle(showBadges)}>
+              Badges {showBadges ? "ON" : "OFF"}
             </button>
-          ))}
-        </div>
-        <div style={{ display: "flex", gap: 6 }}>
-          <button onClick={() => setShowBadges(!showBadges)} style={chipStyle(showBadges)}>
-            Badges {showBadges ? "ON" : "OFF"}
-          </button>
-          <button onClick={() => setShowCustomBadge(!showCustomBadge)} style={chipStyle(showCustomBadge)}>
-            CustomBadge {showCustomBadge ? "ON" : "OFF"}
-          </button>
+            <button onClick={() => setShowCustomBadge(!showCustomBadge)} style={chipStyle(showCustomBadge)}>
+              CustomBadge {showCustomBadge ? "ON" : "OFF"}
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Interactive Preview */}
-      <div style={{ fontSize: 11, fontWeight: 700, color: "#999", marginBottom: 8 }}>Interactive Preview</div>
+      {/* Preview */}
+      <div style={{ fontSize: 11, fontWeight: 700, color: "#999", marginBottom: 8 }}>Preview</div>
       <div style={{ marginBottom: 32 }}>
         <RollingBanner
           bannerType={bannerType}
-          bgColor={bannerType === "type1" ? "#8fc7ff" : bannerType === "type2" ? "#ffffff" : undefined}
+          theme={theme}
           title1="매일 하루종일 특가"
           title2="+최대 5% 적립까지!"
           description="멈추지 않는 선착순 할인!"
@@ -235,48 +280,29 @@ export default function RollingBannerSection() {
       </div>
 
       {/* 3가지 유형 데모 */}
-      <h3 style={{ fontSize: 16, fontWeight: 700, color: "#333", marginBottom: 16 }}>All 3 Types</h3>
+      <div style={{ fontSize: 14, fontWeight: 700, color: "#333", marginBottom: 16 }}>All 3 Types</div>
 
-      {/* Type 1 */}
       <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 11, color: "#999", marginBottom: 6 }}>Type 1 — 라이트 배경 + 우측 오브젝트, 좌측 텍스트</div>
+        <div style={{ fontSize: 11, color: "#999", marginBottom: 6 }}>Type 1 — 풀이미지+텍스트</div>
         <RollingBanner
-          bannerType="type1"
-          bgColor="#8fc7ff"
-          title1="매일 하루종일 특가"
-          title2="+최대 5% 적립까지!"
-          description="멈추지 않는 선착순 할인!"
-          badges={[
-            { icon: "ic_lowest_flat", text: "배달앱 최저가" },
-            { icon: "ic_specialpoint_flat", text: "스페셜적립", small: true },
-          ]}
-          customBadgeLabel="선착순"
+          bannerType="type1" theme="blue"
+          title1="매일 하루종일 특가" title2="+최대 5% 적립까지!" description="멈추지 않는 선착순 할인!"
+          badges={DEMO_BADGES} customBadgeLabel="선착순"
         />
       </div>
 
-      {/* Type 2 */}
       <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 11, color: "#999", marginBottom: 6 }}>Type 2 — 투명/흰 배경 + 우측 음식 누끼, 좌측 텍스트</div>
+        <div style={{ fontSize: 11, color: "#999", marginBottom: 6 }}>Type 2 — 누끼</div>
         <RollingBanner
-          bannerType="type2"
-          bgColor="#ffffff"
-          title1="오늘의 추천 메뉴"
-          title2="신선한 재료로 만든"
-          description="매일 새로운 메뉴를 만나보세요"
-          badges={[
-            { icon: "ic_lowest_flat", text: "배달앱 최저가" },
-          ]}
-          customBadgeLabel="추천"
+          bannerType="type2" theme="pink"
+          title1="오늘의 추천 메뉴" title2="신선한 재료로 만든" description="매일 새로운 메뉴를 만나보세요"
+          badges={[{ icon: "ic_lowest_flat", text: "배달앱 최저가" }]} customBadgeLabel="추천"
         />
       </div>
 
-      {/* Type 3 */}
       <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 11, color: "#999", marginBottom: 6 }}>Type 3 — 어두운 풀이미지, 텍스트 이미지에 포함 (오버레이 없음)</div>
-        <RollingBanner
-          bannerType="type3"
-          customBadgeLabel={null}
-        />
+        <div style={{ fontSize: 11, color: "#999", marginBottom: 6 }}>Type 3 — 풀이미지 (no text)</div>
+        <RollingBanner bannerType="type3" customBadgeLabel={null} />
       </div>
     </div>
   );
