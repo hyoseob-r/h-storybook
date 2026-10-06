@@ -3,6 +3,7 @@ import { metaTokens } from "../tokens";
 import { YdsIcon } from "../icons.jsx";
 import { SingleBadge } from "./Badge.jsx";
 import { getShopLogo } from "../shopLogos";
+import { SectionHeader } from "./SectionHeader.jsx";
 
 // ─── YDS 2.0 DiscountBrandSwimlane (리뉴얼-2026) ──────────────────────────
 // 3아이템 × 1컬럼 = 1페이지, 스와이프 캐러셀
@@ -101,19 +102,7 @@ export function DiscountBrandSwimlane({
 
   return (
     <div style={{ fontFamily: "Pretendard, Roboto, sans-serif" }}>
-      {/* Section header */}
-      <div style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "0 0 8px",
-      }}>
-        <span style={{ fontSize: 18, fontWeight: 700, color: "#333" }}>{title}</span>
-        <button onClick={onMoreClick} style={{
-          display: "flex", alignItems: "center",
-          background: "none", border: "none", cursor: "pointer", padding: 0,
-        }}>
-          <YdsIcon name="chevron_right_s" size={20} color="#999" />
-        </button>
-      </div>
+      <SectionHeader title={title} showArrow onClick={onMoreClick} />
 
       {/* 캐러셀 — 스와이프 가능 */}
       <div ref={scrollRef} style={{

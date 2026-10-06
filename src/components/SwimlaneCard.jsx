@@ -3,6 +3,7 @@ import { metaTokens } from "../tokens";
 import { YdsIcon } from "../icons.jsx";
 import { SingleBadge, GroupBadge, LogoBadge, AdBadge } from "./Badge.jsx";
 import { RatingCompact } from "./Rating.jsx";
+import { SectionHeader } from "./SectionHeader.jsx";
 import { getShopLogo } from "../shopLogos";
 import { getShopImage, imageStyle } from "../shopImages";
 
@@ -186,16 +187,7 @@ export function SwimlaneRow({
 }) {
   return (
     <div style={{ fontFamily: "Pretendard, Roboto, sans-serif" }}>
-      {/* Section header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 16px 12px" }}>
-        <span style={{ fontSize: 18, fontWeight: 700, color: "#333" }}>{title}</span>
-        {showMore && (
-          <button style={{ display: "flex", alignItems: "center", gap: 2, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
-            <span style={{ fontSize: 13, color: "#999" }}>더보기</span>
-            <YdsIcon name="chevron_right_s" size={16} color="#999" />
-          </button>
-        )}
-      </div>
+      <SectionHeader title={title} showArrow={showMore} />
       {/* Scrollable row */}
       <div style={{
         display: "flex", gap: 8, overflowX: "auto", paddingLeft: 16, paddingBottom: 16,

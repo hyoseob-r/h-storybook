@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { metaTokens } from "../tokens";
 import { SingleBadge, AdBadge } from "./Badge.jsx";
+import { SectionHeader } from "./SectionHeader.jsx";
 import { RatingCompact } from "./Rating.jsx";
 import { getShopLogo } from "../shopLogos";
 import { getShopImage } from "../shopImages";
@@ -184,9 +185,7 @@ export function ReorderCard({
 export function ReorderRow({ title = "재주문 숏컷", children }) {
   return (
     <div style={{ fontFamily: "Pretendard, Roboto, sans-serif" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 16px 12px" }}>
-        <span style={{ fontSize: 18, fontWeight: 700, lineHeight: "24px", color: "#333" }}>{title}</span>
-      </div>
+      <SectionHeader title={title} showArrow={false} />
       <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingLeft: 16, paddingBottom: 16, scrollbarWidth: "none" }}>
         {children}
       </div>
