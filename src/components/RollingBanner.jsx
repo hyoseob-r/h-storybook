@@ -125,7 +125,8 @@ export function RollingBanner({
   return (
     <div style={{
       position: "relative",
-      width: "100%", height: 128,
+      width: variant === "card" ? "calc(100% - 32px)" : "100%",
+      height: 128,
       overflow: "hidden",
       background: bgColor || t.bannerBg,
       borderRadius: variant === "card" ? 12 : 0,
