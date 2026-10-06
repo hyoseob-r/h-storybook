@@ -266,6 +266,7 @@ export function TopBanner({
   rightSrc = null,
   address = "서울 강남구 역삼동",
   showSearch = true,
+  showHeader = true,
   // 헤더 상태
   headerState = "top", // "top" | "scrolled-false" | "scrolled-true"
   cartfilled = false,
@@ -291,14 +292,18 @@ export function TopBanner({
       )}
 
       <div style={{ position: "relative", zIndex: 1 }}>
-        <StatusBar theme={isTop ? theme : "light"} />
-        <TopNavHeader
-          theme={theme}
-          top={isTop}
-          scrolled={isScrolledTrue}
-          cartfilled={cartfilled}
-          address={address}
-        />
+        {showHeader && (
+          <>
+            <StatusBar theme={isTop ? theme : "light"} />
+            <TopNavHeader
+              theme={theme}
+              top={isTop}
+              scrolled={isScrolledTrue}
+              cartfilled={cartfilled}
+              address={address}
+            />
+          </>
+        )}
         <ContentsArea leftSrc={leftSrc} rightSrc={rightSrc} />
         {showSearch && <SearchBarContainer />}
       </div>
