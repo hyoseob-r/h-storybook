@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { TopBanner } from "../components/TopBanner.jsx";
+import { TopBanner, StatusBar, TopNavHeader } from "../components/TopBanner.jsx";
 import { VerticalLauncherRow } from "../components/VerticalLauncher.jsx";
 import { FoodCategorySwimlane } from "../components/FoodCategory.jsx";
 import { QCSwimlaneRow } from "../components/QCSwimlane.jsx";
@@ -233,31 +233,37 @@ export default function GlobalHomeSection() {
         background: GLOBAL_HOME_BG,
         position: "relative",
       }}>
-        {/* Sticky 헤더 — 스크롤 시 상단 고정 */}
-        {headerState !== "top" && (
-          <div style={{
-            position: "absolute", top: 0, left: 0, right: 0, zIndex: 10,
-          }}>
-            <TopBanner
-              theme="light"
-              bgColor="transparent"
-              headerState={headerState}
-              cartfilled={false}
-              showSearch={false}
-              leftSrc={null}
-              rightSrc={null}
-            />
-          </div>
-        )}
-
         <div ref={scrollRef} style={{
           width: "100%", height: "100%",
           overflowY: "auto", overflowX: "hidden",
           scrollbarWidth: "none",
         }}>
+          {/* Sticky 헤더 — 스크롤 시 콘텐츠 위에 떠있음 */}
+          <div style={{
+            position: "sticky", top: 0, zIndex: 10,
+            marginBottom: headerState === "top" ? -115 : 0,
+          }}>
+            <div style={{
+              background: headerState === "top"
+                ? "transparent"
+                : headerState === "scrolled-true"
+                  ? "linear-gradient(to bottom, rgba(248,248,248,0.95), rgba(248,248,248,1))"
+                  : "linear-gradient(to bottom, rgba(248,248,248,0.7), rgba(248,248,248,0))",
+              transition: "background 0.2s",
+            }}>
+              <StatusBar theme={headerState === "top" ? theme : "light"} />
+              <TopNavHeader
+                theme={headerState === "top" ? theme : "light"}
+                top={headerState === "top"}
+                scrolled={headerState === "scrolled-true"}
+                cartfilled={false}
+              />
+            </div>
+          </div>
+
           {/* ═══ ATF (고정 순서) ═══ */}
 
-          {/* 1. TopBanner */}
+          {/* 1. TopBanner (배너 콘텐츠만 — 헤더는 sticky로 분리) */}
           <TopBanner
             theme={theme}
             bgColor={theme === "dark" ? "#1a1a2e" : "#E8F0FF"}

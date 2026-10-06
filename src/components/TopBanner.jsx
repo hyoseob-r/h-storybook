@@ -17,7 +17,7 @@ const SAFETY_BOTTOM = 32;
 const SHADOW_LEVEL1_V2 = "0px 0px 2px rgba(25,48,64,0.08), 0px 1px 8px rgba(25,48,64,0.1)";
 
 // ── StatusBar ───────────────────────────────────────────────────────────────
-function StatusBar({ theme = "dark" }) {
+export function StatusBar({ theme = "dark" }) {
   const color = theme === "dark" ? "#fff" : "#333";
   return (
     <div style={{
@@ -134,7 +134,7 @@ function PillAddress({ theme, address }) {
 }
 
 // ── TopNavHeader (3가지 상태) ────────────────────────────────────────────────
-function TopNavHeader({ theme = "dark", top = true, scrolled = false, cartfilled = false, address = "서울 강남구 역삼동" }) {
+export function TopNavHeader({ theme = "dark", top = true, scrolled = false, cartfilled = false, address = "서울 강남구 역삼동" }) {
   const isDark = theme === "dark";
 
   // 배경 — top=false일 때 항상 그라디언트 스크림
