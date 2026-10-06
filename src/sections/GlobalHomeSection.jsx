@@ -123,10 +123,10 @@ export default function GlobalHomeSection() {
 
           <SectionDivider />
 
-          {/* 3. RollingBanner (롤링 배너) — card variant */}
+          {/* 3. RollingBanner (롤링 배너) — full variant */}
           <RollingBanner
             bannerType="nukki2"
-            variant="card"
+            variant="full"
             theme="blue"
             title1="매일 하루종일 특가"
             title2="+최대 5% 적립까지!"
