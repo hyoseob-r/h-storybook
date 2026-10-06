@@ -90,9 +90,6 @@ const QC_PRODUCTS = [
   { thumbSrc: getShopImage("sandwitch_1"), productName: "풀무원 두부 300g", price: "1,980" },
 ];
 
-function SectionDivider() {
-  return <div style={{ height: 8, background: "#f0f0f0" }} />;
-}
 
 export default function GlobalHomeSection() {
   const [theme, setTheme] = useState("dark");
@@ -135,29 +132,22 @@ export default function GlobalHomeSection() {
           />
 
           {/* 2. Vertical Launcher */}
-          <div style={{ background: "#fff" }}>
-            <VerticalLauncherRow items={[
-              { id: "yogiplus", img: "VerticalLauncher_44x44_요기더적립.png", label: "요기더+적립" },
-              { id: "takeout", img: "VerticalLauncher_44x44_포장주문.png", label: "포장", badge: "7% 할인" },
-              { id: "gift", img: "VerticalLauncher_44x44_선물하기.png", label: "선물하기" },
-              { id: "rank", img: "VerticalLauncher_44x44_할인랭킹.png", label: "할인랭킹" },
-              { id: "robot", img: "VerticalLauncher_44x44_로봇배달.png", label: "로봇배달" },
-            ]} />
-          </div>
+          <VerticalLauncherRow items={[
+            { id: "yogiplus", img: "VerticalLauncher_44x44_요기더적립.png", label: "요기더+적립" },
+            { id: "takeout", img: "VerticalLauncher_44x44_포장주문.png", label: "포장", badge: "7% 할인" },
+            { id: "gift", img: "VerticalLauncher_44x44_선물하기.png", label: "선물하기" },
+            { id: "rank", img: "VerticalLauncher_44x44_할인랭킹.png", label: "할인랭킹" },
+            { id: "robot", img: "VerticalLauncher_44x44_로봇배달.png", label: "로봇배달" },
+          ]} />
 
-          {/* 3. Food Category — bg white + 상하 보더(gray50) 컴포넌트 내장 */}
+          {/* 3. Food Category — bg white + 상하 보더(gray50) */}
           <div style={{ background: "#fff" }}>
             <FoodCategorySwimlane />
           </div>
 
-          <SectionDivider />
-
           {/* 4. QC Swimlane (런처) */}
-          <div style={{ background: "#fff" }}>
-            <QCSwimlaneRow />
-          </div>
+          <QCSwimlaneRow />
 
-          <SectionDivider />
 
           {/* 5. RollingBanner */}
           <RollingBanner
@@ -171,58 +161,35 @@ export default function GlobalHomeSection() {
             customBadgeLabel="선착순"
           />
 
-          <SectionDivider />
 
           {/* 6. 재주문 숏컷 */}
-          <div style={{ background: "#fff" }}>
-            <ReorderRow title="재주문 숏컷">
-              <ReorderCard shopName="본도시락-역삼역" thumbSrc={getShopImage("hansik_1")} logoSrc={getShopLogo("bon")} rating={4.8} reviewCount={1567} deliveryFee="0원" orderCount="3회 주문" previousMenu="고추장불고기x1, 된장찌개x1" benefitType="ypx_free" badges={["lowest", "specialpoint"]} />
-              <ReorderCard shopName="교촌치킨 서초점" thumbSrc={getShopImage("chiken_1")} rating={4.6} reviewCount={2103} orderCount="5회 주문" previousMenu="허니콤보x1, 레드콤보x1" benefitType="single_discount" badges={["discount"]} orderType="takeout" walkTime="3분" />
-              <ReorderCard shopName="서브웨이 서초점" thumbSrc={getShopImage("sandwitch_1")} logoSrc={getShopLogo("subway")} rating={4.5} reviewCount={892} deliveryFee="0원" orderCount="8회 주문" previousMenu="에그마요x2, 쿠키x1" badges={["cashback"]} />
-            </ReorderRow>
-          </div>
-
-          <SectionDivider />
+          <ReorderRow title="재주문 숏컷">
+            <ReorderCard shopName="본도시락-역삼역" thumbSrc={getShopImage("hansik_1")} logoSrc={getShopLogo("bon")} rating={4.8} reviewCount={1567} deliveryFee="0원" orderCount="3회 주문" previousMenu="고추장불고기x1, 된장찌개x1" benefitType="ypx_free" badges={["lowest", "specialpoint"]} />
+            <ReorderCard shopName="교촌치킨 서초점" thumbSrc={getShopImage("chiken_1")} rating={4.6} reviewCount={2103} orderCount="5회 주문" previousMenu="허니콤보x1, 레드콤보x1" benefitType="single_discount" badges={["discount"]} orderType="takeout" walkTime="3분" />
+            <ReorderCard shopName="서브웨이 서초점" thumbSrc={getShopImage("sandwitch_1")} logoSrc={getShopLogo("subway")} rating={4.5} reviewCount={892} deliveryFee="0원" orderCount="8회 주문" previousMenu="에그마요x2, 쿠키x1" badges={["cashback"]} />
+          </ReorderRow>
 
           {/* 7. 메뉴 추천 */}
-          <div style={{ background: "#fff" }}>
-            <MenuRecommendRow title="추천 메뉴" cards={MENU_RECOMMEND_CARDS} />
-          </div>
-
-          <SectionDivider />
+          <MenuRecommendRow title="추천 메뉴" cards={MENU_RECOMMEND_CARDS} />
 
           {/* 8. 할인 브랜드 캐러셀 */}
-          <div style={{ background: "#fff" }}>
-            <DiscountBrandSwimlane title="내 주변 할인중인 브랜드" brands={BRAND_ITEMS} />
-          </div>
+          <DiscountBrandSwimlane title="내 주변 할인중인 브랜드" brands={BRAND_ITEMS} />
 
-          <SectionDivider />
 
           {/* 9. 할인랭킹 */}
           <DiscountRankingRow cards={RANKING_CARDS} promoImageSrc="/assets/banners/discount_ranking_hero.png" />
 
-          <SectionDivider />
 
           {/* 10. 우리동네 장보기·쇼핑 */}
-          <div style={{ background: "#fff" }}>
-            <GrocerySwimlane items={GROCERY_ITEMS} />
-          </div>
-
-          <SectionDivider />
+          <GrocerySwimlane items={GROCERY_ITEMS} />
 
           {/* 11. QC 상품 */}
-          <div style={{ background: "#fff" }}>
-            <QCProductSwimlane title="샤인머스캣 2천원 할인" subtitle="알고 먹으면 더 맛있는!" dateRange="2026.10.01~2026.10.15" products={QC_PRODUCTS} />
-          </div>
-
-          <SectionDivider />
+          <QCProductSwimlane title="샤인머스캣 2천원 할인" subtitle="알고 먹으면 더 맛있는!" dateRange="2026.10.01~2026.10.15" products={QC_PRODUCTS} />
 
           {/* 12. ShopList Cards */}
-          <div style={{ background: "#fff" }}>
-            {SHOPLIST_CARDS.map((card, i) => (
-              <ShopListCard key={i} {...card} showMenuThumbnails />
-            ))}
-          </div>
+          {SHOPLIST_CARDS.map((card, i) => (
+            <ShopListCard key={i} {...card} showMenuThumbnails />
+          ))}
 
           {/* Bottom spacer */}
           <div style={{ height: 80 }} />
