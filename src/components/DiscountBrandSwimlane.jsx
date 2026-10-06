@@ -161,13 +161,7 @@ export default function DiscountBrandSwimlaneSection() {
       {/* Full carousel */}
       <div style={{ marginBottom: 32 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: "#999", marginBottom: 8 }}>Preview</div>
-        <div style={{
-          width: "calc(100% - 60px)", minWidth: 260, maxWidth: 316,
-          background: "#fff", borderRadius: 12, padding: 16,
-          border: "1px solid #e8e8e8",
-        }}>
-          <DiscountBrandSwimlane brands={SAMPLE_BRANDS} />
-        </div>
+        <DiscountBrandSwimlane brands={SAMPLE_BRANDS} />
       </div>
 
       {/* Individual BrandCard */}
