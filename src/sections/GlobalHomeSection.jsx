@@ -108,32 +108,53 @@ const BTF_SECTIONS = [
   },
 ];
 
-// ── 순서 조정 패널 ─────────────────────────────────────────────────────────
+// ── 순서 조정 패널 (드래그 앤 드롭) ─────────────────────────────────────────
 
-function OrderPanel({ order, onMove }) {
+function OrderPanel({ order, onReorder }) {
+  const [dragIdx, setDragIdx] = useState(null);
+  const [overIdx, setOverIdx] = useState(null);
+
+  const handleDragStart = (i) => setDragIdx(i);
+  const handleDragOver = (e, i) => { e.preventDefault(); setOverIdx(i); };
+  const handleDrop = (i) => {
+    if (dragIdx === null || dragIdx === i) { setDragIdx(null); setOverIdx(null); return; }
+    const newOrder = [...order];
+    const [moved] = newOrder.splice(dragIdx, 1);
+    newOrder.splice(i, 0, moved);
+    onReorder(newOrder);
+    setDragIdx(null);
+    setOverIdx(null);
+  };
+  const handleDragEnd = () => { setDragIdx(null); setOverIdx(null); };
+
   return (
     <div style={{
-      padding: "8px 12px", background: "#fff", borderRadius: 12,
-      border: "1px solid #e8e8e8", marginBottom: 12,
+      width: 200, padding: "12px 14px", background: "#fff", borderRadius: 14,
+      border: "1px solid #e8e8e8", boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+      position: "sticky", top: 24,
     }}>
-      <div style={{ fontSize: 10, fontWeight: 700, color: "#999", marginBottom: 6 }}>BTF 섹션 순서</div>
+      <div style={{ fontSize: 11, fontWeight: 700, color: "#333", marginBottom: 4 }}>BTF 섹션 순서</div>
+      <div style={{ fontSize: 9, color: "#bbb", marginBottom: 10 }}>드래그하여 순서 변경</div>
       {order.map((sec, i) => (
-        <div key={sec.id} style={{
-          display: "flex", alignItems: "center", gap: 6,
-          padding: "4px 0", borderBottom: i < order.length - 1 ? "1px solid #f0f0f0" : "none",
-        }}>
-          <span style={{ fontSize: 10, color: "#bbb", width: 16, textAlign: "center" }}>{i + 1}</span>
+        <div
+          key={sec.id}
+          draggable
+          onDragStart={() => handleDragStart(i)}
+          onDragOver={(e) => handleDragOver(e, i)}
+          onDrop={() => handleDrop(i)}
+          onDragEnd={handleDragEnd}
+          style={{
+            display: "flex", alignItems: "center", gap: 8,
+            padding: "6px 8px", marginBottom: 2,
+            borderRadius: 8, cursor: "grab",
+            background: dragIdx === i ? "#e8f0ff" : overIdx === i ? "#f0f0f0" : "transparent",
+            border: overIdx === i ? "1px dashed #0C74E4" : "1px solid transparent",
+            transition: "background 0.1s",
+          }}
+        >
+          <span style={{ fontSize: 10, color: "#bbb", width: 16, textAlign: "center", flexShrink: 0 }}>{i + 1}</span>
+          <span style={{ fontSize: 10, color: "#ccc", flexShrink: 0, cursor: "grab" }}>☰</span>
           <span style={{ flex: 1, fontSize: 11, fontWeight: 600, color: "#333" }}>{sec.label}</span>
-          <button
-            onClick={() => onMove(i, -1)}
-            disabled={i === 0}
-            style={{ width: 20, height: 20, border: "1px solid #ddd", borderRadius: 4, background: "#fff", cursor: i === 0 ? "not-allowed" : "pointer", fontSize: 10, color: i === 0 ? "#ddd" : "#333", padding: 0 }}
-          >▲</button>
-          <button
-            onClick={() => onMove(i, 1)}
-            disabled={i === order.length - 1}
-            style={{ width: 20, height: 20, border: "1px solid #ddd", borderRadius: 4, background: "#fff", cursor: i === order.length - 1 ? "not-allowed" : "pointer", fontSize: 10, color: i === order.length - 1 ? "#ddd" : "#333", padding: 0 }}
-          >▼</button>
         </div>
       ))}
     </div>
@@ -145,14 +166,6 @@ function OrderPanel({ order, onMove }) {
 export default function GlobalHomeSection() {
   const [theme, setTheme] = useState("dark");
   const [btfOrder, setBtfOrder] = useState(BTF_SECTIONS);
-
-  const moveSection = useCallback((index, direction) => {
-    const newOrder = [...btfOrder];
-    const target = index + direction;
-    if (target < 0 || target >= newOrder.length) return;
-    [newOrder[index], newOrder[target]] = [newOrder[target], newOrder[index]];
-    setBtfOrder(newOrder);
-  }, [btfOrder]);
 
   return (
     <div style={{ padding: "24px 0" }}>
@@ -169,8 +182,8 @@ export default function GlobalHomeSection() {
         ))}
       </div>
 
-      {/* BTF 순서 조정 */}
-      <OrderPanel order={btfOrder} onMove={moveSection} />
+      {/* 폰 프레임 + 순서 패널 가로 배치 */}
+      <div style={{ display: "flex", gap: 20, alignItems: "flex-start" }}>
 
       {/* Phone frame */}
       <div style={{
@@ -233,6 +246,11 @@ export default function GlobalHomeSection() {
           {/* Bottom spacer */}
           <div style={{ height: 80 }} />
         </div>
+      </div>
+
+      {/* BTF 순서 조정 패널 — 폰 프레임 우측 */}
+      <OrderPanel order={btfOrder} onReorder={setBtfOrder} />
+
       </div>
     </div>
   );
