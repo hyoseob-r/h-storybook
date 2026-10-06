@@ -99,6 +99,7 @@ function CustomBadge({ label, bgColor = "#DFEFFF", textColor = "#2D509C" }) {
 export function RollingBanner({
   bannerType = "type1",
   theme = "blue",
+  bgColor = null,
   title1 = "매일 하루종일 특가",
   title2 = "+최대 5% 적립까지!",
   description = "멈추지 않는 선착순 할인!",
@@ -116,7 +117,7 @@ export function RollingBanner({
       position: "relative",
       width: 390, height: 128,
       overflow: "hidden",
-      background: isType3 ? "#1a1a2e" : t.bannerBg,
+      background: bgColor || (isType3 ? "#1a1a2e" : t.bannerBg),
       cursor: onClick ? "pointer" : "default",
       fontFamily: "Pretendard, Roboto, sans-serif",
     }} onClick={onClick}>
@@ -186,8 +187,8 @@ export function RollingBanner({
         </>
       )}
 
-      {/* 우상단: CustomBadge — 테마 색상 적용 */}
-      {customBadgeLabel && <CustomBadge label={customBadgeLabel} bgColor={t.customBadgeBg} textColor={t.customBadgeText} />}
+      {/* 우상단: CustomBadge — 테마 색상 적용 (type3에선 숨김) */}
+      {!isType3 && customBadgeLabel && <CustomBadge label={customBadgeLabel} bgColor={t.customBadgeBg} textColor={t.customBadgeText} />}
     </div>
   );
 }
