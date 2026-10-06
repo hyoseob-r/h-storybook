@@ -101,6 +101,7 @@ function CustomBadge({ label, bgColor = "#DFEFFF", textColor = "#2D509C" }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 export function RollingBanner({
   bannerType = "nukki2",
+  variant = "full", // "full" | "card"
   theme = "blue",
   bgColor = null,
   title1 = "매일 하루종일 특가",
@@ -124,6 +125,7 @@ export function RollingBanner({
       width: "100%", height: 128,
       overflow: "hidden",
       background: bgColor || (isFullImg ? "#1a1a2e" : t.bannerBg),
+      borderRadius: variant === "card" ? 12 : 0,
       cursor: onClick ? "pointer" : "default",
       fontFamily: "Pretendard, Roboto, sans-serif",
     }} onClick={onClick}>
@@ -216,6 +218,7 @@ const THEME_IDS = ["red", "orange", "yellow", "green", "cyan", "blue", "pink", "
 
 export default function RollingBannerSection() {
   const [bannerType, setBannerType] = useState("nukki2");
+  const [variant, setVariant] = useState("full");
   const [theme, setTheme] = useState("blue");
   const [showBadges, setShowBadges] = useState(true);
   const [showCustomBadge, setShowCustomBadge] = useState(true);
@@ -253,6 +256,14 @@ export default function RollingBannerSection() {
               </button>
             ))}
           </div>
+          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+            <span style={{ fontSize: 10, color: "#999", width: 60, flexShrink: 0 }}>Variant</span>
+            {["full", "card"].map(v => (
+              <button key={v} onClick={() => setVariant(v)} style={chipStyle(variant === v)}>
+                {v === "full" ? "Full (좌우 꽉참)" : "Card (r12)"}
+              </button>
+            ))}
+          </div>
           <div style={{ display: "flex", gap: 4, alignItems: "center", flexWrap: "wrap" }}>
             <span style={{ fontSize: 10, color: "#999", width: 60, flexShrink: 0 }}>Theme</span>
             {THEME_IDS.map(id => (
@@ -278,6 +289,7 @@ export default function RollingBannerSection() {
       <div style={{ marginBottom: 32 }}>
         <RollingBanner
           bannerType={bannerType}
+          variant={variant}
           theme={theme}
           title1="매일 하루종일 특가"
           title2="+최대 5% 적립까지!"
