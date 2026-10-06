@@ -292,7 +292,7 @@ export function TopBanner({
       )}
 
       <div style={{ position: "relative", zIndex: 1 }}>
-        {showHeader && (
+        {showHeader ? (
           <>
             <StatusBar theme={isTop ? theme : "light"} />
             <TopNavHeader
@@ -303,6 +303,8 @@ export function TopBanner({
               address={address}
             />
           </>
+        ) : (
+          <div style={{ height: 115 }} />
         )}
         <ContentsArea leftSrc={leftSrc} rightSrc={rightSrc} />
         {showSearch && <SearchBarContainer />}
