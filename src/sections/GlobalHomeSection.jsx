@@ -238,28 +238,23 @@ export default function GlobalHomeSection() {
           overflowY: "auto", overflowX: "hidden",
           scrollbarWidth: "none",
         }}>
-          {/* Sticky 헤더 — 스크롤 시 콘텐츠 위에 떠있음 */}
-          <div style={{
-            position: "sticky", top: 0, zIndex: 10,
-            marginBottom: headerState === "top" ? -115 : 0,
-          }}>
+          {/* Sticky 헤더 — 배너 지나면 나타남 */}
+          {headerState !== "top" && (
             <div style={{
-              background: headerState === "top"
-                ? "transparent"
-                : headerState === "scrolled-true"
-                  ? "linear-gradient(to bottom, rgba(248,248,248,0.95), rgba(248,248,248,1))"
-                  : "linear-gradient(to bottom, rgba(248,248,248,0.7), rgba(248,248,248,0))",
-              transition: "background 0.2s",
+              position: "sticky", top: 0, zIndex: 10,
+              background: headerState === "scrolled-true"
+                ? "linear-gradient(to bottom, rgba(248,248,248,0.96), #f8f8f8)"
+                : "linear-gradient(to bottom, rgba(251,250,249,0.96), rgba(251,250,249,0))",
             }}>
-              <StatusBar theme={headerState === "top" ? theme : "light"} />
+              <StatusBar theme="light" />
               <TopNavHeader
-                theme={headerState === "top" ? theme : "light"}
-                top={headerState === "top"}
+                theme="light"
+                top={false}
                 scrolled={headerState === "scrolled-true"}
                 cartfilled={false}
               />
             </div>
-          </div>
+          )}
 
           {/* ═══ ATF (고정 순서) ═══ */}
 
