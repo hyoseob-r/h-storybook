@@ -78,7 +78,7 @@ function CustomBadge({ label, bgColor = "#DFEFFF", textColor = "#2D509C" }) {
       {/* 텍스트 영역 40x40 — 우상단 정렬 */}
       <div style={{
         position: "absolute", top: 0, right: 0,
-        width: 40, height: 40,
+        width: 36, height: 36,
         display: "flex", alignItems: "center", justifyContent: "center",
       }}>
         <span style={{
