@@ -55,8 +55,8 @@ export function SwimlaneCard({
       width: CARD_WIDTH, flexShrink: 0,
       fontFamily: "Pretendard, Roboto, sans-serif",
     }}>
-      {/* Thumbnail + 배너 wrapper — 고정 높이로 텍스트 위치 통일 */}
-      <div style={{ width: CARD_WIDTH, height: THUMB_HEIGHT + 10, position: "relative" }}>
+      {/* Thumbnail + 배너 wrapper */}
+      <div style={{ width: CARD_WIDTH, height: banner ? THUMB_HEIGHT + 10 : THUMB_HEIGHT, position: "relative" }}>
         <div style={{
           width: CARD_WIDTH, height: THUMB_HEIGHT, borderRadius: metaTokens.radius.meta_r4,
           overflow: "hidden", background: "#f2f2f2", position: "absolute", top: 0, left: 0,
