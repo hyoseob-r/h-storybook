@@ -130,11 +130,11 @@ export function GrocerySwimlane({
       {/* 아이템 목록: 가로 스크롤 */}
       <div style={{
         display: "flex",
-        gap: 4,
+        gap: 10,
         paddingLeft: 16,
         paddingRight: 16,
         paddingTop: 12,
-        paddingBottom: 20,
+        paddingBottom: 8,
         overflowX: "auto",
         scrollbarWidth: "none",
       }}>
