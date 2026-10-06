@@ -136,12 +136,12 @@ function PillAddress({ theme, address }) {
 function TopNavHeader({ theme = "dark", top = true, scrolled = false, cartfilled = false, address = "서울 강남구 역삼동" }) {
   const isDark = theme === "dark";
 
-  // 배경
+  // 배경 — top=false일 때 항상 그라디언트 스크림
   let background = "transparent";
   if (!top && !scrolled) {
     background = "linear-gradient(to bottom, rgba(251,250,249,0), rgba(251,250,249,0.96))";
   } else if (!top && scrolled) {
-    background = "#f8f8f8";
+    background = "linear-gradient(to bottom, rgba(248,248,248,0.7), #f8f8f8)";
   }
 
   const px = (!top && scrolled) ? 8 : 16;
