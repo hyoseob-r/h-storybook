@@ -273,12 +273,11 @@ export function TopBanner({
       fontFamily: "Pretendard, Roboto, sans-serif",
       overflow: "hidden",
     }}>
-      {/* 배경 이미지 — 480 기준 센터, 좌우 크롭, bottom 정렬 */}
+      {/* 배경 이미지 — 가로 100% 리사이징, 바텀 정렬, 넘치면 상단 크롭 */}
       {bgImage && (
         <img src={bgImage} alt="" style={{
-          position: "absolute", bottom: 0, left: "50%", transform: "translateX(-50%)",
-          width: 480, height: "auto", minHeight: "100%",
-          objectFit: "cover", objectPosition: "center bottom",
+          position: "absolute", bottom: 0, left: 0,
+          width: "100%", height: "auto",
           pointerEvents: "none",
         }} />
       )}
@@ -375,7 +374,7 @@ export default function TopBannerSection() {
           <TopBanner
             theme={theme}
             bgColor={theme === "dark" ? "#1a1a2e" : "#E8F0FF"}
-            bgImage="/assets/banners/topbanner_bg_sample.png"
+            bgImage="/assets/banners/topbanner_bg.png"
             leftSrc="/assets/banners/topbanner_left.png"
             rightSrc="/assets/banners/topbanner_right.png"
             headerState={effectiveState}
