@@ -375,7 +375,7 @@ export default function TopBannerSection() {
         <div style={{ fontSize: 11, color: "#999", marginBottom: 6 }}>
           top_final — {theme} / {effectiveState} / cart={cartfilled ? "filled" : "empty"}
         </div>
-        <div style={{ width: "100%", overflow: "hidden" }}>
+        <div style={{ width: "100%" }}>
           <TopBanner
             theme={theme}
             bgColor={theme === "dark" ? "#1a1a2e" : "#E8F0FF"}

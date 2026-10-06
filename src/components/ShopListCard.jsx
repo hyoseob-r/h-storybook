@@ -339,39 +339,46 @@ export default function ShopListCardSection() {
   const [subType, setSubType] = useState("none");
   const [showThumbnails, setShowThumbnails] = useState(true);
 
+  const controlStyle = {
+    padding: "16px 20px", background: "#fff", borderRadius: 12,
+    border: "1px solid #e8e8e8", marginBottom: 16,
+  };
+  const chipStyle = (active) => ({
+    padding: "4px 10px", borderRadius: 20,
+    border: `1.5px solid ${active ? "#0C74E4" : "#e0e0e0"}`,
+    background: active ? "#0C74E4" : "#fff",
+    color: active ? "#fff" : "#666",
+    fontSize: 10, cursor: "pointer",
+  });
+
   return (
     <div style={{ padding: "24px 0" }}>
       {/* Controls */}
-      <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
-        <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-          <span style={{ fontSize: 11, color: "#999", marginRight: 4 }}>Benefits:</span>
-          {["none", "ypx_free_delivery", "store_free_delivery", "single_discount", "single_cashback"].map(t => (
-            <button key={t} onClick={() => setBenefitType(t)}
-              style={{ padding: "4px 10px", borderRadius: 20, border: `1.5px solid ${benefitType === t ? "#0C74E4" : "#e0e0e0"}`,
-                background: benefitType === t ? "#0C74E4" : "#fff", color: benefitType === t ? "#fff" : "#666",
-                fontSize: 10, cursor: "pointer" }}>{t.replace(/_/g, " ")}</button>
-          ))}
-        </div>
-        <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-          <span style={{ fontSize: 11, color: "#999", marginRight: 4 }}>Thumbnails:</span>
-          <button onClick={() => setShowThumbnails(!showThumbnails)}
-            style={{ padding: "4px 10px", borderRadius: 20, border: `1.5px solid ${showThumbnails ? "#0C74E4" : "#e0e0e0"}`,
-              background: showThumbnails ? "#0C74E4" : "#fff", color: showThumbnails ? "#fff" : "#666",
-              fontSize: 10, cursor: "pointer" }}>{showThumbnails ? "ON" : "OFF"}</button>
-        </div>
-        <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-          <span style={{ fontSize: 11, color: "#999", marginRight: 4 }}>Subscription:</span>
-          {["none", "ypx_sub", "ypx_nonsub"].map(t => (
-            <button key={t} onClick={() => setSubType(t)}
-              style={{ padding: "4px 10px", borderRadius: 20, border: `1.5px solid ${subType === t ? "#0C74E4" : "#e0e0e0"}`,
-                background: subType === t ? "#0C74E4" : "#fff", color: subType === t ? "#fff" : "#666",
-                fontSize: 10, cursor: "pointer" }}>{t.replace(/_/g, " ")}</button>
-          ))}
+      <div style={controlStyle}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: "#333", marginBottom: 10 }}>Options</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div style={{ display: "flex", gap: 4, alignItems: "center", flexWrap: "wrap" }}>
+            <span style={{ fontSize: 10, color: "#999", width: 70, flexShrink: 0 }}>Benefits</span>
+            {["none", "ypx_free_delivery", "store_free_delivery", "single_discount", "single_cashback"].map(t => (
+              <button key={t} onClick={() => setBenefitType(t)} style={chipStyle(benefitType === t)}>{t.replace(/_/g, " ")}</button>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+            <span style={{ fontSize: 10, color: "#999", width: 70, flexShrink: 0 }}>Subscription</span>
+            {["none", "ypx_sub", "ypx_nonsub"].map(t => (
+              <button key={t} onClick={() => setSubType(t)} style={chipStyle(subType === t)}>{t.replace(/_/g, " ")}</button>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+            <span style={{ fontSize: 10, color: "#999", width: 70, flexShrink: 0 }}>Thumbnails</span>
+            <button onClick={() => setShowThumbnails(!showThumbnails)} style={chipStyle(showThumbnails)}>{showThumbnails ? "ON" : "OFF"}</button>
+          </div>
         </div>
       </div>
 
-      {/* Demo cards */}
-      <div style={{ width: "100%", background: "#fff", borderRadius: 12, padding: "0", overflow: "hidden" }}>
+      {/* Preview */}
+      <div style={{ fontSize: 11, fontWeight: 700, color: "#999", marginBottom: 8 }}>Preview</div>
+      <div style={{ width: "100%", background: "#fff", borderRadius: 12, padding: "0", border: "1px solid #e8e8e8" }}>
         <ShopListCard
           shopName="본도시락-역삼역"
           shopId="hansik_1"
