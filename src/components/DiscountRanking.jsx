@@ -218,7 +218,6 @@ export function DiscountRankingRow({
           {promoImageSrc && (
             <div style={{
               width: "100%", height: 148, borderRadius: 12, overflow: "hidden",
-              background: "#e0edf9",
             }}>
               <img src={promoImageSrc} alt="프로모션" style={{
                 width: "100%", height: "100%", objectFit: "cover", display: "block",
