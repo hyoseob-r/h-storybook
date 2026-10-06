@@ -7,6 +7,7 @@ import { SwimlaneCard, SwimlaneRow } from "../components/SwimlaneCard.jsx";
 import { ShopListCard } from "../components/ShopListCard.jsx";
 import { RollingBanner } from "../components/RollingBanner.jsx";
 import { DiscountBrandSwimlane } from "../components/DiscountBrandSwimlane.jsx";
+import { ReorderCard, ReorderRow } from "../components/ReorderShortcut.jsx";
 import { getShopLogo } from "../shopLogos";
 import { getShopImage } from "../shopImages";
 
@@ -98,8 +99,9 @@ export default function GlobalHomeSection() {
           <TopBanner
             theme={theme}
             bgColor={theme === "dark" ? "#1a1a2e" : "#E8F0FF"}
-            title="매일 하루종일 특가"
-            subtitle="멈추지 않는 선착순 할인!"
+            bgImage="/assets/banners/topbanner_bg.png"
+            leftSrc="/assets/banners/topbanner_left.png"
+            rightSrc="/assets/banners/topbanner_right.png"
           />
 
           {/* 2. Vertical Launcher */}
@@ -121,31 +123,37 @@ export default function GlobalHomeSection() {
 
           <SectionDivider />
 
-          {/* 3. RollingBanner (롤링 배너) */}
-          <div style={{ padding: 16 }}>
-            <RollingBanner
-              bannerType="type1"
-              bgColor="#8fc7ff"
-              title1="무한적립"
-              title2="주문할수록 쌓여요"
-              description="최대 15% 적립"
-              badges={[{ icon: "ic_specialpoint_flat", text: "스페셜적립" }]}
-              customBadgeLabel="선착순"
-            />
-          </div>
+          {/* 3. RollingBanner (롤링 배너) — card variant */}
+          <RollingBanner
+            bannerType="nukki2"
+            variant="card"
+            theme="blue"
+            title1="매일 하루종일 특가"
+            title2="+최대 5% 적립까지!"
+            description="멈추지 않는 선착순 할인!"
+            badges={[{ icon: "ic_lowest_flat", text: "배달앱 최저가" }, { icon: "ic_specialpoint_flat", text: "스페셜적립", small: true }]}
+            customBadgeLabel="선착순"
+          />
 
           <SectionDivider />
 
-          {/* 4. 맞춤 추천 Swimlane */}
-          <div style={{ padding: 16 }}>
-            <SwimlaneRow title="고객님 맞춤 추천 가게">
-              {SWIMLANE_SHOPS.map((s, i) => <SwimlaneCard key={i} {...s} />)}
-            </SwimlaneRow>
-          </div>
+          {/* 4. 재주문 숏컷 */}
+          <ReorderRow title="재주문 숏컷">
+            <ReorderCard shopName="본도시락-역삼역" thumbSrc={getShopImage("hansik_1")} logoSrc={getShopLogo("bon")} rating={4.8} reviewCount={1567} deliveryFee="0원" orderCount="3회 주문" previousMenu="고추장불고기x1, 된장찌개x1" benefitType="ypx_free" badges={["lowest", "specialpoint"]} />
+            <ReorderCard shopName="교촌치킨 서초점" thumbSrc={getShopImage("chiken_1")} rating={4.6} reviewCount={2103} orderCount="5회 주문" previousMenu="허니콤보x1, 레드콤보x1" benefitType="single_discount" badges={["discount"]} orderType="takeout" walkTime="3분" />
+            <ReorderCard shopName="서브웨이 서초점" thumbSrc={getShopImage("sandwitch_1")} logoSrc={getShopLogo("subway")} rating={4.5} reviewCount={892} deliveryFee="0원" orderCount="8회 주문" previousMenu="에그마요x2, 쿠키x1" badges={["cashback"]} />
+          </ReorderRow>
 
           <SectionDivider />
 
-          {/* 5. 할인 브랜드 */}
+          {/* 5. 맞춤 추천 Swimlane */}
+          <SwimlaneRow title="고객님 맞춤 추천 가게">
+            {SWIMLANE_SHOPS.map((s, i) => <SwimlaneCard key={i} {...s} />)}
+          </SwimlaneRow>
+
+          <SectionDivider />
+
+          {/* 6. 할인 브랜드 */}
           <div style={{ padding: 16 }}>
             <DiscountBrandSwimlane
               title="내 주변 할인중인 브랜드"
@@ -155,8 +163,8 @@ export default function GlobalHomeSection() {
 
           <SectionDivider />
 
-          {/* 6. ShopList Cards */}
-          <div style={{ padding: "0 0 16px" }}>
+          {/* 7. ShopList Cards */}
+          <div>
             {SHOPLIST_CARDS.map((card, i) => (
               <ShopListCard key={i} {...card} showMenuThumbnails />
             ))}
