@@ -24,18 +24,20 @@ export function SectionHeader({
       fontFamily: "Pretendard, Roboto, sans-serif",
     }}>
       {/* Left — 아이콘 + 타이틀 */}
-      <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 2 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 2, flexShrink: 0 }}>
         {leftIcon && (
           <img src={leftIcon} alt="" style={{ width: 24, height: 24, flexShrink: 0 }} />
         )}
         <span style={{
           fontSize: 20, fontWeight: 700, lineHeight: "27px",
           color: "#333",
-          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
         }}>{title}</span>
       </div>
 
-      {/* Right — chevron 화살표 */}
+      {/* Spacer — 우측 끝 정렬 */}
+      <div style={{ flex: 1 }} />
+
+      {/* Right — chevron 화살표 (항상 우측 끝) */}
       {showArrow && (
         <div
           onClick={onClick}
@@ -65,8 +67,8 @@ export default function SectionHeaderSection() {
           <SectionHeader title="내 주변 할인중인 브랜드" showArrow={false} />
         </div>
 
-        {/* 긴 타이틀 (말줄임) */}
-        <div style={{ background: "#fff", maxWidth: 280 }}>
+        {/* 긴 타이틀 */}
+        <div style={{ background: "#fff" }}>
           <SectionHeader title="이 가게 어때요? 새로운 맛집을 찾아보세요" />
         </div>
       </div>
