@@ -133,7 +133,7 @@ export function DiscountBrandSwimlane({
 
       {/* Page indicator dots */}
       {totalPages > 1 && (
-        <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 12 }}>
+        <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 8, paddingBottom: 16 }}>
           {Array.from({ length: totalPages }).map((_, i) => (
             <button key={i} onClick={() => goToPage(i)} style={{
               width: currentPage === i ? 16 : 6, height: 6,
