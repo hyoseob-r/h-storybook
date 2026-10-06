@@ -2,61 +2,209 @@ import { useState } from "react";
 import { metaTokens } from "../tokens";
 import { YdsIcon } from "../icons.jsx";
 
-// ─── YDS 2.0 TopBanner (promotion_area) ─────────────────────────────────────
-// Figma: 리뉴얼-2026 > 탑배너 가이드
-// 구조: 배경(480 기준 센터크롭) + safety area(116+32) + contents_area(100)
-// 헤더: dark/light theme 선택 가능
+// ─── YDS 2.0 TopBanner (top_final) ─────────────────────────────────────────
+// Figma node 13767:322397 — top_final
+// 헤더 3단계: top=true / scrolled=false / scrolled=true
+// 배경 + safety area + contents_area + 검색바
 
-const STATUS_BAR_H = 52;
+const STATUS_BAR_H = 59;
 const TOP_NAV_H = 56;
-const SAFETY_TOP = STATUS_BAR_H + TOP_NAV_H; // 108 → safety area 116
+const SAFETY_TOP = STATUS_BAR_H + TOP_NAV_H; // 115
 const CONTENTS_H = 100;
 const SAFETY_BOTTOM = 32;
-const BANNER_H = 248;
 
+const SHADOW_LEVEL1_V2 = "0px 0px 2px rgba(25,48,64,0.08), 0px 1px 8px rgba(25,48,64,0.1)";
+
+// ── StatusBar ───────────────────────────────────────────────────────────────
 function StatusBar({ theme = "dark" }) {
   const color = theme === "dark" ? "#fff" : "#333";
   return (
     <div style={{
-      height: STATUS_BAR_H, padding: "0 45px",
+      height: STATUS_BAR_H, padding: "14px 24px 0",
       display: "flex", alignItems: "center", justifyContent: "space-between",
+      fontFamily: "Pretendard, -apple-system, sans-serif",
     }}>
-      <span style={{ fontSize: 15, fontWeight: 600, color }}>9:41</span>
+      <span style={{ fontSize: 15, fontWeight: 600, color, letterSpacing: -0.2 }}>9:41</span>
       <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-        <span style={{ fontSize: 10, color, opacity: 0.6 }}>●●●●</span>
-        <span style={{ fontSize: 10, color, opacity: 0.6 }}>WiFi</span>
-        <span style={{ fontSize: 10, color, opacity: 0.6 }}>🔋</span>
+        <svg width="18" height="12" viewBox="0 0 18 12" fill="none">
+          <rect x="0" y="3" width="3" height="9" rx="1" fill={color} opacity="0.3" />
+          <rect x="4" y="2" width="3" height="10" rx="1" fill={color} opacity="0.5" />
+          <rect x="8" y="1" width="3" height="11" rx="1" fill={color} opacity="0.7" />
+          <rect x="12" y="0" width="3" height="12" rx="1" fill={color} />
+        </svg>
+        <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+          <path d="M1.6 4.8C3.4 2.4 6 1 8 1s4.6 1.4 6.4 3.8" stroke={color} strokeWidth="1.4" strokeLinecap="round" fill="none" opacity="0.5"/>
+          <path d="M3.6 7.2C4.8 5.6 6.4 4.6 8 4.6s3.2 1 4.4 2.6" stroke={color} strokeWidth="1.4" strokeLinecap="round" fill="none" opacity="0.7"/>
+          <circle cx="8" cy="10" r="1.5" fill={color} />
+        </svg>
+        <svg width="25" height="12" viewBox="0 0 25 12" fill="none">
+          <rect x="0.5" y="0.5" width="21" height="11" rx="2" stroke={color} strokeWidth="1" fill="none" opacity="0.4"/>
+          <rect x="2" y="2" width="16" height="8" rx="1" fill={color} />
+          <rect x="23" y="3.5" width="2" height="5" rx="1" fill={color} opacity="0.4"/>
+        </svg>
       </div>
     </div>
   );
 }
 
-function TopNav({ theme = "dark", address = "서울 강남구 역삼동" }) {
-  const color = theme === "dark" ? "#fff" : "#333";
+// ── NotiBadge ────────────────────────────────────────────────────────────────
+function NotiBadge() {
   return (
     <div style={{
-      height: TOP_NAV_H, padding: "10px 16px",
-      display: "flex", alignItems: "center", justifyContent: "space-between",
+      position: "absolute", top: -4, right: -4,
+      width: 18, height: 18, borderRadius: 9,
+      background: "#fff", border: "1px solid #e5e5e5",
+      display: "flex", alignItems: "center", justifyContent: "center",
     }}>
-      <div style={{
-        display: "flex", alignItems: "center", gap: 4,
-        background: theme === "dark" ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.06)",
-        borderRadius: 18, padding: "7px 12px",
-      }}>
-        <span style={{ fontSize: 14, fontWeight: 600, color }}>{address}</span>
-        <YdsIcon name="chevron_right_s" size={20} color={color} style={{ transform: "rotate(90deg)" }} />
-      </div>
-      <div style={{
-        width: 36, height: 36, borderRadius: 18,
-        background: theme === "dark" ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.06)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-      }}>
-        <YdsIcon name="heart" size={20} color={color} />
+      <span style={{
+        fontSize: 10, fontWeight: 700, color: "#ff3072",
+        lineHeight: "14px", fontFamily: "Pretendard, sans-serif",
+      }}>1</span>
+    </div>
+  );
+}
+
+// ── FloatingButton (원형 36x36 그림자 있음) ──────────────────────────────────
+function FloatingButton({ theme, icon, size = 20, cartfilled = false, onClick }) {
+  const isDark = theme === "dark";
+  const isCartFilled = icon === "cart" && cartfilled;
+  const bg = isCartFilled
+    ? "#FA0050"
+    : isDark ? "rgba(0,0,0,0.9)" : "rgba(255,255,255,0.96)";
+  const iconColor = isCartFilled ? "#fff" : (isDark ? "#fff" : "#333");
+
+  return (
+    <div style={{
+      position: "relative",
+      width: 36, height: 36, borderRadius: 40,
+      background: bg,
+      boxShadow: SHADOW_LEVEL1_V2,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      flexShrink: 0,
+      cursor: "pointer",
+    }}>
+      <YdsIcon name={icon} size={size} color={iconColor} />
+      {isCartFilled && <NotiBadge />}
+    </div>
+  );
+}
+
+// ── FlatButton (원형 36x36 그림자 없음 — scrolled=true) ──────────────────────
+function FlatButton({ icon, size = 20, cartfilled = false }) {
+  const isCartFilled = icon === "cart" && cartfilled;
+  const bg = isCartFilled ? "#FA0050" : "transparent";
+  const iconColor = isCartFilled ? "#fff" : "#333";
+
+  return (
+    <div style={{
+      position: "relative",
+      width: 36, height: 36, borderRadius: 40,
+      background: bg,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      flexShrink: 0,
+      cursor: "pointer",
+    }}>
+      <YdsIcon name={icon} size={size} color={iconColor} />
+      {isCartFilled && <NotiBadge />}
+    </div>
+  );
+}
+
+// ── PillAddress (pill 형태 주소 버튼) ────────────────────────────────────────
+function PillAddress({ theme, address }) {
+  const isDark = theme === "dark";
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", gap: 2,
+      background: isDark ? "rgba(0,0,0,0.9)" : "rgba(255,255,255,0.96)",
+      borderRadius: 360, padding: "0 12px",
+      height: 36,
+      boxShadow: SHADOW_LEVEL1_V2,
+      cursor: "pointer",
+    }}>
+      <span style={{
+        fontSize: 16, fontWeight: 700, color: isDark ? "#fff" : "#333",
+        lineHeight: "22px", fontFamily: "Pretendard, sans-serif",
+        whiteSpace: "nowrap",
+      }}>{address}</span>
+      <YdsIcon name="chevron_down_s" size={20} color={isDark ? "#fff" : "#333"} />
+    </div>
+  );
+}
+
+// ── TopNavHeader (3가지 상태) ────────────────────────────────────────────────
+function TopNavHeader({ theme = "dark", top = true, scrolled = false, cartfilled = false, address = "서울 강남구 역삼동" }) {
+  const isDark = theme === "dark";
+
+  // 배경
+  let background = "transparent";
+  if (!top && !scrolled) {
+    background = "linear-gradient(to bottom, rgba(251,250,249,0), rgba(251,250,249,0.96))";
+  } else if (!top && scrolled) {
+    background = "#f8f8f8";
+  }
+
+  const px = (!top && scrolled) ? 8 : 16;
+
+  return (
+    <div style={{
+      height: TOP_NAV_H, padding: `12px ${px}px`,
+      display: "flex", alignItems: "center", justifyContent: "space-between",
+      gap: 8,
+      background,
+    }}>
+      {/* 좌: 주소 */}
+      {(top || !scrolled) ? (
+        <PillAddress theme={top ? theme : "light"} address={address} />
+      ) : (
+        /* scrolled=true: 텍스트 주소 (pill 아님) */
+        <div style={{
+          display: "flex", alignItems: "center", gap: 2,
+          padding: "6px 8px",
+          borderRadius: 360,
+          cursor: "pointer",
+        }}>
+          <span style={{
+            fontSize: 16, fontWeight: 700, color: "#333",
+            lineHeight: "22px", fontFamily: "Pretendard, sans-serif",
+            whiteSpace: "nowrap",
+          }}>{address}</span>
+          <YdsIcon name="chevron_down_s" size={20} color="#333" />
+        </div>
+      )}
+
+      {/* 우: 버튼들 */}
+      <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
+        {/* 검색: top=false에서만 */}
+        {!top && (
+          scrolled
+            ? <FlatButton icon="search" cartfilled={false} />
+            : <FloatingButton theme="light" icon="search" cartfilled={false} />
+        )}
+
+        {/* 장바구니 */}
+        {top ? (
+          <FloatingButton theme={theme} icon="cart" cartfilled={cartfilled} />
+        ) : scrolled ? (
+          <FlatButton icon="cart" cartfilled={cartfilled} />
+        ) : (
+          <FloatingButton theme="light" icon="cart" cartfilled={cartfilled} />
+        )}
+
+        {/* 햄버거 */}
+        {top ? (
+          <FloatingButton theme={theme} icon="hamburger" cartfilled={false} />
+        ) : scrolled ? (
+          <FlatButton icon="hamburger" cartfilled={false} />
+        ) : (
+          <FloatingButton theme="light" icon="hamburger" cartfilled={false} />
+        )}
       </div>
     </div>
   );
 }
 
+// ── ContentsArea ─────────────────────────────────────────────────────────────
 function ContentsArea({ title = "매일 하루종일 특가", subtitle = "멈추지 않는 선착순 할인!", theme = "dark" }) {
   const textColor = theme === "dark" ? "#fff" : "#333";
   const subColor = theme === "dark" ? "rgba(255,255,255,0.7)" : "#666";
@@ -89,6 +237,7 @@ function ContentsArea({ title = "매일 하루종일 특가", subtitle = "멈추
   );
 }
 
+// ── SearchBar ────────────────────────────────────────────────────────────────
 function SearchBar() {
   return (
     <div style={{
@@ -96,12 +245,13 @@ function SearchBar() {
       background: "rgba(0,0,0,0.04)", borderRadius: 16,
       display: "flex", alignItems: "center", padding: "0 12px", gap: 6,
     }}>
-      <YdsIcon name="chevron_right_s" size={16} color="#999" />
-      <span style={{ fontSize: 13, color: "#999" }}>뭐 먹을까? 메뉴나 가게를 검색해보세요</span>
+      <YdsIcon name="search" size={16} color="#999" />
+      <span style={{ fontSize: 13, color: "#999", fontFamily: "Pretendard, sans-serif" }}>뭐 먹을까? 메뉴나 가게를 검색해보세요</span>
     </div>
   );
 }
 
+// ── TopBanner (export) ──────────────────────────────────────────────────────
 export function TopBanner({
   bgColor = "#1a1a2e",
   bgImage = null,
@@ -110,7 +260,14 @@ export function TopBanner({
   subtitle = "멈추지 않는 선착순 할인!",
   address = "서울 강남구 역삼동",
   showSearch = true,
+  // 새 props (기본값: top=true 상태)
+  headerState = "top", // "top" | "scrolled-false" | "scrolled-true"
+  cartfilled = false,
 }) {
+  const isTop = headerState === "top";
+  const isScrolledFalse = headerState === "scrolled-false";
+  const isScrolledTrue = headerState === "scrolled-true";
+
   return (
     <div style={{
       width: "100%", position: "relative",
@@ -129,18 +286,23 @@ export function TopBanner({
       )}
 
       <div style={{ position: "relative", zIndex: 1 }}>
-        <StatusBar theme={theme} />
-        <TopNav theme={theme} address={address} />
-        <ContentsArea title={title} subtitle={subtitle} theme={theme} />
+        <StatusBar theme={isTop ? theme : "light"} />
+        <TopNavHeader
+          theme={theme}
+          top={isTop}
+          scrolled={isScrolledTrue}
+          cartfilled={cartfilled}
+          address={address}
+        />
+        <ContentsArea title={title} subtitle={subtitle} theme={isTop ? theme : "light"} />
         {showSearch && <SearchBar />}
-        {/* safety bottom 32px */}
         <div style={{ height: SAFETY_BOTTOM }} />
       </div>
     </div>
   );
 }
 
-// ── Section (Storybook) ─────────────────────────────────────────────────────
+// ── Section (Storybook Controls) ────────────────────────────────────────────
 const controlStyle = {
   padding: "16px 20px", background: "#fff", borderRadius: 12,
   border: "1px solid #e8e8e8", marginBottom: 16,
@@ -148,6 +310,8 @@ const controlStyle = {
 
 export default function TopBannerSection() {
   const [theme, setTheme] = useState("dark");
+  const [headerState, setHeaderState] = useState("top");
+  const [cartfilled, setCartfilled] = useState(false);
 
   const chipStyle = (active) => ({
     padding: "4px 12px", borderRadius: 20,
@@ -157,15 +321,49 @@ export default function TopBannerSection() {
     fontSize: 10, cursor: "pointer",
   });
 
+  // dark theme에서는 headerState가 항상 top
+  const effectiveState = theme === "dark" ? "top" : headerState;
+
   return (
     <div style={{ padding: "24px 0" }}>
       {/* Controls */}
       <div style={controlStyle}>
         <div style={{ fontSize: 11, fontWeight: 700, color: "#333", marginBottom: 10 }}>Options</div>
-        <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-          <span style={{ fontSize: 10, color: "#999", width: 70, flexShrink: 0 }}>Theme</span>
+
+        {/* Theme */}
+        <div style={{ display: "flex", gap: 4, alignItems: "center", marginBottom: 8 }}>
+          <span style={{ fontSize: 10, color: "#999", width: 80, flexShrink: 0 }}>Theme</span>
           <button onClick={() => setTheme("dark")} style={chipStyle(theme === "dark")}>Dark</button>
           <button onClick={() => setTheme("light")} style={chipStyle(theme === "light")}>Light</button>
+        </div>
+
+        {/* State */}
+        <div style={{ display: "flex", gap: 4, alignItems: "center", marginBottom: 8 }}>
+          <span style={{ fontSize: 10, color: "#999", width: 80, flexShrink: 0 }}>State</span>
+          <button onClick={() => setHeaderState("top")} style={chipStyle(effectiveState === "top")}>top</button>
+          <button
+            onClick={() => { if (theme === "light") setHeaderState("scrolled-false"); }}
+            style={{
+              ...chipStyle(effectiveState === "scrolled-false"),
+              opacity: theme === "dark" ? 0.4 : 1,
+              cursor: theme === "dark" ? "not-allowed" : "pointer",
+            }}
+          >scrolled-false</button>
+          <button
+            onClick={() => { if (theme === "light") setHeaderState("scrolled-true"); }}
+            style={{
+              ...chipStyle(effectiveState === "scrolled-true"),
+              opacity: theme === "dark" ? 0.4 : 1,
+              cursor: theme === "dark" ? "not-allowed" : "pointer",
+            }}
+          >scrolled-true</button>
+        </div>
+
+        {/* CartFilled */}
+        <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+          <span style={{ fontSize: 10, color: "#999", width: 80, flexShrink: 0 }}>CartFilled</span>
+          <button onClick={() => setCartfilled(false)} style={chipStyle(!cartfilled)}>Off</button>
+          <button onClick={() => setCartfilled(true)} style={chipStyle(cartfilled)}>On</button>
         </div>
       </div>
 
@@ -173,13 +371,17 @@ export default function TopBannerSection() {
       <div style={{ fontSize: 11, fontWeight: 700, color: "#999", marginBottom: 8 }}>Preview</div>
 
       <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 11, color: "#999", marginBottom: 6 }}>promotion_area_1 — {theme} theme</div>
+        <div style={{ fontSize: 11, color: "#999", marginBottom: 6 }}>
+          top_final — {theme} / {effectiveState} / cart={cartfilled ? "filled" : "empty"}
+        </div>
         <div style={{ width: "100%", borderRadius: 16, overflow: "hidden" }}>
           <TopBanner
             theme={theme}
             bgColor={theme === "dark" ? "#1a1a2e" : "#E8F0FF"}
             title="매일 하루종일 특가"
             subtitle="멈추지 않는 선착순 할인!"
+            headerState={effectiveState}
+            cartfilled={cartfilled}
           />
         </div>
       </div>
