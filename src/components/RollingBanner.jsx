@@ -124,7 +124,7 @@ export function RollingBanner({
       position: "relative",
       width: "100%", height: 128,
       overflow: "hidden",
-      background: bgColor || (isFullImg ? "#1a1a2e" : t.bannerBg),
+      background: bgColor || t.bannerBg,
       borderRadius: variant === "card" ? 12 : 0,
       margin: variant === "card" ? "0 16px" : 0,
       cursor: onClick ? "pointer" : "default",
