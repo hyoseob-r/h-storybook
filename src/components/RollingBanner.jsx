@@ -82,7 +82,7 @@ function CustomBadge({ label, bgColor = "#DFEFFF", textColor = "#2D509C" }) {
         transform: "translate(50%, -50%) rotate(45deg)",
         fontSize: 12,
         fontWeight: 700,
-        lineHeight: "22px",
+        lineHeight: "14px",
         color: textColor,
         fontFamily: "'YOGIYO Sans', Pretendard, sans-serif",
         whiteSpace: "nowrap",
