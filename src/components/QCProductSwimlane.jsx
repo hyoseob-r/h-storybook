@@ -195,14 +195,14 @@ export function QCProductSwimlane({
       }}>
         <div style={{
           fontSize: 20, fontWeight: 700, lineHeight: "27px",
-          color: "#000",
+          color: "#333",
         }}>
           {title}
         </div>
         {subtitle && (
           <div style={{
             fontSize: 13, fontWeight: 400, lineHeight: "18px",
-            color: "#000",
+            color: "#333",
             marginTop: 2,
           }}>
             {subtitle}
