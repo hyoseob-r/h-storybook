@@ -12,6 +12,7 @@ import { DiscountRankingRow } from "../components/DiscountRanking.jsx";
 import { MenuRecommendRow } from "../components/MenuRecommendSwimlane.jsx";
 import { GrocerySwimlane } from "../components/GrocerySwimlane.jsx";
 import { QCProductSwimlane } from "../components/QCProductSwimlane.jsx";
+import { NavNew } from "../components/BottomNav.jsx";
 import { getShopLogo } from "../shopLogos";
 import { getShopImage } from "../shopImages";
 
@@ -305,8 +306,20 @@ export default function GlobalHomeSection() {
             <div key={sec.id}>{sec.render()}</div>
           ))}
 
-          {/* Bottom spacer */}
-          <div style={{ height: 80 }} />
+          {/* Bottom spacer for nav */}
+          <div style={{ height: 100 }} />
+        </div>
+
+        {/* Sticky 바텀 네비 — 하단 고정 */}
+        <div style={{
+          position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 10,
+          padding: "0 20px 20px",
+          background: "linear-gradient(to bottom, rgba(248,248,248,0) 0%, rgba(248,248,248,0.92) 30%)",
+          pointerEvents: "none",
+        }}>
+          <div style={{ pointerEvents: "auto" }}>
+            <NavNew activeTab="home" />
+          </div>
         </div>
       </div>
 
