@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { YdsIcon } from "../icons.jsx";
 
-// ─── YDS 2.0 CouponPack (쿠폰팩 티켓 카드, 혜택탭) ─────────────────────────
-// 티켓 모양: 좌측(12 fixed) + 중앙(stretch min192~max264) + 노치(8+8) + 우측(68 fixed)
-// 노치: 상하 반원 + 점선
+// ─── YDS 2.0 CouponPack (쿠폰팩 티켓 카드) ─────────────────────────────────
+// 3분할 이미지 기반: left(12 fixed) + center(stretch) + right(84 fixed)
+// Android: NinePatchDrawable / iOS: resizableImage(withCapInsets:) 동일 방식
 
-const NOTCH_SIZE = 8; // 반원 지름
+const COUPON_LEFT = "/assets/coupon/coupon_left@3x.png";
+const COUPON_CENTER = "/assets/coupon/coupon_center@3x.png";
+const COUPON_RIGHT = "/assets/coupon/coupon_right@3x.png";
 
 export function CouponPack({
   subtitle = "쿠폰팩 21개 한번에 받기",
@@ -16,100 +18,49 @@ export function CouponPack({
   return (
     <div style={{
       display: "flex", alignItems: "stretch",
-      width: "100%",
+      width: "100%", height: 72,
       fontFamily: "Pretendard, Roboto, sans-serif",
-      position: "relative",
     }}>
-      {/* 좌측: 콘텐츠 영역 */}
+      {/* Left — 12px fixed, 이미지 배경 */}
+      <div style={{
+        width: 12, flexShrink: 0,
+        backgroundImage: `url(${COUPON_LEFT})`,
+        backgroundSize: "12px 72px",
+        backgroundRepeat: "no-repeat",
+      }} />
+
+      {/* Center — stretch, 이미지 타일링 */}
       <div style={{
         flex: 1, minWidth: 0,
-        background: "#fff",
-        borderRadius: "16px 0 0 16px",
-        border: "0.5px solid #e5e5e5",
-        borderRight: "none",
-        padding: "16px 8px 16px 16px",
-        display: "flex", flexDirection: "column", gap: 2, justifyContent: "center",
+        backgroundImage: `url(${COUPON_CENTER})`,
+        backgroundSize: "1px 72px",
+        backgroundRepeat: "repeat-x",
+        display: "flex", alignItems: "center",
       }}>
-        <div style={{ fontSize: 12, fontWeight: 400, lineHeight: "16px", color: "#333" }}>
-          {subtitle}
+        {/* 텍스트 콘텐츠 */}
+        <div style={{ padding: "0 8px 0 4px", display: "flex", flexDirection: "column", gap: 2 }}>
+          <div style={{ fontSize: 12, fontWeight: 400, lineHeight: "16px", color: "#333" }}>
+            {subtitle}
+          </div>
+          <div style={{ fontSize: 16, fontWeight: 700, lineHeight: "22px", color: "#333" }}>
+            {title}
+          </div>
         </div>
-        <div style={{ fontSize: 16, fontWeight: 700, lineHeight: "22px", color: "#333" }}>
-          {title}
-        </div>
       </div>
 
-      {/* 노치 영역 — 좌측(콘텐츠 쪽) */}
-      <div style={{
-        width: NOTCH_SIZE, alignSelf: "stretch",
-        background: "#fff",
-        borderTop: "0.5px solid #e5e5e5",
-        borderBottom: "0.5px solid #e5e5e5",
-        position: "relative",
-        display: "flex", flexDirection: "column", alignItems: "flex-end",
-      }}>
-        {/* 상단 반원 노치 */}
-        <div style={{
-          position: "absolute", top: -NOTCH_SIZE / 2, right: 0,
-          width: NOTCH_SIZE, height: NOTCH_SIZE,
-          borderRadius: "0 0 50% 50%",
-          background: "#f8f8f8",
-          zIndex: 1,
-        }} />
-        {/* 점선 */}
-        <div style={{
-          position: "absolute", top: NOTCH_SIZE / 2, bottom: NOTCH_SIZE / 2,
-          right: 0, width: 1,
-          borderRight: "1px dashed #e5e5e5",
-        }} />
-        {/* 하단 반원 노치 */}
-        <div style={{
-          position: "absolute", bottom: -NOTCH_SIZE / 2, right: 0,
-          width: NOTCH_SIZE, height: NOTCH_SIZE,
-          borderRadius: "50% 50% 0 0",
-          background: "#f8f8f8",
-          zIndex: 1,
-        }} />
-      </div>
-
-      {/* 노치 영역 — 우측(다운로드 쪽) */}
-      <div style={{
-        width: NOTCH_SIZE, alignSelf: "stretch",
-        background: "#f0f7ff",
-        borderTop: "0.5px solid #e5e5e5",
-        borderBottom: "0.5px solid #e5e5e5",
-        position: "relative",
-      }}>
-        {/* 상단 반원 노치 */}
-        <div style={{
-          position: "absolute", top: -NOTCH_SIZE / 2, left: 0,
-          width: NOTCH_SIZE, height: NOTCH_SIZE,
-          borderRadius: "0 0 50% 50%",
-          background: "#f8f8f8",
-          zIndex: 1,
-        }} />
-        {/* 하단 반원 노치 */}
-        <div style={{
-          position: "absolute", bottom: -NOTCH_SIZE / 2, left: 0,
-          width: NOTCH_SIZE, height: NOTCH_SIZE,
-          borderRadius: "50% 50% 0 0",
-          background: "#f8f8f8",
-          zIndex: 1,
-        }} />
-      </div>
-
-      {/* 우측: 다운로드 버튼 영역 (68px fixed) */}
+      {/* Right — 84px fixed, 이미지 배경 + 버튼 */}
       <div
         onClick={onDownload}
         style={{
-          width: 68, flexShrink: 0,
-          background: "#f0f7ff",
-          borderRadius: "0 16px 16px 0",
-          border: "0.5px solid #e5e5e5",
-          borderLeft: "none",
+          width: 84, flexShrink: 0,
+          backgroundImage: `url(${COUPON_RIGHT})`,
+          backgroundSize: "84px 72px",
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "right center",
           display: "flex", flexDirection: "column",
           alignItems: "center", justifyContent: "center",
           gap: 3, cursor: "pointer",
-          paddingRight: 8,
+          paddingLeft: 16,
         }}
       >
         <YdsIcon name="download" size={24} color="#0c74e4" />
@@ -129,19 +80,33 @@ export default function CouponPackSection() {
       <div style={{ fontSize: 11, fontWeight: 700, color: "#999", marginBottom: 8 }}>Preview</div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        {/* 기본 */}
+        {/* 360px */}
         <div style={{ maxWidth: 360, padding: "0 16px" }}>
+          <div style={{ fontSize: 10, color: "#bbb", marginBottom: 4 }}>360px</div>
           <CouponPack />
         </div>
 
-        {/* 320px */}
+        {/* 320px — min */}
         <div style={{ maxWidth: 288, padding: "0 16px" }}>
+          <div style={{ fontSize: 10, color: "#bbb", marginBottom: 4 }}>288px (min)</div>
           <CouponPack subtitle="쿠폰팩 5개 한번에 받기" title="총 15,000원 할인" />
         </div>
 
-        {/* 넓은 */}
+        {/* 390px — max */}
         <div style={{ maxWidth: 390, padding: "0 16px" }}>
+          <div style={{ fontSize: 10, color: "#bbb", marginBottom: 4 }}>390px</div>
           <CouponPack subtitle="쿠폰팩 30개 한번에 받기" title="총 120,000원 할인 쿠폰팩" buttonLabel="다운로드" />
+        </div>
+      </div>
+
+      {/* 구현 가이드 */}
+      <div style={{ marginTop: 32, padding: "16px 20px", background: "#fff", borderRadius: 12, border: "1px solid #e8e8e8" }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: "#333", marginBottom: 8 }}>Native 구현 가이드</div>
+        <div style={{ fontSize: 11, color: "#666", lineHeight: "18px" }}>
+          <div><b>Android</b>: coupon_left + coupon_center (repeat-x) + coupon_right</div>
+          <div>또는 NinePatch (.9.png) — left 12px, right 84px cap inset</div>
+          <div style={{ marginTop: 4 }}><b>iOS</b>: UIImage.resizableImage(withCapInsets: UIEdgeInsets(top:0, left:12, bottom:0, right:84))</div>
+          <div style={{ marginTop: 4 }}><b>에셋 경로</b>: /assets/coupon/coupon_left@3x.png, coupon_center@3x.png, coupon_right@3x.png</div>
         </div>
       </div>
     </div>
