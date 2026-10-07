@@ -131,15 +131,13 @@ export function SwimlaneCard({
 
       {/* Info */}
       <div style={{ padding: "4px 6px 0", display: "flex", flexDirection: "column", gap: 4 }}>
-        {/* 가게명 + 별점 */}
+        {/* 가게명 + 별점 — 같은 행 */}
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <span style={{
             fontSize: 14, fontWeight: 700, color: "#333",
             overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+            flex: "0 1 auto", minWidth: 0,
           }}>{shopName}</span>
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
           <RatingCompact grade={rating} total={reviewCount} size="small" />
         </div>
 
