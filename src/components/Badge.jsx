@@ -40,7 +40,7 @@ export function BenefitBadge({ label = "3,000원 할인" }) {
 
 const BADGE_SIZES = {
   small: { height: 18, fontSize: 10, lineHeight: 14, iconSize: 12, px: 4, labelPx: 0, gap: 2, radius: metaTokens.radius.meta_r1 },
-  medium: { height: 22, fontSize: 12, lineHeight: 16, iconSize: 16, px: 4, labelPx: 2, gap: 2, radius: metaTokens.radius.meta_r1 },
+  medium: { height: 22, fontSize: 12, lineHeight: 16, iconSize: 16, px: 4, labelPx: 0, gap: 2, radius: metaTokens.radius.meta_r1 },
 };
 
 const BADGE_COLORS = {
