@@ -84,7 +84,7 @@ export function OrderStatusPill({ status = "order_complete", title, shopName = "
 // ── Section (Storybook) ─────────────────────────────────────────────────────
 const STATUS_LIST = Object.keys(ORDER_STATUS_MAP);
 
-export default function FloatingPillSection() {
+export default function FloatingPillSection({ previewWidth }) {
   const [activeStatus, setActiveStatus] = useState("order_complete");
 
   const chipStyle = (active) => ({
@@ -115,6 +115,7 @@ export default function FloatingPillSection() {
       {/* Preview */}
       <div style={{ fontSize: 11, fontWeight: 700, color: "#999", marginBottom: 8 }}>FloatingPill variants</div>
 
+      <div style={{ width: previewWidth > 0 ? previewWidth : "100%", margin: previewWidth > 0 ? "0 auto" : 0 }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 390, padding: "0 16px" }}>
         {/* 요타임딜 */}
         <TimedealPill />
@@ -127,6 +128,7 @@ export default function FloatingPillSection() {
         {STATUS_LIST.map(s => (
           <OrderStatusPill key={s} status={s} shopName={s === "preparing_qc" ? "요마트-GSTHEFRESH서초점" : "서브웨이-서초점"} />
         ))}
+      </div>
       </div>
     </div>
   );

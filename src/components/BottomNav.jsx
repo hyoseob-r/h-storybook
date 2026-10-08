@@ -65,13 +65,14 @@ export function NavNew({ activeTab = "home", onTabChange }) {
 }
 
 // ── Section (Storybook 표시용) ───────────────────────────────────────────────
-export default function BottomNavSection() {
+export default function BottomNavSection({ previewWidth }) {
   const [tab, setTab] = useState("home");
 
   return (
     <div style={{ padding: "24px 0" }}>
       {/* Preview */}
       <div style={{ fontSize: 11, fontWeight: 700, color: "#999", marginBottom: 8 }}>Preview</div>
+      <div style={{ width: previewWidth > 0 ? previewWidth : "100%", margin: previewWidth > 0 ? "0 auto" : 0 }}>
       <div style={{ background: "#f5f5f5", borderRadius: 16, padding: "40px 0 0", width: "100%", margin: "0 auto", overflow: "hidden" }}>
         <div style={{ height: 200, display: "flex", alignItems: "center", justifyContent: "center", color: "#ccc", fontSize: 13 }}>
           (화면 콘텐츠 영역)
@@ -79,6 +80,7 @@ export default function BottomNavSection() {
         <div style={{ padding: "16px 20px 20px" }}>
           <NavNew activeTab={tab} onTabChange={setTab} />
         </div>
+      </div>
       </div>
     </div>
   );

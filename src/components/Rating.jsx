@@ -35,7 +35,7 @@ export function RatingCompact({ grade = 4.8, total = 1234, size = "small" }) {
   );
 }
 
-export default function RatingSection() {
+export default function RatingSection({ previewWidth }) {
   const [size, setSize] = useState("small");
 
   return (
@@ -50,6 +50,7 @@ export default function RatingSection() {
         ))}
       </div>
 
+      <div style={{ width: previewWidth > 0 ? previewWidth : "100%", margin: previewWidth > 0 ? "0 auto" : 0 }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         <div>
           <div style={{ fontSize: 11, color: "#999", marginBottom: 4 }}>compact — 기본</div>
@@ -63,6 +64,7 @@ export default function RatingSection() {
           <div style={{ fontSize: 11, color: "#999", marginBottom: 4 }}>compact — 낮은 평점</div>
           <RatingCompact grade={3.2} total={45678} size={size} />
         </div>
+      </div>
       </div>
     </div>
   );

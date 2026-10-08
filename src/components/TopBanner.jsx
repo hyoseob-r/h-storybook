@@ -319,7 +319,7 @@ const controlStyle = {
   border: "1px solid #e8e8e8", marginBottom: 16,
 };
 
-export default function TopBannerSection() {
+export default function TopBannerSection({ previewWidth }) {
   const [theme, setTheme] = useState("dark");
   const [headerState, setHeaderState] = useState("top");
   const [cartfilled, setCartfilled] = useState(false);
@@ -381,6 +381,7 @@ export default function TopBannerSection() {
       {/* Preview */}
       <div style={{ fontSize: 11, fontWeight: 700, color: "#999", marginBottom: 8 }}>Preview</div>
 
+      <div style={{ width: previewWidth > 0 ? previewWidth : "100%", margin: previewWidth > 0 ? "0 auto" : 0 }}>
       <div style={{ marginBottom: 24 }}>
         <div style={{ fontSize: 11, color: "#999", marginBottom: 6 }}>
           top_final — {theme} / {effectiveState} / cart={cartfilled ? "filled" : "empty"}
@@ -396,6 +397,7 @@ export default function TopBannerSection() {
             cartfilled={cartfilled}
           />
         </div>
+      </div>
       </div>
     </div>
   );

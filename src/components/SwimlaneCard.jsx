@@ -204,7 +204,7 @@ export function SwimlaneRow({
 }
 
 // ── Section (Storybook) ─────────────────────────────────────────────────────
-export default function SwimlaneCardSection() {
+export default function SwimlaneCardSection({ previewWidth }) {
   const sampleShops = [
     { shopName: "서브웨이 서초점", thumbSrc: getShopImage("sandwitch_1"), logoSrc: getShopLogo("subway"), rating: 4.8, reviewCount: 1523, deliveryTime: "25~40분", deliveryFee: "0원", distance: "0.8km", benefitType: "ypx_free", badges: ["lowest", "specialpoint"] },
     { shopName: "맘스터치 강남역점", thumbSrc: getShopImage("burger_1"), rating: 4.5, reviewCount: 892, deliveryTime: "30~45분", deliveryFee: "1,000원", distance: "1.5km", badges: ["discount"] },
@@ -214,8 +214,12 @@ export default function SwimlaneCardSection() {
     { shopName: "본도시락 역삼역", thumbSrc: getShopImage("hansik_1"), logoSrc: getShopLogo("bon"), rating: 4.7, reviewCount: 1890, deliveryTime: "20~35분", deliveryFee: "0원", distance: "372m", benefitType: "ypx_free", badges: ["lowest", "specialpoint", "ranking"] },
   ];
 
+  const pw = previewWidth > 0 ? previewWidth : "100%";
+  const pm = previewWidth > 0 ? "0 auto" : 0;
+
   return (
     <div style={{ padding: "24px 0" }}>
+      <div style={{ width: pw, margin: pm }}>
       <div style={{ marginBottom: 32, width: "100%", background: "#fff" }}>
         <SwimlaneRow title="이 가게 어때요?">
           {sampleShops.map((s, i) => <SwimlaneCard key={i} {...s} />)}
@@ -228,6 +232,7 @@ export default function SwimlaneCardSection() {
             <SwimlaneCard key={i} {...s} benefitType="single_cashback" badges={["cashback", "discount"]} />
           ))}
         </SwimlaneRow>
+      </div>
       </div>
     </div>
   );

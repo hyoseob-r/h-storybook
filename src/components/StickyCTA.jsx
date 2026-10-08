@@ -72,7 +72,7 @@ export function StickyCTA({
 }
 
 // ── Section (Storybook 표시용) ───────────────────────────────────────────────
-export default function StickyCTASection() {
+export default function StickyCTASection({ previewWidth }) {
   const [qty, setQty] = useState(1);
   const [type, setType] = useState("deal");
 
@@ -88,6 +88,7 @@ export default function StickyCTASection() {
         ))}
       </div>
 
+      <div style={{ width: previewWidth > 0 ? previewWidth : "100%", margin: previewWidth > 0 ? "0 auto" : 0 }}>
       <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
         {type === "default" && (
           <div>
@@ -126,6 +127,7 @@ export default function StickyCTASection() {
           <div style={{ width: "100%", maxWidth: 200 }}><PriceButton label="버튼" countBadge={3} /></div>
           <div style={{ width: "100%", maxWidth: 200 }}><PriceButton label="품절" disabled /></div>
         </div>
+      </div>
       </div>
     </div>
   );

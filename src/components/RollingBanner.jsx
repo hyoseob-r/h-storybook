@@ -223,7 +223,7 @@ const DEMO_BADGES = [
 
 const THEME_IDS = ["red", "orange", "yellow", "green", "cyan", "blue", "pink", "purple", "brown", "gray"];
 
-export default function RollingBannerSection() {
+export default function RollingBannerSection({ previewWidth }) {
   const [bannerType, setBannerType] = useState("nukki2");
   const [variant, setVariant] = useState("full");
   const [theme, setTheme] = useState("blue");
@@ -328,6 +328,7 @@ export default function RollingBannerSection() {
 
       {/* Preview */}
       <div style={{ fontSize: 11, fontWeight: 700, color: "#999", marginBottom: 8 }}>Preview</div>
+      <div style={{ width: previewWidth > 0 ? previewWidth : "100%", margin: previewWidth > 0 ? "0 auto" : 0 }}>
       <div style={{ marginBottom: 32 }}>
         <RollingBanner
           bannerType={bannerType}
@@ -367,6 +368,7 @@ export default function RollingBannerSection() {
       <div style={{ marginBottom: 16 }}>
         <div style={{ fontSize: 11, color: "#999", marginBottom: 6 }}>풀이미지 — 텍스트 포함 이미지, 센터 정렬</div>
         <RollingBanner bannerType="fullimg" customBadgeLabel={null} />
+      </div>
       </div>
     </div>
   );

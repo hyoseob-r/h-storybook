@@ -248,13 +248,15 @@ const SAMPLE_CARDS = [
   },
 ];
 
-export default function MenuRecommendSwimlaneSection() {
+export default function MenuRecommendSwimlaneSection({ previewWidth }) {
   return (
     <div style={{ padding: "24px 0" }}>
       <div style={{ fontSize: 11, fontWeight: 700, color: "#999", marginBottom: 8 }}>Preview</div>
 
+      <div style={{ width: previewWidth > 0 ? previewWidth : "100%", margin: previewWidth > 0 ? "0 auto" : 0 }}>
       <div style={{ background: "#fff", borderRadius: 12, overflow: "hidden" }}>
         <MenuRecommendRow cards={SAMPLE_CARDS} />
+      </div>
       </div>
     </div>
   );

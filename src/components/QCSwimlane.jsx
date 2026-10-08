@@ -72,7 +72,7 @@ export function QCSwimlaneRow({ items = QC_ITEMS, badgeStates = null }) {
 }
 
 // ── Section (Storybook) ─────────────────────────────────────────────────────
-export default function QCSwimlaneSection() {
+export default function QCSwimlaneSection({ previewWidth }) {
   const [badgeStates, setBadgeStates] = useState(() => {
     const init = {};
     QC_ITEMS.forEach(item => { init[item.id] = !!item.badge; });
@@ -111,7 +111,7 @@ export default function QCSwimlaneSection() {
 
       {/* Preview */}
       <div style={{ fontSize: 11, fontWeight: 700, color: "#999", marginBottom: 8 }}>Preview</div>
-      <div style={{ width: "100%" }}>
+      <div style={{ width: previewWidth > 0 ? previewWidth : "100%", margin: previewWidth > 0 ? "0 auto" : 0 }}>
         <QCSwimlaneRow badgeStates={badgeStates} />
       </div>
     </div>

@@ -103,7 +103,7 @@ export function NumericStepperCompact({
 }
 
 // ── Section (Storybook 표시용) ───────────────────────────────────────────────
-export default function NumericStepperSection() {
+export default function NumericStepperSection({ previewWidth }) {
   const [val1, setVal1] = useState(1);
   const [val2, setVal2] = useState(3);
   const [val3, setVal3] = useState(1);
@@ -134,6 +134,7 @@ export default function NumericStepperSection() {
         </div>
       </div>
 
+      <div style={{ width: previewWidth > 0 ? previewWidth : "100%", margin: previewWidth > 0 ? "0 auto" : 0 }}>
       {/* Default type */}
       <div style={{ marginBottom: 24 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: "#333", marginBottom: 12 }}>default</div>
@@ -168,6 +169,7 @@ export default function NumericStepperSection() {
             <NumericStepperCompact value={2} size={size} shapeStyle={shape} readOnly />
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

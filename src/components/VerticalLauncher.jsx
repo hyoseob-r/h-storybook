@@ -73,9 +73,13 @@ export function VerticalLauncherRow({ items = LAUNCHER_PRESETS }) {
 }
 
 // ── Section (Storybook) ─────────────────────────────────────────────────────
-export default function VerticalLauncherSection() {
+export default function VerticalLauncherSection({ previewWidth }) {
+  const pw = previewWidth > 0 ? previewWidth : "100%";
+  const pm = previewWidth > 0 ? "0 auto" : 0;
+
   return (
     <div style={{ padding: "24px 0" }}>
+      <div style={{ width: pw, margin: pm }}>
       <div style={{ marginBottom: 24 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: "#333", marginBottom: 12 }}>VerticalLauncher Row</div>
         <div style={{ width: "100%", background: "transparent" }}>
@@ -99,6 +103,7 @@ export default function VerticalLauncherSection() {
             <VLauncherItem key={p.id} img={p.img} label={p.label} />
           ))}
         </div>
+      </div>
       </div>
     </div>
   );

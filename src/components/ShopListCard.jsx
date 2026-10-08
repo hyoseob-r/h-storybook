@@ -334,7 +334,7 @@ export function ShopListCard({
 }
 
 // ── Section (Storybook) ─────────────────────────────────────────────────────
-export default function ShopListCardSection() {
+export default function ShopListCardSection({ previewWidth }) {
   const [benefitType, setBenefitType] = useState("ypx_free_delivery");
   const [subType, setSubType] = useState("none");
   const [showThumbnails, setShowThumbnails] = useState(true);
@@ -378,6 +378,7 @@ export default function ShopListCardSection() {
 
       {/* Preview */}
       <div style={{ fontSize: 11, fontWeight: 700, color: "#999", marginBottom: 8 }}>Preview</div>
+      <div style={{ width: previewWidth > 0 ? previewWidth : "100%", margin: previewWidth > 0 ? "0 auto" : 0 }}>
       <div style={{ width: "100%", background: "#fff", borderRadius: 12, padding: "0", border: "1px solid #e8e8e8" }}>
         <ShopListCard
           shopName="본도시락-역삼역"
@@ -420,6 +421,7 @@ export default function ShopListCardSection() {
           showMenuThumbnails={showThumbnails}
           isAd
         />
+      </div>
       </div>
     </div>
   );

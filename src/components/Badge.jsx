@@ -143,7 +143,7 @@ export function IconBadge({ iconName = "information", size = 24, bg = "#F2F2F2" 
 }
 
 // ── Badge Section (Storybook 표시용) ─────────────────────────────────────────
-export default function BadgeSection() {
+export default function BadgeSection({ previewWidth }) {
   const [selectedSize, setSelectedSize] = useState("small");
   const [selectedColor, setSelectedColor] = useState("primary");
 
@@ -170,6 +170,9 @@ export default function BadgeSection() {
           ))}
         </div>
       </div>
+
+      {/* Preview area */}
+      <div style={{ width: previewWidth > 0 ? previewWidth : "100%", margin: previewWidth > 0 ? "0 auto" : 0 }}>
 
       {/* singleBadge */}
       <div style={{ marginBottom: 24 }}>
@@ -236,6 +239,8 @@ export default function BadgeSection() {
           <img src="/assets/badge-icons/ic_item_star.svg" alt="★" style={{ width: 24, height: 24 }} />
           <span style={{ fontSize: 11, color: "#ccc" }}>← ic_item_star.svg</span>
         </div>
+      </div>
+
       </div>
     </div>
   );

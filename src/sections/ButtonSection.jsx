@@ -198,7 +198,7 @@ const ALLOWED_COLORS = {
   text:     ["gray_v2"],
 };
 
-function ButtonSection() {
+function ButtonSection({ previewWidth }) {
   const [shape,   setShapeRaw] = useState("filled");
   const [color,   setColor]    = useState("primary_v2");
   const [size,    setSize]     = useState("medium");
@@ -295,6 +295,7 @@ function ButtonSection() {
       </div>
 
       {/* Preview */}
+      <div style={{ width: previewWidth > 0 ? previewWidth : "100%", margin: previewWidth > 0 ? "0 auto" : 0 }}>
       <div style={{ padding: "40px", background: "#ffffff", border: "1px solid #e5e5e5", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", gap: "16px", flexWrap: "wrap" }}>
         {/* enabled */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
@@ -310,6 +311,7 @@ function ButtonSection() {
             rightIcon={config === "labelWithIcon" && iconPos === "right" ? iconName : null} />
           <span style={{ fontSize: "9px", color: "#bbbbbb", letterSpacing: "0.1em" }}>DISABLED</span>
         </div>
+      </div>
       </div>
 
       {/* Platform tabs */}

@@ -163,12 +163,12 @@ export function FoodCategorySwimlane({ row1 = ROW1_CATEGORIES, row2 = ROW2_CATEG
 }
 
 // ── Section (Storybook) ─────────────────────────────────────────────────────
-export default function FoodCategorySection() {
+export default function FoodCategorySection({ previewWidth }) {
   return (
     <div style={{ padding: "24px 0" }}>
       <div style={{ marginBottom: 24 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: "#333", marginBottom: 12 }}>FoodCategory Swimlane (390px)</div>
-        <div style={{ width: "100%" }}>
+        <div style={{ width: previewWidth > 0 ? previewWidth : "100%", margin: previewWidth > 0 ? "0 auto" : 0 }}>
           <FoodCategorySwimlane />
         </div>
       </div>

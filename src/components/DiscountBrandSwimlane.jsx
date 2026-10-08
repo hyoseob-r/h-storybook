@@ -162,13 +162,18 @@ const SAMPLE_BRANDS = [
   { shopName: "청년피자", logoSrc: getShopLogo("youngman"), benefit: "최대 5,000원 할인 + 최대 15% 적립", badges: ["lowest", "specialpoint", "menu_discount", "recommend"] },
 ];
 
-export default function DiscountBrandSwimlaneSection() {
+export default function DiscountBrandSwimlaneSection({ previewWidth }) {
+  const pw = previewWidth > 0 ? previewWidth : "100%";
+  const pm = previewWidth > 0 ? "0 auto" : 0;
+
   return (
     <div style={{ padding: "24px 0" }}>
       {/* Full carousel */}
       <div style={{ marginBottom: 32 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: "#999", marginBottom: 8 }}>Preview</div>
-        <DiscountBrandSwimlane brands={SAMPLE_BRANDS} />
+        <div style={{ width: pw, margin: pm }}>
+          <DiscountBrandSwimlane brands={SAMPLE_BRANDS} />
+        </div>
       </div>
 
       {/* Individual BrandCard */}

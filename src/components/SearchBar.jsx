@@ -109,7 +109,7 @@ const controlStyle = {
   border: "1px solid #e8e8e8", marginBottom: 16,
 };
 
-export default function SearchBarSection() {
+export default function SearchBarSection({ previewWidth }) {
   const [trend, setTrend] = useState("up");
   const [showBonus, setShowBonus] = useState(true);
 
@@ -144,6 +144,7 @@ export default function SearchBarSection() {
       </div>
 
       {/* Single Interactive */}
+      <div style={{ width: previewWidth > 0 ? previewWidth : "100%", margin: previewWidth > 0 ? "0 auto" : 0 }}>
       <div style={{ fontSize: 11, fontWeight: 700, color: "#999", marginBottom: 8 }}>Interactive</div>
       <div style={{ padding: "16px 16px 8px", background: "#f5f5f5", borderRadius: 12, marginBottom: 24 }}>
         <SearchBar
@@ -166,6 +167,7 @@ export default function SearchBarSection() {
             bonusText={item.bonusText}
           />
         ))}
+      </div>
       </div>
     </div>
   );

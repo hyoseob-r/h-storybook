@@ -194,9 +194,10 @@ export function ReorderRow({ title = "재주문 숏컷", children }) {
 }
 
 // ── Section (Storybook) ─────────────────────────────────────────────────────
-export default function ReorderShortcutSection() {
+export default function ReorderShortcutSection({ previewWidth }) {
   return (
     <div style={{ padding: "24px 0" }}>
+      <div style={{ width: previewWidth > 0 ? previewWidth : "100%", margin: previewWidth > 0 ? "0 auto" : 0 }}>
       <div style={{ width: "100%", background: "#fff" }}>
         <ReorderRow title="재주문 숏컷">
           <ReorderCard shopName="본도시락-역삼역" thumbSrc={getShopImage("hansik_1")} logoSrc={getShopLogo("bon")} rating={4.8} reviewCount={1567} deliveryFee="0원" orderCount="3회 주문" previousMenu="고추장불고기x1, 된장찌개x1" benefitType="ypx_free" badges={["lowest", "specialpoint"]} />
@@ -205,6 +206,7 @@ export default function ReorderShortcutSection() {
           <ReorderCard shopName="맘스터치 강남점" thumbSrc={getShopImage("chiken_2")} logoSrc={getShopLogo("moms")} rating={4.3} reviewCount={738} orderCount="4회 주문" previousMenu="싸이버거x2, 감자튀김x1" benefitType="single_cashback" orderType="takeout" walkTime="1분" />
           <ReorderCard shopName="피자헛 역삼점" thumbSrc={getShopImage("pizza_1")} logoSrc={getShopLogo("pizzahut")} rating={4.2} reviewCount={456} deliveryFee="0원" orderCount="2회 주문" previousMenu="슈퍼슈프림 라지x1" isAd />
         </ReorderRow>
+      </div>
       </div>
     </div>
   );

@@ -293,7 +293,7 @@ const SAMPLE_PRODUCTS = [
 
 // ── Section (Storybook) ────────────────────────────────────────────────────
 
-export default function QCProductSwimlaneSection() {
+export default function QCProductSwimlaneSection({ previewWidth }) {
   // Assign menu images to sample products
   const menuIds = [
     "burger_1_menu_01", "burger_1_menu_02", "burger_1_menu_03",
@@ -325,6 +325,7 @@ export default function QCProductSwimlaneSection() {
       </div>
 
       {/* Live Preview */}
+      <div style={{ width: previewWidth > 0 ? previewWidth : "100%", margin: previewWidth > 0 ? "0 auto" : 0 }}>
       <div style={{
         background: "#fff", borderRadius: 12,
         border: "1px solid #e8e8e8", overflow: "hidden",
@@ -335,6 +336,7 @@ export default function QCProductSwimlaneSection() {
           dateRange="10.1(수)~10.7(화)"
           products={products}
         />
+      </div>
       </div>
     </div>
   );

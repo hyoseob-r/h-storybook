@@ -162,23 +162,24 @@ const GROCERY_ITEMS = [
 ];
 
 // ── Section (Storybook) ─────────────────────────────────────────────────────
-export default function GrocerySwimlaneSection() {
+export default function GrocerySwimlaneSection({ previewWidth }) {
   const [items, setItems] = useState(GROCERY_ITEMS);
 
   return (
     <div style={{ padding: "24px 0" }}>
       {/* 1. 라이브 프리뷰 */}
+      <div style={{ width: previewWidth > 0 ? previewWidth : "100%", margin: previewWidth > 0 ? "0 auto" : 0, marginBottom: 24 }}>
       <div style={{
         background: "#fff",
         borderRadius: 12,
         border: "1px solid #e5e5e5",
         overflow: "hidden",
-        marginBottom: 24,
       }}>
         <GrocerySwimlane
           title="우리동네 장보기·쇼핑"
           items={items}
         />
+      </div>
       </div>
 
       {/* 2. 아이템 목록 컨트롤 */}

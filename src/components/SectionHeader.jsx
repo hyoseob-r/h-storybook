@@ -51,11 +51,12 @@ export function SectionHeader({
 }
 
 // ── Section (Storybook) ─────────────────────────────────────────────────────
-export default function SectionHeaderSection() {
+export default function SectionHeaderSection({ previewWidth }) {
   return (
     <div style={{ padding: "24px 0" }}>
       <div style={{ fontSize: 11, fontWeight: 700, color: "#999", marginBottom: 8 }}>Preview</div>
 
+      <div style={{ width: previewWidth > 0 ? previewWidth : "100%", margin: previewWidth > 0 ? "0 auto" : 0 }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         {/* 기본 */}
         <div style={{ background: "#fff" }}>
@@ -71,6 +72,7 @@ export default function SectionHeaderSection() {
         <div style={{ background: "#fff" }}>
           <SectionHeader title="이 가게 어때요? 새로운 맛집을 찾아보세요" />
         </div>
+      </div>
       </div>
     </div>
   );
